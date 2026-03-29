@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Public Relations Application | Cognitus</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<h1>Public Relations Application</h1>
+<form id="form">
+<input placeholder="Discord ID" id="discordId" required>
+<textarea placeholder="Motivation" id="motivation" required></textarea>
+<textarea placeholder="Experience" id="experience" required></textarea>
+<textarea placeholder="Scenario: A public misunderstanding occurs..." id="scenario" required></textarea>
+<button type="submit">Submit</button>
+</form>
+<p id="status"></p>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+const app = initializeApp({ apiKey: "AIzaSyCnFyOTUVOxz14Ef2BwtcxdTAr3-xj3uwE", projectId: "cognitus-solutio" });
+const db = getFirestore(app);
+document.getElementById("form").addEventListener("submit", async (e)=>{
+e.preventDefault();
+const id=document.getElementById("discordId").value;
+const q=query(collection(db,"applications"),where("discordId","==",id),where("department","==","public-relations"));
+const ex=await getDocs(q);
+if(!ex.empty){document.getElementById("status").innerText="Already applied.";return;}
+await addDoc(collection(db,"applications"),{applicationType:"staff",department:"public-relations",discordId:id,motivation:motivation.value,experience:experience.value,scenario:scenario.value,status:"submitted",notificationPosted:false,submittedAt:serverTimestamp()});
+document.getElementById("status").innerText="Submitted.";
+});
+</script>
+</body>
+</html>
