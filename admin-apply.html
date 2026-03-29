@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Administration Application</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<h1>Administration Application</h1>
+
+<form id="form">
+  <input placeholder="Discord ID" id="discordId" required>
+  <textarea placeholder="Motivation" id="motivation" required></textarea>
+  <textarea placeholder="Experience" id="experience" required></textarea>
+  <textarea placeholder="Scenario: A record system becomes inconsistent..." id="scenario" required></textarea>
+  <button type="submit">Submit</button>
+</form>
+
+<p id="status"></p>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } 
+from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyCnFyOTUVOxz14Ef2BwtcxdTAr3-xj3uwE",
+  authDomain: "cognitus-solutio.firebaseapp.com",
+  projectId: "cognitus-solutio"
+});
+
+const db = getFirestore(app);
+
+document.getElementById("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const discordId = document.getElementById("discordId").value;
+
+  // CHECK DUPLICATE
+  const q = query(
+    collection(db, "applications"),
+    where("discordId", "==", discordId),
+    where("department", "==", "administration")
+  );
+
+  const existing = await getDocs(q);
+
+  if (!existing.empty) {
+    document.getElementById("status").innerText = "You already applied for this department.";
+    return;
+  }
+
+  await addDoc(collection(db, "applications"), {
+    applicationType: "staff",
+    department: "administration",
+    discordId,
+    motivation: document.getElementById("motivation").value,
+    experience: document.getElementById("experience").value,
+    scenario: document.getElementById("scenario").value,
+    status: "submitted",
+    notificationPosted: false,
+    submittedAt: serverTimestamp(),
+    reviewedAt: null,
+    reviewedBy: null,
+    decisionNotes: null
+  });
+
+  document.getElementById("status").innerText = "Application submitted.";
+});
+</script>
+
+</body>
+</html>
