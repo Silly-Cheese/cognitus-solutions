@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Apply | Cognitus Solutions</title>
+    <meta
+      name="description"
+      content="Apply to join Cognitus Solutions in Administration, Customer Support, or Public Relations." />
+    <meta name="theme-color" content="#0a1020" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .apply-page { padding: 72px 0 40px; }
+      .apply-shell { max-width: 980px; margin: 0 auto; }
+      .apply-hero { margin-bottom: 28px; }
+      .apply-hero h1 { margin-top: 14px; font-size: clamp(2.3rem, 5vw, 3.8rem); line-height: 1.05; letter-spacing: -0.04em; }
+      .apply-hero p { margin-top: 16px; color: var(--text-secondary); max-width: 70ch; }
+      .apply-form-wrap {
+        padding: 30px;
+        border-radius: var(--radius-xl);
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(10,16,30,0.92));
+        box-shadow: var(--shadow-xl);
+      }
+      .apply-form { display: grid; gap: 22px; }
+      .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+      .form-group { display: grid; gap: 10px; }
+      .form-group.full { grid-column: 1 / -1; }
+      .form-label { font-size: 0.88rem; font-weight: 700; color: var(--text-primary); letter-spacing: 0.01em; }
+      .form-input, .form-select, .form-textarea {
+        width: 100%;
+        border: 1px solid rgba(138, 171, 255, 0.16);
+        background: rgba(255,255,255,0.035);
+        color: var(--text-primary);
+        border-radius: 14px;
+        padding: 14px 16px;
+        font: inherit;
+        outline: none;
+      }
+      .form-input::placeholder, .form-textarea::placeholder { color: var(--text-muted); }
+      .form-input:focus, .form-select:focus, .form-textarea:focus {
+        border-color: rgba(142, 176, 255, 0.42);
+        box-shadow: 0 0 0 4px rgba(109, 143, 255, 0.08);
+      }
+      .form-select option { background: #0a1020; color: #f4f7ff; }
+      .form-textarea { min-height: 140px; resize: vertical; }
+      .apply-note {
+        padding: 18px 20px;
+        border-radius: 16px;
+        border: 1px solid rgba(138, 171, 255, 0.14);
+        background: rgba(255,255,255,0.025);
+        color: var(--text-secondary);
+      }
+      .form-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+      .inline-status { color: var(--text-muted); font-size: 0.92rem; }
+      @media (max-width: 760px) {
+        .form-grid { grid-template-columns: 1fr; }
+        .apply-form-wrap { padding: 22px; }
+        .form-actions { flex-direction: column; align-items: stretch; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="index.html" aria-label="Cognitus home">
+          <img class="brand-mark" src="assets/cognitus-logo.png" alt="Cognitus logo" />
+          <span class="brand-lockup">
+            <span class="brand-wordmark">Cognitus</span>
+            <span class="brand-sub">Enterprise Intelligence Infrastructure</span>
+          </span>
+        </a>
+
+        <nav class="nav-links" aria-label="Primary navigation">
+          <a href="index.html#platform">Platform</a>
+          <a href="index.html#capabilities">Capabilities</a>
+          <a href="index.html#careers">Careers</a>
+          <a href="index.html#leadership">Leadership</a>
+          <a href="index.html#access">Access</a>
+        </nav>
+
+        <a
+          class="button button-primary"
+          href="https://discord.com/oauth2/authorize?client_id=1486480583604441128"
+          target="_blank"
+          rel="noopener noreferrer">
+          Invite Bot
+        </a>
+      </header>
+
+      <main class="apply-page">
+        <div class="apply-shell">
+          <section class="apply-hero">
+            <span class="section-kicker">CAREERS APPLICATION</span>
+            <h1>Apply to join Cognitus Solutions.</h1>
+            <p>
+              Complete the application below to be considered for Administration, Customer Support,
+              or Public Relations. This page is prepared for direct Firestore integration and can be
+              wired into a Discord review and approval process next.
+            </p>
+          </section>
+
+          <section class="apply-form-wrap">
+            <form class="apply-form" id="applicationForm">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="applicationType">Application Type</label>
+                  <input class="form-input" id="applicationType" name="applicationType" type="text" value="staff" readonly />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="department">Department</label>
+                  <select class="form-select" id="department" name="department" required>
+                    <option value="">Select a department</option>
+                    <option value="administration">Administration</option>
+                    <option value="customer-support">Customer Support</option>
+                    <option value="public-relations">Public Relations</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="username">Username</label>
+                  <input class="form-input" id="username" name="username" type="text" placeholder="Your username" required />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="discordUsername">Discord Username</label>
+                  <input class="form-input" id="discordUsername" name="discordUsername" type="text" placeholder="Example: @username or username#0000" required />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="timezone">Timezone</label>
+                  <input class="form-input" id="timezone" name="timezone" type="text" placeholder="Example: CST" required />
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="status">Initial Status</label>
+                  <input class="form-input" id="status" name="status" type="text" value="pending" readonly />
+                </div>
+              </div>
+
+              <div class="form-grid">
+                <div class="form-group full">
+                  <label class="form-label" for="experience">Experience</label>
+                  <textarea class="form-textarea" id="experience" name="experience" placeholder="Describe your relevant experience, previous responsibilities, and any background related to the department you selected." required></textarea>
+                </div>
+
+                <div class="form-group full">
+                  <label class="form-label" for="motivation">Motivation</label>
+                  <textarea class="form-textarea" id="motivation" name="motivation" placeholder="Explain why you want to join Cognitus Solutions and what makes you a strong candidate." required></textarea>
+                </div>
+
+                <div class="form-group full">
+                  <label class="form-label" for="scenario">Scenario Response</label>
+                  <textarea class="form-textarea" id="scenario" name="scenario" placeholder="Provide a professional response to a realistic situation relevant to your selected department." required></textarea>
+                </div>
+
+                <div class="form-group full">
+                  <label class="form-label" for="reviewedBy">Reviewed By</label>
+                  <input class="form-input" id="reviewedBy" name="reviewedBy" type="text" placeholder="To be completed by staff during review" />
+                </div>
+
+                <div class="form-group full">
+                  <label class="form-label" for="decisionNotes">Decision Notes</label>
+                  <textarea class="form-textarea" id="decisionNotes" name="decisionNotes" placeholder="Reserved for staff review notes, approval reasoning, or denial reasoning."></textarea>
+                </div>
+              </div>
+
+              <div class="apply-note">
+                Firestore fields intended for this form include applicationType, department, username,
+                discordUsername, timezone, experience, motivation, scenario, status, submittedAt,
+                reviewedAt, reviewedBy, and decisionNotes.
+              </div>
+
+              <div class="form-actions">
+                <button class="button button-primary" type="submit">Submit Application</button>
+                <a class="button button-secondary" href="index.html#careers">Back to Careers</a>
+                <span class="inline-status" id="formStatus">Ready for Firestore integration.</span>
+              </div>
+            </form>
+          </section>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <p>© 2026 Cognitus. Enterprise intelligence infrastructure.</p>
+      </footer>
+    </div>
+
+    <script src="enhancements.js"></script>
+    <script>
+      const params = new URLSearchParams(window.location.search);
+      const department = params.get('department');
+      const departmentSelect = document.getElementById('department');
+      const form = document.getElementById('applicationForm');
+      const statusText = document.getElementById('formStatus');
+      if (department && departmentSelect) departmentSelect.value = department;
+      form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        statusText.textContent = 'Application form prepared. Connect this page to Firestore next.';
+      });
+    </script>
+  </body>
+</html>
