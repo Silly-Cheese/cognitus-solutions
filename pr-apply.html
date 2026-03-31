@@ -1,35 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Public Relations Application | Cognitus</title>
-<link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-<h1>Public Relations Application</h1>
-<form id="form">
-<input placeholder="Discord ID" id="discordId" required>
-<textarea placeholder="Motivation" id="motivation" required></textarea>
-<textarea placeholder="Experience" id="experience" required></textarea>
-<textarea placeholder="Scenario: A public misunderstanding occurs..." id="scenario" required></textarea>
-<button type="submit">Submit</button>
-</form>
-<p id="status"></p>
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
-const app = initializeApp({ apiKey: "AIzaSyCnFyOTUVOxz14Ef2BwtcxdTAr3-xj3uwE", projectId: "cognitus-solutio" });
-const db = getFirestore(app);
-document.getElementById("form").addEventListener("submit", async (e)=>{
-e.preventDefault();
-const id=document.getElementById("discordId").value;
-const q=query(collection(db,"applications"),where("discordId","==",id),where("department","==","public-relations"));
-const ex=await getDocs(q);
-if(!ex.empty){document.getElementById("status").innerText="Already applied.";return;}
-await addDoc(collection(db,"applications"),{applicationType:"staff",department:"public-relations",discordId:id,motivation:motivation.value,experience:experience.value,scenario:scenario.value,status:"submitted",notificationPosted:false,submittedAt:serverTimestamp()});
-document.getElementById("status").innerText="Submitted.";
-});
-</script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Public Relations Application | Cognitus Solutions</title>
+    <meta name="description" content="Apply for the Public Relations division at Cognitus Solutions." />
+    <meta name="theme-color" content="#0a1020" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="topbar">
+        <a class="brand" href="index.html" aria-label="Cognitus home">
+          <img class="brand-mark" src="assets/cognitus-logo.png" alt="Cognitus logo" />
+          <span class="brand-lockup">
+            <span class="brand-wordmark">Cognitus</span>
+            <span class="brand-sub">Enterprise Intelligence Infrastructure</span>
+          </span>
+        </a>
+        <nav class="nav-links" aria-label="Primary navigation">
+          <a href="index.html#platform">Platform</a>
+          <a href="index.html#capabilities">Capabilities</a>
+          <a href="index.html#careers">Careers</a>
+        </nav>
+        <a class="button button-primary" href="https://discord.com/oauth2/authorize?client_id=1486480583604441128" target="_blank" rel="noopener noreferrer">Invite Bot</a>
+      </header>
+
+      <main class="page-shell">
+        <div class="narrow-shell">
+          <span class="page-kicker">CAREERS APPLICATION</span>
+          <h1 class="page-title">Public Relations Application</h1>
+          <p class="page-intro">Submit an application for the Public Relations division. Only one application per department is allowed for each Discord ID.</p>
+
+          <section class="form-wrap" style="margin-top:28px;">
+            <div class="department-banner">
+              <strong>Public Relations Division</strong>
+              <p>This application is for candidates interested in announcements, outreach, representation, and protecting the public image of Cognitus Solutions.</p>
+            </div>
+
+            <form id="applicationForm" class="apply-form">
+              <div class="form-grid">
+                <div class="form-group full">
+                  <label class="form-label" for="discordId">Discord ID</label>
+                  <input class="form-input" id="discordId" name="discordId" type="text" required />
+                </div>
+
+                <div class="form-group full">
+                  <label class="form-label" for="motivation">Motivation</label>
+                  <textarea class="form-textarea" id="motivation" name="motivation" placeholder="Why do you want to join Public Relations?" required></textarea>
+                </div>
+
+                <div class="form-group full">
+                  <label class="form-label" for="experience">Experience</label>
+                  <textarea class="form-textarea" id="experience" name="experience" placeholder="Describe any experience with announcements, external communication, partnerships, or public-facing work." required></textarea>
+                </div>
+
+                <div class="form-group full">
+                  <label class="form-label" for="scenario">Scenario Response</label>
+                  <textarea class="form-textarea" id="scenario" name="scenario" placeholder="A public announcement is misunderstood and begins causing confusion in the community. Explain how you would respond and protect the organization’s image." required></textarea>
+                </div>
+
+                <div class="form-group full">
+                  <label class="form-label" for="additionalResponse">Additional Question</label>
+                  <textarea class="form-textarea" id="additionalResponse" name="additionalResponse" placeholder="How would you represent Cognitus Solutions professionally when dealing with outside communities or partner groups?" required></textarea>
+                </div>
+              </div>
+
+              <div id="formMessage" class="form-message"></div>
+
+              <div class="form-actions">
+                <button class="button button-primary" id="submitButton" type="submit">Submit Application</button>
+                <a class="button button-secondary" href="index.html#careers">Back to Careers</a>
+                <span class="inline-status" id="formStatus">Ready for submission.</span>
+              </div>
+            </form>
+          </section>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <p>© 2026 Cognitus. Enterprise intelligence infrastructure.</p>
+      </footer>
+    </div>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+      import { getFirestore, collection, addDoc, query, where, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyCnFyOTUVOxz14Ef2BwtcxdTAr3-xj3uwE",
+        authDomain: "cognitus-solutio.firebaseapp.com",
+        projectId: "cognitus-solutio",
+        storageBucket: "cognitus-solutio.firebasestorage.app",
+        messagingSenderId: "44920534330",
+        appId: "1:44920534330:web:d295e189e573d40c360c03"
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const form = document.getElementById("applicationForm");
+      const formMessage = document.getElementById("formMessage");
+      const formStatus = document.getElementById("formStatus");
+      const submitButton = document.getElementById("submitButton");
+
+      function setMessage(type, text) {
+        formMessage.className = "form-message";
+        if (type === "success") formMessage.classList.add("is-success");
+        if (type === "error") formMessage.classList.add("is-error");
+        formMessage.textContent = text;
+      }
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setMessage("", "");
+        formStatus.textContent = "Checking existing application...";
+        submitButton.disabled = true;
+
+        const discordId = document.getElementById("discordId").value.trim();
+        const motivation = document.getElementById("motivation").value.trim();
+        const experience = document.getElementById("experience").value.trim();
+        const scenario = document.getElementById("scenario").value.trim();
+        const additionalResponse = document.getElementById("additionalResponse").value.trim();
+
+        try {
+          const existingQuery = query(
+            collection(db, "applications"),
+            where("discordId", "==", discordId),
+            where("department", "==", "public-relations")
+          );
+
+          const existingSnapshot = await getDocs(existingQuery);
+          if (!existingSnapshot.empty) {
+            setMessage("error", "An application for Public Relations already exists for this Discord ID.");
+            formStatus.textContent = "Duplicate application blocked.";
+            submitButton.disabled = false;
+            return;
+          }
+
+          formStatus.textContent = "Submitting application...";
+
+          await addDoc(collection(db, "applications"), {
+            applicationType: "staff",
+            department: "public-relations",
+            discordId,
+            motivation,
+            experience,
+            scenario,
+            additionalResponse,
+            status: "submitted",
+            notificationPosted: false,
+            submittedAt: serverTimestamp(),
+            reviewedAt: null,
+            reviewedBy: null,
+            decisionNotes: null
+          });
+
+          form.reset();
+          setMessage("success", "Your application has been submitted successfully.");
+          formStatus.textContent = "Application submitted.";
+        } catch (error) {
+          console.error(error);
+          setMessage("error", "There was a problem submitting your application. Please try again.");
+          formStatus.textContent = "Submission failed.";
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+    </script>
+  </body>
 </html>
