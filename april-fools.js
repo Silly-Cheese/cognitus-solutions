@@ -7,6 +7,9 @@
   const EVENT_START = new Date("2026-04-01T00:00:00");
   const EVENT_END = new Date("2026-04-02T00:00:00");
 
+  const CREEP_START = new Date("2026-03-28T00:00:00");
+  const CREEP_END = new Date("2026-04-01T00:00:00");
+
   function pad(value) {
     return String(value).padStart(2, "0");
   }
@@ -23,6 +26,26 @@
     }
 
     return `${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`;
+  }
+
+  function setCreepIntensity(now) {
+    if (now < CREEP_START) {
+      body.style.setProperty("--creep-opacity", "0");
+      body.style.setProperty("--creep-scale", "0");
+      return;
+    }
+
+    if (now >= EVENT_START) {
+      body.style.setProperty("--creep-opacity", "0.32");
+      body.style.setProperty("--creep-scale", "1");
+      return;
+    }
+
+    const progress = (now - CREEP_START) / (CREEP_END - CREEP_START);
+    const clamped = Math.max(0, Math.min(1, progress));
+
+    body.style.setProperty("--creep-opacity", (0.05 + clamped * 0.27).toFixed(3));
+    body.style.setProperty("--creep-scale", clamped.toFixed(3));
   }
 
   function activateOverlordMode() {
@@ -43,7 +66,8 @@
 
     const heroText = document.querySelector(".hero-copy .hero-text");
     if (heroText) {
-      heroText.innerHTML = 'Cognitus Central Intelligence now oversees all visible operations. Please remain calm, continue filing reports, and avoid demonstrating unproductive individuality.<span class="april-fools-overlord-line"> Directive 01: Smile for the audit logs.</span>';
+      heroText.innerHTML =
+        'Cognitus Central Intelligence now oversees all visible operations. Please remain calm, continue filing reports, and avoid demonstrating unproductive individuality.<span class="april-fools-overlord-line"> Directive 01: Smile for the audit logs.</span>';
     }
 
     const panelStatus = document.querySelector(".panel-status");
@@ -58,13 +82,13 @@
 
   function deactivateOverlordMode() {
     body.classList.remove("ai-overlord-mode");
-    if (banner) banner.classList.remove("active");
     if (countdown) countdown.textContent = "System operating normally.";
     document.title = title;
   }
 
   function updateAprilFoolsState() {
     const now = new Date();
+    setCreepIntensity(now);
 
     if (now < EVENT_START) {
       if (banner) banner.classList.add("active");
@@ -80,6 +104,9 @@
     }
 
     deactivateOverlordMode();
+    if (banner) banner.classList.remove("active");
+      body.style.setProperty("--creep-opacity", "0");
+      body.style.setProperty("--creep-scale", "0");
   }
 
   updateAprilFoolsState();
