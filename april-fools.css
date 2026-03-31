@@ -1,4 +1,6 @@
 :root {
+  --creep-opacity: 0;
+  --creep-scale: 0;
   --ai-overlord-red: #ff4d4d;
   --ai-overlord-red-deep: #7a0f17;
   --ai-overlord-panel: rgba(35, 6, 10, 0.88);
@@ -45,6 +47,18 @@
   color: var(--text-primary);
   font-weight: 700;
   white-space: nowrap;
+}
+
+body::before {
+  opacity: var(--creep-opacity);
+  transform: scale(calc(0.7 + (var(--creep-scale) * 0.3)));
+  transition: opacity 1.2s ease, transform 1.2s ease;
+}
+
+body::after {
+  opacity: calc(var(--creep-opacity) * 0.9);
+  transform: scale(calc(0.72 + (var(--creep-scale) * 0.28)));
+  transition: opacity 1.2s ease, transform 1.2s ease;
 }
 
 .ai-overlord-mode {
