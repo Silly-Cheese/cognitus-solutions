@@ -1,0 +1,198 @@
+:root {
+  --ai-overlord-red: #ff4d4d;
+  --ai-overlord-red-deep: #7a0f17;
+  --ai-overlord-panel: rgba(35, 6, 10, 0.88);
+  --ai-overlord-border: rgba(255, 77, 77, 0.24);
+  --ai-overlord-glow: rgba(255, 77, 77, 0.16);
+}
+
+.april-fools-banner {
+  display: none;
+  margin: 22px 0 0;
+  padding: 16px 18px;
+  border: 1px solid rgba(138, 171, 255, 0.14);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(10,16,30,0.82));
+  box-shadow: 0 18px 40px rgba(0,0,0,0.25);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.april-fools-banner.active {
+  display: flex;
+}
+
+.april-fools-banner strong {
+  display: block;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+}
+
+.april-fools-banner span {
+  display: block;
+  margin-top: 6px;
+  color: var(--text-secondary);
+}
+
+.april-fools-status {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(138, 171, 255, 0.18);
+  background: rgba(255,255,255,0.04);
+  color: var(--text-primary);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ai-overlord-mode {
+  background:
+    radial-gradient(circle at top left, rgba(255, 77, 77, 0.18), transparent 30%),
+    radial-gradient(circle at 82% 12%, rgba(255, 0, 0, 0.16), transparent 28%),
+    linear-gradient(180deg, #090000 0%, #130205 48%, #0b0102 100%);
+}
+
+.ai-overlord-mode body,
+body.ai-overlord-mode {
+  background:
+    radial-gradient(circle at top left, rgba(255, 77, 77, 0.18), transparent 30%),
+    radial-gradient(circle at 82% 12%, rgba(255, 0, 0, 0.16), transparent 28%),
+    linear-gradient(180deg, #090000 0%, #130205 48%, #0b0102 100%);
+}
+
+body.ai-overlord-mode::before {
+  background: rgba(255, 77, 77, 0.14);
+}
+
+body.ai-overlord-mode::after {
+  background: rgba(160, 10, 24, 0.14);
+}
+
+body.ai-overlord-mode .april-fools-banner {
+  display: flex;
+  border-color: var(--ai-overlord-border);
+  background: linear-gradient(180deg, rgba(70, 8, 14, 0.78), rgba(20, 4, 7, 0.92));
+  box-shadow: 0 20px 50px rgba(0,0,0,0.36), 0 0 0 1px rgba(255,77,77,0.08);
+}
+
+body.ai-overlord-mode .april-fools-banner strong,
+body.ai-overlord-mode .eyebrow,
+body.ai-overlord-mode .section-kicker,
+body.ai-overlord-mode .card-kicker,
+body.ai-overlord-mode .staff-kicker,
+body.ai-overlord-mode .page-kicker {
+  color: #ff8f8f;
+}
+
+body.ai-overlord-mode .april-fools-status {
+  color: #fff3f3;
+  border-color: rgba(255, 77, 77, 0.28);
+  background: rgba(255, 77, 77, 0.08);
+}
+
+body.ai-overlord-mode .topbar,
+body.ai-overlord-mode .hero-panel,
+body.ai-overlord-mode .panel,
+body.ai-overlord-mode .command-card,
+body.ai-overlord-mode .info-card,
+body.ai-overlord-mode .feature-card,
+body.ai-overlord-mode .architecture-card,
+body.ai-overlord-mode .staff-card,
+body.ai-overlord-mode .access-panel,
+body.ai-overlord-mode .dashboard-card,
+body.ai-overlord-mode .summary-card,
+body.ai-overlord-mode .analytics-card,
+body.ai-overlord-mode .form-wrap {
+  border-color: var(--ai-overlord-border);
+  background: linear-gradient(180deg, rgba(45, 8, 14, 0.92), rgba(12, 4, 6, 0.96));
+  box-shadow: 0 24px 80px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,77,77,0.06);
+}
+
+body.ai-overlord-mode .panel-content,
+body.ai-overlord-mode .metric-card,
+body.ai-overlord-mode .command-item {
+  background: linear-gradient(180deg, rgba(35, 6, 10, 0.72), rgba(16, 4, 6, 0.92));
+  border-color: rgba(255, 77, 77, 0.12);
+}
+
+body.ai-overlord-mode .brand-sub,
+body.ai-overlord-mode .hero-text,
+body.ai-overlord-mode .section-heading p,
+body.ai-overlord-mode .info-card p,
+body.ai-overlord-mode .feature-card p,
+body.ai-overlord-mode .architecture-card p,
+body.ai-overlord-mode .staff-card p,
+body.ai-overlord-mode .access-panel p,
+body.ai-overlord-mode .muted,
+body.ai-overlord-mode .activity-list li,
+body.ai-overlord-mode .metric-label,
+body.ai-overlord-mode .command-label,
+body.ai-overlord-mode .footer p {
+  color: #ffcccc;
+}
+
+body.ai-overlord-mode h1,
+body.ai-overlord-mode h2,
+body.ai-overlord-mode h3,
+body.ai-overlord-mode strong,
+body.ai-overlord-mode .brand-wordmark,
+body.ai-overlord-mode .command-line,
+body.ai-overlord-mode .panel-badge,
+body.ai-overlord-mode .panel-status,
+body.ai-overlord-mode .section-title,
+body.ai-overlord-mode .page-title {
+  color: #fff2f2;
+}
+
+body.ai-overlord-mode .button-primary {
+  background: linear-gradient(135deg, var(--ai-overlord-red) 0%, var(--ai-overlord-red-deep) 100%);
+  border-color: rgba(255, 77, 77, 0.42);
+  box-shadow: 0 12px 30px rgba(255, 77, 77, 0.18);
+}
+
+body.ai-overlord-mode .button-secondary {
+  border-color: rgba(255, 77, 77, 0.24);
+  background: rgba(255, 77, 77, 0.05);
+  color: #fff1f1;
+}
+
+body.ai-overlord-mode .button-secondary:hover,
+body.ai-overlord-mode .button-primary:hover {
+  transform: translateY(-1px);
+}
+
+body.ai-overlord-mode .nav-links a {
+  color: #ffd0d0;
+}
+
+body.ai-overlord-mode .nav-links a:hover {
+  color: #fff1f1;
+}
+
+body.ai-overlord-mode .nav-links a::after {
+  background: linear-gradient(90deg, transparent, #ff8f8f, transparent);
+}
+
+body.ai-overlord-mode .activity-list li::before,
+body.ai-overlord-mode .list-clean li::before {
+  background: linear-gradient(180deg, #ff9d9d, #ff4d4d);
+  box-shadow: 0 0 0 5px rgba(255,77,77,0.08);
+}
+
+body.ai-overlord-mode .april-fools-overlord-line {
+  color: #ff9d9d;
+}
+
+@media (max-width: 820px) {
+  .april-fools-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .april-fools-status {
+    width: 100%;
+    text-align: center;
+  }
+}
