@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Access the Cognitus Solutions public portal dashboard for user-specific status and portal functions."
+    />
+    <title>Portal | Cognitus Solutions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <style>
+      .portal-grid {
+        display: grid;
+        grid-template-columns: 0.95fr 1.35fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+
+      .portal-sidebar,
+      .portal-main {
+        padding: 1.5rem;
+      }
+
+      .sidebar-stack,
+      .portal-stack,
+      .quick-grid {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .profile-card,
+      .quick-card,
+      .content-card,
+      .state-card {
+        padding: 1.1rem 1.15rem;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(242,247,255,0.92));
+        border: 1px solid rgba(112, 153, 216, 0.18);
+      }
+
+      .profile-card h3,
+      .quick-card h3,
+      .content-card h3,
+      .state-card h3 {
+        margin: 0 0 0.45rem;
+        font-size: 1rem;
+      }
+
+      .profile-card p,
+      .quick-card p,
+      .content-card p,
+      .state-card p,
+      .helper-text {
+        margin: 0;
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
+
+      .identity-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(40, 103, 200, 0.10);
+        color: var(--primary-dark);
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.8rem;
+      }
+
+      .quick-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .quick-card .button {
+        margin-top: 0.9rem;
+      }
+
+      .state-card {
+        display: none;
+      }
+
+      .state-card.visible {
+        display: block;
+      }
+
+      .state-card.success {
+        border-color: rgba(31, 143, 97, 0.18);
+        background: rgba(31, 143, 97, 0.08);
+      }
+
+      .state-card.info {
+        border-color: rgba(40, 103, 200, 0.18);
+        background: rgba(40, 103, 200, 0.08);
+      }
+
+      .record-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+        margin-top: 1rem;
+      }
+
+      .record-item {
+        padding: 0.9rem 1rem;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.76);
+        border: 1px solid rgba(112, 153, 216, 0.16);
+      }
+
+      .record-label {
+        display: block;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+      }
+
+      @media (max-width: 980px) {
+        .portal-grid,
+        .quick-grid,
+        .record-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body data-page="portal-home">
+    <div class="site-shell">
+      <header class="topbar">
+        <div class="container topbar-inner">
+          <a href="index.html" class="brand" aria-label="Cognitus Solutions home">
+            <div class="brand-mark">
+              <img src="assets/logo.png" alt="Cognitus Solutions logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>CS</span>';" />
+            </div>
+            <div class="brand-copy">
+              <span class="brand-title">Cognitus Solutions</span>
+              <span class="brand-subtitle">Professional Operations Platform</span>
+            </div>
+          </a>
+
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="careers.html" class="nav-link">Careers</a>
+            <a href="portal-login.html" class="nav-link active">Portal Login</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section class="page-hero compact-hero">
+          <div class="container page-hero-content">
+            <span class="eyebrow">Public Portal Dashboard</span>
+            <h1>Welcome to your Cognitus portal</h1>
+            <p>
+              This public dashboard is structured for verified user access, personal status visibility, and future self-service portal functions.
+            </p>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="container portal-grid">
+            <aside class="card portal-sidebar">
+              <div class="sidebar-stack">
+                <div class="profile-card" id="portalProfileCard">
+                  <div class="identity-pill">Portal Session</div>
+                  <h3 id="portalWelcomeTitle">No active session detected</h3>
+                  <p id="portalWelcomeText">
+                    Sign in through the public portal login page to create a session and load your user-specific dashboard state.
+                  </p>
+                </div>
+
+                <div class="profile-card">
+                  <h3>Portal design direction</h3>
+                  <p>
+                    The public side of Cognitus is designed to give verified users access to their own status, allowed information, and self-service options without exposing internal staff-only data.
+                  </p>
+                </div>
+              </div>
+            </aside>
+
+            <section class="card portal-main">
+              <div class="portal-stack">
+                <div class="quick-grid">
+                  <article class="quick-card">
+                    <h3>Application Status</h3>
+                    <p>Review the latest saved status of your application using the public status system.</p>
+                    <a class="button button-secondary" href="application-status.html">Open Status Page</a>
+                  </article>
+
+                  <article class="quick-card">
+                    <h3>Portal Session</h3>
+                    <p>Keep track of your local session state while the Firestore-backed session system is being connected.</p>
+                    <button class="button button-secondary" type="button" id="clearPortalSessionButton">Clear Session</button>
+                  </article>
+                </div>
+
+                <div class="content-card">
+                  <h3>Your visible portal record</h3>
+                  <p>
+                    This page is prepared to show only user-allowed information. The internal record system will remain separate for staff-facing access.
+                  </p>
+
+                  <div class="record-grid" id="portalRecordGrid">
+                    <div class="record-item">
+                      <span class="record-label">Verified User ID</span>
+                      <strong id="portalRecordUserId">Not available</strong>
+                    </div>
+                    <div class="record-item">
+                      <span class="record-label">Portal Role</span>
+                      <strong id="portalRecordRole">Public</strong>
+                    </div>
+                    <div class="record-item">
+                      <span class="record-label">Session Created</span>
+                      <strong id="portalRecordSignedIn">Not available</strong>
+                    </div>
+                    <div class="record-item">
+                      <span class="record-label">Visible Record Status</span>
+                      <strong id="portalRecordStatus">Pending connection</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="state-card info visible" id="portalStateCard">
+                  <h3>Portal state ready</h3>
+                  <p>
+                    This dashboard now reads the current local portal session and can auto-create the missing portal-facing record shape in browser storage. In the Firestore-backed build, the same logic will ensure that missing user portal documents are created automatically instead of causing failures.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="assets/js/portal.js"></script>
+  </body>
+</html>
