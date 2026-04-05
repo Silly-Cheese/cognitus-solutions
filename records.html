@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Search, create, and manage Cognitus Solutions records through the internal records workspace."
+    />
+    <title>Records | Cognitus Solutions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <style>
+      .records-layout {
+        display: grid;
+        grid-template-columns: 0.95fr 1.35fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+
+      .records-sidebar,
+      .records-main {
+        padding: 1.5rem;
+      }
+
+      .sidebar-stack,
+      .main-stack,
+      .search-grid,
+      .quick-grid,
+      .results-stack {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .search-grid,
+      .quick-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .panel-card,
+      .result-card,
+      .state-card {
+        padding: 1.1rem 1.15rem;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(242,247,255,0.92));
+        border: 1px solid rgba(112, 153, 216, 0.18);
+      }
+
+      .panel-card h3,
+      .result-card h3,
+      .state-card h3 {
+        margin: 0 0 0.45rem;
+        font-size: 1rem;
+      }
+
+      .panel-card p,
+      .result-card p,
+      .state-card p,
+      .helper-text {
+        margin: 0;
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
+
+      .section-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(40, 103, 200, 0.10);
+        color: var(--primary-dark);
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.8rem;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .form-field {
+        display: grid;
+        gap: 0.45rem;
+      }
+
+      .form-field label {
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+
+      .form-field input,
+      .form-field select,
+      .form-field textarea {
+        width: 100%;
+        border: 1px solid rgba(114, 153, 214, 0.26);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.92);
+        padding: 0.95rem 1rem;
+        font: inherit;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .form-field input:focus,
+      .form-field select:focus,
+      .form-field textarea:focus {
+        border-color: rgba(40, 103, 200, 0.56);
+        box-shadow: 0 0 0 4px rgba(40, 103, 200, 0.10);
+      }
+
+      .form-field textarea {
+        min-height: 130px;
+        resize: vertical;
+      }
+
+      .result-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 0.85rem;
+      }
+
+      .result-meta-item {
+        padding: 0.78rem 0.9rem;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.75);
+        border: 1px solid rgba(112, 153, 216, 0.16);
+      }
+
+      .mini-label {
+        display: block;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+      }
+
+      .result-actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+      }
+
+      .state-card {
+        display: none;
+      }
+
+      .state-card.visible {
+        display: block;
+      }
+
+      .state-card.success {
+        border-color: rgba(31, 143, 97, 0.18);
+        background: rgba(31, 143, 97, 0.08);
+      }
+
+      .state-card.info {
+        border-color: rgba(40, 103, 200, 0.18);
+        background: rgba(40, 103, 200, 0.08);
+      }
+
+      @media (max-width: 980px) {
+        .records-layout,
+        .search-grid,
+        .quick-grid,
+        .result-meta {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body data-page="records-workspace">
+    <div class="site-shell">
+      <header class="topbar">
+        <div class="container topbar-inner">
+          <a href="index.html" class="brand" aria-label="Cognitus Solutions home">
+            <div class="brand-mark">
+              <img src="assets/logo.png" alt="Cognitus Solutions logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>CS</span>';" />
+            </div>
+            <div class="brand-copy">
+              <span class="brand-title">Cognitus Solutions</span>
+              <span class="brand-subtitle">Professional Operations Platform</span>
+            </div>
+          </a>
+
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="careers.html" class="nav-link">Careers</a>
+            <a href="dashboard.html" class="nav-link active">Dashboard</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section class="page-hero compact-hero">
+          <div class="container page-hero-content">
+            <span class="eyebrow">Records Workspace</span>
+            <h1>Search and create records</h1>
+            <p>
+              This internal workspace allows staff to locate records by user ID or username, create missing records automatically, and move into the full record view.
+            </p>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="container records-layout">
+            <aside class="card records-sidebar">
+              <div class="sidebar-stack">
+                <div class="panel-card">
+                  <div class="section-pill">Search Records</div>
+                  <form class="form-grid" id="recordSearchForm">
+                    <div class="form-field">
+                      <label for="recordSearchQuery">Search Query</label>
+                      <input id="recordSearchQuery" name="recordSearchQuery" type="text" maxlength="80" placeholder="Search by user ID, username, or display name" required />
+                    </div>
+                    <button class="button button-primary" type="submit">Search Records</button>
+                  </form>
+                </div>
+
+                <div class="panel-card">
+                  <div class="section-pill">Create Record</div>
+                  <form class="form-grid" id="recordCreateForm">
+                    <div class="form-field">
+                      <label for="createRecordUserId">Discord User ID</label>
+                      <input id="createRecordUserId" name="createRecordUserId" type="text" maxlength="80" placeholder="Enter a Discord user ID" required />
+                    </div>
+                    <div class="form-field">
+                      <label for="createRecordUsername">Username</label>
+                      <input id="createRecordUsername" name="createRecordUsername" type="text" maxlength="80" placeholder="Enter a username" required />
+                    </div>
+                    <div class="form-field">
+                      <label for="createRecordDisplayName">Display Name</label>
+                      <input id="createRecordDisplayName" name="createRecordDisplayName" type="text" maxlength="80" placeholder="Enter a display name" />
+                    </div>
+                    <button class="button button-primary" type="submit">Create or Ensure Record</button>
+                  </form>
+                </div>
+              </div>
+            </aside>
+
+            <section class="card records-main">
+              <div class="main-stack">
+                <div class="quick-grid">
+                  <article class="panel-card">
+                    <h3>Automatic creation</h3>
+                    <p>
+                      If a searched record does not exist in the shared data layer yet, the full record workflow can create it instead of failing.
+                    </p>
+                  </article>
+                  <article class="panel-card">
+                    <h3>Next workflow step</h3>
+                    <p>
+                      Once a record is found or created, staff can move into the detailed record view for notes, history, and updates.
+                    </p>
+                  </article>
+                </div>
+
+                <div class="state-card info visible" id="recordsStateCard">
+                  <h3>Records workspace ready</h3>
+                  <p>
+                    The records workspace is connected to the self-healing Cognitus data layer and prepared for Firestore-backed record loading and creation.
+                  </p>
+                </div>
+
+                <div class="results-stack" id="recordResultsContainer">
+                  <article class="result-card">
+                    <h3>No search results yet</h3>
+                    <p>
+                      Search for a record or create one using the tools on the left. Matching records will appear here.
+                    </p>
+                  </article>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/firestore-helpers.js"></script>
+    <script src="assets/js/records.js"></script>
+  </body>
+</html>
