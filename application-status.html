@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Check the status of your Cognitus Solutions application through the public portal."
+    />
+    <title>Application Status | Cognitus Solutions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <style>
+      .status-layout {
+        display: grid;
+        grid-template-columns: 0.85fr 1.2fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+
+      .status-panel,
+      .lookup-panel {
+        padding: 1.5rem;
+      }
+
+      .lookup-form {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .form-field {
+        display: grid;
+        gap: 0.45rem;
+      }
+
+      .form-field label {
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+
+      .form-field input {
+        width: 100%;
+        border: 1px solid rgba(114, 153, 214, 0.26);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.92);
+        padding: 0.95rem 1rem;
+        font: inherit;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .form-field input:focus {
+        border-color: rgba(40, 103, 200, 0.56);
+        box-shadow: 0 0 0 4px rgba(40, 103, 200, 0.10);
+      }
+
+      .info-block,
+      .summary-card,
+      .result-card {
+        padding: 1rem 1.1rem;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(242,247,255,0.92));
+        border: 1px solid rgba(112, 153, 216, 0.18);
+      }
+
+      .info-list {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .info-block h3,
+      .summary-card h3,
+      .result-card h3 {
+        margin: 0 0 0.45rem;
+        font-size: 1rem;
+      }
+
+      .info-block p,
+      .summary-card p,
+      .result-card p,
+      .helper-text {
+        margin: 0;
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
+
+      .result-stack {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .result-card {
+        display: none;
+      }
+
+      .result-card.visible {
+        display: block;
+      }
+
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.48rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.75rem;
+      }
+
+      .status-submitted,
+      .status-pending,
+      .status-under_review {
+        background: rgba(40, 103, 200, 0.10);
+        color: var(--primary-dark);
+      }
+
+      .status-approved {
+        background: rgba(31, 143, 97, 0.10);
+        color: #176c4c;
+      }
+
+      .status-denied {
+        background: rgba(212, 74, 74, 0.10);
+        color: #a33b3b;
+      }
+
+      .meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+        margin-top: 1rem;
+      }
+
+      .meta-item {
+        padding: 0.9rem 1rem;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.76);
+        border: 1px solid rgba(112, 153, 216, 0.16);
+      }
+
+      .meta-label {
+        display: block;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+      }
+
+      @media (max-width: 980px) {
+        .status-layout,
+        .meta-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body data-page="application-status">
+    <div class="site-shell">
+      <header class="topbar">
+        <div class="container topbar-inner">
+          <a href="index.html" class="brand" aria-label="Cognitus Solutions home">
+            <div class="brand-mark">
+              <img src="assets/logo.png" alt="Cognitus Solutions logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>CS</span>';" />
+            </div>
+            <div class="brand-copy">
+              <span class="brand-title">Cognitus Solutions</span>
+              <span class="brand-subtitle">Professional Operations Platform</span>
+            </div>
+          </a>
+
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="careers.html" class="nav-link">Careers</a>
+            <a href="portal-login.html" class="nav-link active">Portal Login</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section class="page-hero compact-hero">
+          <div class="container page-hero-content">
+            <span class="eyebrow">Application Tracking</span>
+            <h1>Check your application status</h1>
+            <p>
+              Applicants can use this page to view the latest known status of their Cognitus Solutions application using their Discord username.
+            </p>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="container status-layout">
+            <aside class="card status-panel">
+              <div class="info-list">
+                <div class="info-block">
+                  <h3>Status workflow</h3>
+                  <p>
+                    Applications are intended to move through a structured flow such as submitted, under review, approved, or denied as the full platform expands.
+                  </p>
+                </div>
+
+                <div class="info-block">
+                  <h3>Public visibility</h3>
+                  <p>
+                    Public applicants should only be able to view their own application information and not the internal review data of other users.
+                  </p>
+                </div>
+
+                <div class="info-block">
+                  <h3>Connected future flow</h3>
+                  <p>
+                    In the Firestore-connected version, this page will read the latest record directly from the applications collection and respect protected access rules.
+                  </p>
+                </div>
+              </div>
+            </aside>
+
+            <section class="card lookup-panel">
+              <form class="lookup-form" id="applicationStatusForm">
+                <div class="form-field">
+                  <label for="statusDiscordUsername">Discord Username</label>
+                  <input id="statusDiscordUsername" name="statusDiscordUsername" type="text" maxlength="60" placeholder="Enter the Discord username used on your application" required />
+                </div>
+
+                <p class="helper-text">
+                  This current build checks the locally saved application store used by the front-end system and is already structured for a future Firestore-backed status lookup.
+                </p>
+
+                <button class="button button-primary" type="submit">Check Status</button>
+              </form>
+
+              <div class="result-stack" style="margin-top: 1.25rem;">
+                <div class="summary-card" id="statusSummaryCard">
+                  <h3>Ready for status lookup</h3>
+                  <p>
+                    Enter the Discord username attached to your application to view the latest saved status.
+                  </p>
+                </div>
+
+                <div class="result-card" id="applicationStatusResult"></div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="assets/js/portal.js"></script>
+  </body>
+</html>
