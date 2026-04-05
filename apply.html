@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Submit a professional application to Cognitus Solutions for Administration, Customer Support, or Public Relations."
+    />
+    <title>Apply | Cognitus Solutions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <style>
+      .form-shell {
+        display: grid;
+        grid-template-columns: 0.95fr 1.2fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+
+      .info-panel,
+      .form-panel {
+        padding: 1.5rem;
+      }
+
+      .info-stack {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .info-block {
+        padding: 1rem 1.1rem;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(242,247,255,0.92));
+        border: 1px solid rgba(112, 153, 216, 0.18);
+      }
+
+      .info-block h3 {
+        margin: 0 0 0.45rem;
+        font-size: 1rem;
+      }
+
+      .info-block p,
+      .helper-text,
+      .field-hint {
+        margin: 0;
+        color: var(--text-secondary);
+        line-height: 1.65;
+      }
+
+      .application-form {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .form-field {
+        display: grid;
+        gap: 0.45rem;
+      }
+
+      .form-field label {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+
+      .form-field input,
+      .form-field select,
+      .form-field textarea {
+        width: 100%;
+        border: 1px solid rgba(114, 153, 214, 0.26);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.92);
+        padding: 0.95rem 1rem;
+        font: inherit;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .form-field input:focus,
+      .form-field select:focus,
+      .form-field textarea:focus {
+        border-color: rgba(40, 103, 200, 0.56);
+        box-shadow: 0 0 0 4px rgba(40, 103, 200, 0.10);
+      }
+
+      .form-field textarea {
+        min-height: 150px;
+        resize: vertical;
+      }
+
+      .full-width {
+        grid-column: 1 / -1;
+      }
+
+      .question-bank {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .submission-note {
+        padding: 1rem 1.1rem;
+        border-radius: 18px;
+        background: rgba(40, 103, 200, 0.08);
+        border: 1px solid rgba(40, 103, 200, 0.15);
+        color: var(--primary-dark);
+        line-height: 1.7;
+      }
+
+      .submit-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .status-banner {
+        display: none;
+        margin-top: 1rem;
+        padding: 1rem 1.1rem;
+        border-radius: 18px;
+        border: 1px solid rgba(31, 143, 97, 0.18);
+        background: rgba(31, 143, 97, 0.08);
+        color: #156447;
+        line-height: 1.65;
+      }
+
+      @media (max-width: 980px) {
+        .form-shell,
+        .field-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body data-page="apply">
+    <div class="site-shell">
+      <header class="topbar">
+        <div class="container topbar-inner">
+          <a href="index.html" class="brand" aria-label="Cognitus Solutions home">
+            <div class="brand-mark">
+              <img src="assets/logo.png" alt="Cognitus Solutions logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>CS</span>';" />
+            </div>
+            <div class="brand-copy">
+              <span class="brand-title">Cognitus Solutions</span>
+              <span class="brand-subtitle">Professional Operations Platform</span>
+            </div>
+          </a>
+
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="careers.html" class="nav-link active">Careers</a>
+            <a href="portal-login.html" class="nav-link">Portal Login</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section class="page-hero compact-hero">
+          <div class="container page-hero-content">
+            <span class="eyebrow" id="departmentPill">Application</span>
+            <h1 id="applicationHeading">Apply to Cognitus Solutions</h1>
+            <p id="applicationIntro">
+              Complete the application below with clear, thoughtful, and professional responses.
+            </p>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="container form-shell">
+            <aside class="card info-panel">
+              <div class="info-stack">
+                <div class="info-block">
+                  <h3 id="departmentTitle">Department Focus</h3>
+                  <p id="departmentDescription">
+                    This application form will adapt based on the department selected from the careers page.
+                  </p>
+                </div>
+
+                <div class="info-block">
+                  <h3>Expectations</h3>
+                  <p>
+                    Applicants should respond professionally, provide honest information, and ensure that all answers are detailed enough for a complete review.
+                  </p>
+                </div>
+
+                <div class="info-block">
+                  <h3>Review Process</h3>
+                  <p>
+                    Once submitted, applications are reviewed internally. Applicants may later receive updates through the public portal as the full system comes online.
+                  </p>
+                </div>
+              </div>
+            </aside>
+
+            <section class="card form-panel">
+              <form class="application-form" id="applicationForm">
+                <div class="field-grid">
+                  <div class="form-field">
+                    <label for="department">Department</label>
+                    <select id="department" name="department" required>
+                      <option value="administration">Administration</option>
+                      <option value="customer-support">Customer Support</option>
+                      <option value="public-relations">Public Relations</option>
+                    </select>
+                    <p class="field-hint">The selected department changes the custom question section below.</p>
+                  </div>
+
+                  <div class="form-field">
+                    <label for="fullNameOrUsername">Name or Username</label>
+                    <input id="fullNameOrUsername" name="fullNameOrUsername" type="text" maxlength="60" placeholder="Enter your preferred display name" required />
+                  </div>
+
+                  <div class="form-field">
+                    <label for="discordUsername">Discord Username</label>
+                    <input id="discordUsername" name="discordUsername" type="text" maxlength="60" placeholder="username or username#0000" required />
+                  </div>
+
+                  <div class="form-field">
+                    <label for="timezone">Timezone</label>
+                    <input id="timezone" name="timezone" type="text" maxlength="40" placeholder="Example: CST / America-Chicago" required />
+                  </div>
+
+                  <div class="form-field full-width">
+                    <label for="email">Email (optional)</label>
+                    <input id="email" name="email" type="email" maxlength="120" placeholder="Enter an email if you want to provide one" />
+                  </div>
+
+                  <div class="form-field full-width">
+                    <label for="experience">Relevant Experience</label>
+                    <textarea id="experience" name="experience" placeholder="Describe your relevant experience, roles, or qualifications." required></textarea>
+                  </div>
+
+                  <div class="form-field full-width">
+                    <label for="skills">Skills and Strengths</label>
+                    <textarea id="skills" name="skills" placeholder="Describe the strengths and skills you would bring to Cognitus Solutions." required></textarea>
+                  </div>
+
+                  <div class="form-field full-width">
+                    <label for="motivation">Why do you want to join?</label>
+                    <textarea id="motivation" name="motivation" placeholder="Explain why you want to join Cognitus Solutions and why this department fits you." required></textarea>
+                  </div>
+
+                  <div class="form-field full-width">
+                    <label for="availability">Availability</label>
+                    <textarea id="availability" name="availability" placeholder="Explain your weekly availability and anything staff should know about your schedule." required></textarea>
+                  </div>
+
+                  <div class="form-field full-width">
+                    <label for="scenarioResponse">Scenario Response</label>
+                    <textarea id="scenarioResponse" name="scenarioResponse" placeholder="Provide a professional response to a realistic work situation or challenge." required></textarea>
+                  </div>
+                </div>
+
+                <div class="question-bank" id="departmentQuestions"></div>
+
+                <div class="submission-note">
+                  By submitting this application, you confirm that your answers are truthful and professionally written to the best of your ability.
+                </div>
+
+                <div class="submit-row">
+                  <p class="helper-text">This front-end is prepared for a Firestore-backed application flow and already captures structured department-specific answers.</p>
+                  <button class="button button-primary" type="submit">Submit Application</button>
+                </div>
+              </form>
+
+              <div class="status-banner" id="applicationStatusBanner"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="assets/js/site.js"></script>
+  </body>
+</html>
