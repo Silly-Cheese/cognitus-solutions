@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="View a complete Cognitus Solutions application and process internal review actions."
+    />
+    <title>Application View | Cognitus Solutions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <style>
+      .application-view-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+
+      .application-panel,
+      .review-panel {
+        padding: 1.5rem;
+      }
+
+      .panel-stack,
+      .details-grid,
+      .review-form {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .info-card,
+      .answer-card,
+      .state-card {
+        padding: 1.1rem 1.15rem;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(242,247,255,0.92));
+        border: 1px solid rgba(112, 153, 216, 0.18);
+      }
+
+      .info-card h3,
+      .answer-card h3,
+      .state-card h3 {
+        margin: 0 0 0.45rem;
+        font-size: 1rem;
+      }
+
+      .info-card p,
+      .answer-card p,
+      .state-card p,
+      .helper-text {
+        margin: 0;
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
+
+      .identity-row {
+        display: flex;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.8rem;
+      }
+
+      .identity-pill,
+      .status-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .identity-pill {
+        background: rgba(255, 255, 255, 0.8);
+        color: var(--text-secondary);
+        border: 1px solid rgba(112, 153, 216, 0.18);
+      }
+
+      .status-chip {
+        background: rgba(40, 103, 200, 0.10);
+        color: var(--primary-dark);
+      }
+
+      .status-chip.approved {
+        background: rgba(31, 143, 97, 0.10);
+        color: #176c4c;
+      }
+
+      .status-chip.denied {
+        background: rgba(212, 74, 74, 0.10);
+        color: #a33b3b;
+      }
+
+      .details-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .detail-item {
+        padding: 0.85rem 0.95rem;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.75);
+        border: 1px solid rgba(112, 153, 216, 0.16);
+      }
+
+      .detail-label {
+        display: block;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+      }
+
+      .review-form {
+        gap: 1rem;
+      }
+
+      .form-field {
+        display: grid;
+        gap: 0.45rem;
+      }
+
+      .form-field label {
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+
+      .form-field select,
+      .form-field textarea {
+        width: 100%;
+        border: 1px solid rgba(114, 153, 214, 0.26);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.92);
+        padding: 0.95rem 1rem;
+        font: inherit;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .form-field select:focus,
+      .form-field textarea:focus {
+        border-color: rgba(40, 103, 200, 0.56);
+        box-shadow: 0 0 0 4px rgba(40, 103, 200, 0.10);
+      }
+
+      .form-field textarea {
+        min-height: 150px;
+        resize: vertical;
+      }
+
+      .review-actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+      }
+
+      .state-card {
+        display: none;
+      }
+
+      .state-card.visible {
+        display: block;
+      }
+
+      .state-card.success {
+        border-color: rgba(31, 143, 97, 0.18);
+        background: rgba(31, 143, 97, 0.08);
+      }
+
+      .state-card.info {
+        border-color: rgba(40, 103, 200, 0.18);
+        background: rgba(40, 103, 200, 0.08);
+      }
+
+      @media (max-width: 980px) {
+        .application-view-layout,
+        .details-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body data-page="application-view-page">
+    <div class="site-shell">
+      <header class="topbar">
+        <div class="container topbar-inner">
+          <a href="index.html" class="brand" aria-label="Cognitus Solutions home">
+            <div class="brand-mark">
+              <img src="assets/logo.png" alt="Cognitus Solutions logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>CS</span>';" />
+            </div>
+            <div class="brand-copy">
+              <span class="brand-title">Cognitus Solutions</span>
+              <span class="brand-subtitle">Professional Operations Platform</span>
+            </div>
+          </a>
+
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="careers.html" class="nav-link">Careers</a>
+            <a href="applications.html" class="nav-link active">Applications</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section class="page-hero compact-hero">
+          <div class="container page-hero-content">
+            <span class="eyebrow">Detailed Application View</span>
+            <h1>Application review</h1>
+            <p>
+              Review an individual application, inspect its details, and process an internal decision with structured review notes.
+            </p>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="container application-view-layout">
+            <section class="card application-panel">
+              <div class="panel-stack">
+                <div class="info-card">
+                  <div class="identity-row" id="applicationIdentityRow">
+                    <span class="identity-pill">Application</span>
+                    <span class="status-chip" id="applicationViewStatusChip">Submitted</span>
+                  </div>
+                  <h3 id="applicationViewTitle">No application loaded</h3>
+                  <p id="applicationViewDescription">
+                    Open this page through the applications workspace to load a specific application by its internal identifier.
+                  </p>
+                </div>
+
+                <div class="state-card info visible" id="applicationViewStateCard">
+                  <h3>Application view ready</h3>
+                  <p>
+                    The application view is prepared to load a complete application from the shared data layer and preserve internal review notes and status changes.
+                  </p>
+                </div>
+
+                <div class="info-card">
+                  <h3>Application details</h3>
+                  <div class="details-grid">
+                    <div class="detail-item">
+                      <span class="detail-label">Department</span>
+                      <strong id="applicationDetailDepartment">Not loaded</strong>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Discord Username</span>
+                      <strong id="applicationDetailDiscord">Not loaded</strong>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Timezone</span>
+                      <strong id="applicationDetailTimezone">Not loaded</strong>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Email</span>
+                      <strong id="applicationDetailEmail">Not loaded</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="answer-card">
+                  <h3>Experience</h3>
+                  <p id="applicationDetailExperience">No experience response loaded.</p>
+                </div>
+
+                <div class="answer-card">
+                  <h3>Skills</h3>
+                  <p id="applicationDetailSkills">No skills response loaded.</p>
+                </div>
+
+                <div class="answer-card">
+                  <h3>Motivation</h3>
+                  <p id="applicationDetailMotivation">No motivation response loaded.</p>
+                </div>
+
+                <div class="answer-card">
+                  <h3>Availability</h3>
+                  <p id="applicationDetailAvailability">No availability response loaded.</p>
+                </div>
+
+                <div class="answer-card">
+                  <h3>Scenario Response</h3>
+                  <p id="applicationDetailScenario">No scenario response loaded.</p>
+                </div>
+
+                <div class="answer-card">
+                  <h3>Department Answers</h3>
+                  <div id="applicationDetailAnswers">
+                    <p>No department-specific answers were found for this application.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card review-panel">
+              <div class="panel-stack">
+                <div class="info-card">
+                  <h3>Internal review</h3>
+                  <form class="review-form" id="applicationReviewForm">
+                    <div class="form-field">
+                      <label for="applicationDecision">Decision</label>
+                      <select id="applicationDecision" name="applicationDecision" required>
+                        <option value="under_review">Under Review</option>
+                        <option value="approved">Approve</option>
+                        <option value="denied">Deny</option>
+                      </select>
+                    </div>
+
+                    <div class="form-field">
+                      <label for="applicationReviewNotes">Review Notes</label>
+                      <textarea id="applicationReviewNotes" name="applicationReviewNotes" placeholder="Write structured internal review notes for this application." required></textarea>
+                    </div>
+
+                    <div class="review-actions">
+                      <button class="button button-primary" type="submit">Save Decision</button>
+                      <a class="button button-secondary" href="applications.html">Back to Applications</a>
+                    </div>
+                  </form>
+                </div>
+
+                <div class="answer-card">
+                  <h3>Latest internal review</h3>
+                  <p id="applicationLatestReviewText">
+                    No internal review has been saved for this application yet.
+                  </p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/firestore-helpers.js"></script>
+    <script src="assets/js/applications.js"></script>
+  </body>
+</html>
