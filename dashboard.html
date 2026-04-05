@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Access the internal Cognitus Solutions dashboard for records, notes, and application operations."
+    />
+    <title>Staff Dashboard | Cognitus Solutions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <style>
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 0.9fr 1.35fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+
+      .dashboard-sidebar,
+      .dashboard-main {
+        padding: 1.5rem;
+      }
+
+      .dashboard-stack,
+      .sidebar-stack,
+      .metrics-grid,
+      .action-grid,
+      .record-list,
+      .application-list {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .metrics-grid,
+      .action-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .profile-card,
+      .metric-card,
+      .action-card,
+      .record-card,
+      .app-card,
+      .state-card,
+      .content-card {
+        padding: 1.1rem 1.15rem;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(242,247,255,0.92));
+        border: 1px solid rgba(112, 153, 216, 0.18);
+      }
+
+      .profile-card h3,
+      .metric-card h3,
+      .action-card h3,
+      .record-card h3,
+      .app-card h3,
+      .state-card h3,
+      .content-card h3 {
+        margin: 0 0 0.45rem;
+        font-size: 1rem;
+      }
+
+      .profile-card p,
+      .metric-card p,
+      .action-card p,
+      .record-card p,
+      .app-card p,
+      .state-card p,
+      .content-card p,
+      .helper-text {
+        margin: 0;
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
+
+      .staff-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(40, 103, 200, 0.10);
+        color: var(--primary-dark);
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.8rem;
+      }
+
+      .metric-value {
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: var(--primary-dark);
+        display: block;
+        margin-bottom: 0.35rem;
+      }
+
+      .action-card .button {
+        margin-top: 0.9rem;
+      }
+
+      .state-card.success {
+        border-color: rgba(31, 143, 97, 0.18);
+        background: rgba(31, 143, 97, 0.08);
+      }
+
+      .list-label {
+        display: block;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+      }
+
+      .record-meta,
+      .app-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 0.8rem;
+      }
+
+      .record-meta-item,
+      .app-meta-item {
+        padding: 0.75rem 0.85rem;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.75);
+        border: 1px solid rgba(112, 153, 216, 0.16);
+      }
+
+      .dashboard-actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+      }
+
+      @media (max-width: 980px) {
+        .dashboard-grid,
+        .metrics-grid,
+        .action-grid,
+        .record-meta,
+        .app-meta {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body data-page="staff-dashboard">
+    <div class="site-shell">
+      <header class="topbar">
+        <div class="container topbar-inner">
+          <a href="index.html" class="brand" aria-label="Cognitus Solutions home">
+            <div class="brand-mark">
+              <img src="assets/logo.png" alt="Cognitus Solutions logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>CS</span>';" />
+            </div>
+            <div class="brand-copy">
+              <span class="brand-title">Cognitus Solutions</span>
+              <span class="brand-subtitle">Professional Operations Platform</span>
+            </div>
+          </a>
+
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="careers.html" class="nav-link">Careers</a>
+            <a href="portal-login.html" class="nav-link">Portal Login</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section class="page-hero compact-hero">
+          <div class="container page-hero-content">
+            <span class="eyebrow">Internal Operations</span>
+            <h1>Staff dashboard</h1>
+            <p>
+              This dashboard is the operational center for Cognitus staff workflows, records access, notes handling, and application review oversight.
+            </p>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="container dashboard-grid">
+            <aside class="card dashboard-sidebar">
+              <div class="sidebar-stack">
+                <div class="profile-card">
+                  <div class="staff-pill">Staff Session</div>
+                  <h3>Structured internal access</h3>
+                  <p>
+                    The dashboard is designed for role-aware operational use, with self-healing document creation so missing data structures do not block work.
+                  </p>
+                </div>
+
+                <div class="profile-card">
+                  <h3>Data layer state</h3>
+                  <p id="dashboardDataStateText">
+                    Loading the Cognitus data layer and preparing records, staff documents, applications, and settings.
+                  </p>
+                </div>
+
+                <div class="dashboard-actions">
+                  <button class="button button-primary" type="button" id="seedDashboardDataButton">Seed Demo Data</button>
+                  <button class="button button-secondary" type="button" id="refreshDashboardButton">Refresh Dashboard</button>
+                </div>
+              </div>
+            </aside>
+
+            <section class="card dashboard-main">
+              <div class="dashboard-stack">
+                <div class="metrics-grid">
+                  <article class="metric-card">
+                    <span class="metric-value" id="dashboardRecordCount">0</span>
+                    <h3>Records</h3>
+                    <p>Total records currently available to the internal dashboard layer.</p>
+                  </article>
+
+                  <article class="metric-card">
+                    <span class="metric-value" id="dashboardStaffCount">0</span>
+                    <h3>Staff Profiles</h3>
+                    <p>Tracked staff entries prepared for internal permissions and workflow handling.</p>
+                  </article>
+
+                  <article class="metric-card">
+                    <span class="metric-value" id="dashboardApplicationCount">0</span>
+                    <h3>Applications</h3>
+                    <p>Applications currently available in the working data layer.</p>
+                  </article>
+
+                  <article class="metric-card">
+                    <span class="metric-value" id="dashboardNoteCount">0</span>
+                    <h3>Total Notes</h3>
+                    <p>Combined notes across the records currently available to the dashboard.</p>
+                  </article>
+                </div>
+
+                <div class="action-grid">
+                  <article class="action-card">
+                    <h3>Records system</h3>
+                    <p>The current dashboard foundation already supports automatic record creation when data is missing.</p>
+                    <a href="portal.html" class="button button-secondary">Open Public Portal</a>
+                  </article>
+
+                  <article class="action-card">
+                    <h3>Application visibility</h3>
+                    <p>Applications can already be surfaced to the public status flow and are ready for deeper internal review pages next.</p>
+                    <a href="application-status.html" class="button button-secondary">Open Status Page</a>
+                  </article>
+                </div>
+
+                <div class="state-card success">
+                  <h3>Self-healing data enabled</h3>
+                  <p>
+                    The dashboard is wired into a self-healing data layer. If required settings, staff entries, or records are missing, they can be created automatically instead of causing failures.
+                  </p>
+                </div>
+
+                <div class="content-card">
+                  <h3>Recent records</h3>
+                  <p>These records are loaded through the shared Cognitus data layer and sorted by the latest update time.</p>
+                  <div class="record-list" id="dashboardRecordList"></div>
+                </div>
+
+                <div class="content-card">
+                  <h3>Applications snapshot</h3>
+                  <p>This shows the latest application entries available to the current front-end data store.</p>
+                  <div class="application-list" id="dashboardApplicationList"></div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/firestore-helpers.js"></script>
+    <script>
+      (() => {
+        const Data = window.CognitusData;
+
+        const recordCount = document.getElementById('dashboardRecordCount');
+        const staffCount = document.getElementById('dashboardStaffCount');
+        const applicationCount = document.getElementById('dashboardApplicationCount');
+        const noteCount = document.getElementById('dashboardNoteCount');
+        const recordList = document.getElementById('dashboardRecordList');
+        const applicationList = document.getElementById('dashboardApplicationList');
+        const dataStateText = document.getElementById('dashboardDataStateText');
+        const seedButton = document.getElementById('seedDashboardDataButton');
+        const refreshButton = document.getElementById('refreshDashboardButton');
+
+        const renderRecords = (records) => {
+          recordList.innerHTML = '';
+
+          if (!records.length) {
+            recordList.innerHTML = `
+              <article class="record-card">
+                <h3>No records yet</h3>
+                <p>Once records are created or auto-generated by the self-healing layer, they will appear here.</p>
+              </article>
+            `;
+            return;
+          }
+
+          records.slice(0, 6).forEach((record) => {
+            const article = document.createElement('article');
+            article.className = 'record-card';
+            article.innerHTML = `
+              <span class="list-label">${record.username || 'Unknown Record'}</span>
+              <h3>${record.displayName || record.username || 'Unknown User'}</h3>
+              <p>This record is currently available to the dashboard and can be expanded into full record management pages next.</p>
+              <div class="record-meta">
+                <div class="record-meta-item">
+                  <span class="list-label">User ID</span>
+                  <strong>${record.discordUserId || 'Not set'}</strong>
+                </div>
+                <div class="record-meta-item">
+                  <span class="list-label">Status</span>
+                  <strong>${record.status || 'Active'}</strong>
+                </div>
+                <div class="record-meta-item">
+                  <span class="list-label">Risk Level</span>
+                  <strong>${record.riskLevel || 'Low'}</strong>
+                </div>
+                <div class="record-meta-item">
+                  <span class="list-label">Notes</span>
+                  <strong>${Array.isArray(record.notes) ? record.notes.length : record.notesCount || 0}</strong>
+                </div>
+              </div>
+            `;
+            recordList.appendChild(article);
+          });
+        };
+
+        const renderApplications = (applications) => {
+          applicationList.innerHTML = '';
+
+          if (!applications.length) {
+            applicationList.innerHTML = `
+              <article class="app-card">
+                <h3>No applications yet</h3>
+                <p>Applications submitted through the public application page will appear here once captured by the working data layer.</p>
+              </article>
+            `;
+            return;
+          }
+
+          applications.slice().reverse().slice(0, 6).forEach((application) => {
+            const article = document.createElement('article');
+            article.className = 'app-card';
+            article.innerHTML = `
+              <span class="list-label">${application.department || 'Department not set'}</span>
+              <h3>${application.fullNameOrUsername || application.username || 'Unnamed Applicant'}</h3>
+              <p>${application.motivation || 'No motivation provided.'}</p>
+              <div class="app-meta">
+                <div class="app-meta-item">
+                  <span class="list-label">Discord Username</span>
+                  <strong>${application.discordUsername || 'Not provided'}</strong>
+                </div>
+                <div class="app-meta-item">
+                  <span class="list-label">Status</span>
+                  <strong>${application.status || 'submitted'}</strong>
+                </div>
+              </div>
+            `;
+            applicationList.appendChild(article);
+          });
+        };
+
+        const refreshDashboard = () => {
+          Data.ensureSettings();
+
+          const records = Data.getAllRecords();
+          const staff = Data.getAllStaff();
+          const applications = Data.getApplications();
+          const notes = records.reduce((count, record) => count + (Array.isArray(record.notes) ? record.notes.length : 0), 0);
+
+          recordCount.textContent = String(records.length);
+          staffCount.textContent = String(staff.length);
+          applicationCount.textContent = String(applications.length);
+          noteCount.textContent = String(notes);
+
+          dataStateText.textContent = Data.isFirebaseConfigured()
+            ? 'Firebase configuration is present. The dashboard is prepared to transition from local fallback storage into Firestore-backed operations.'
+            : 'Firebase configuration is not active yet, so the dashboard is using the built-in self-healing local data layer as a safe fallback.';
+
+          renderRecords(records);
+          renderApplications(applications);
+        };
+
+        seedButton.addEventListener('click', () => {
+          Data.seedDemoData();
+          refreshDashboard();
+        });
+
+        refreshButton.addEventListener('click', refreshDashboard);
+
+        refreshDashboard();
+      })();
+    </script>
+  </body>
+</html>
