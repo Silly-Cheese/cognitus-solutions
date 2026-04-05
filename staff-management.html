@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Manage Cognitus Solutions staff profiles, roles, and internal permission structures."
+    />
+    <title>Staff Management | Cognitus Solutions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <style>
+      .staff-layout {
+        display: grid;
+        grid-template-columns: 0.95fr 1.35fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+
+      .staff-sidebar,
+      .staff-main {
+        padding: 1.5rem;
+      }
+
+      .sidebar-stack,
+      .main-stack,
+      .form-grid,
+      .staff-list {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .panel-card,
+      .staff-card,
+      .state-card {
+        padding: 1.1rem 1.15rem;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(242,247,255,0.92));
+        border: 1px solid rgba(112, 153, 216, 0.18);
+      }
+
+      .panel-card h3,
+      .staff-card h3,
+      .state-card h3 {
+        margin: 0 0 0.45rem;
+        font-size: 1rem;
+      }
+
+      .panel-card p,
+      .staff-card p,
+      .state-card p,
+      .helper-text {
+        margin: 0;
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
+
+      .section-pill,
+      .role-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .section-pill {
+        background: rgba(40, 103, 200, 0.10);
+        color: var(--primary-dark);
+        margin-bottom: 0.8rem;
+      }
+
+      .role-chip {
+        background: rgba(255, 255, 255, 0.82);
+        color: var(--text-secondary);
+        border: 1px solid rgba(112, 153, 216, 0.18);
+        margin-bottom: 0.8rem;
+      }
+
+      .form-field {
+        display: grid;
+        gap: 0.45rem;
+      }
+
+      .form-field label {
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+
+      .form-field input,
+      .form-field select {
+        width: 100%;
+        border: 1px solid rgba(114, 153, 214, 0.26);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.92);
+        padding: 0.95rem 1rem;
+        font: inherit;
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .form-field input:focus,
+      .form-field select:focus {
+        border-color: rgba(40, 103, 200, 0.56);
+        box-shadow: 0 0 0 4px rgba(40, 103, 200, 0.10);
+      }
+
+      .staff-meta {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 0.85rem;
+      }
+
+      .staff-meta-item {
+        padding: 0.78rem 0.9rem;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.75);
+        border: 1px solid rgba(112, 153, 216, 0.16);
+      }
+
+      .mini-label {
+        display: block;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+      }
+
+      .staff-actions {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+      }
+
+      .state-card {
+        display: none;
+      }
+
+      .state-card.visible {
+        display: block;
+      }
+
+      .state-card.success {
+        border-color: rgba(31, 143, 97, 0.18);
+        background: rgba(31, 143, 97, 0.08);
+      }
+
+      .state-card.info {
+        border-color: rgba(40, 103, 200, 0.18);
+        background: rgba(40, 103, 200, 0.08);
+      }
+
+      @media (max-width: 980px) {
+        .staff-layout,
+        .staff-meta {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body data-page="staff-management">
+    <div class="site-shell">
+      <header class="topbar">
+        <div class="container topbar-inner">
+          <a href="index.html" class="brand" aria-label="Cognitus Solutions home">
+            <div class="brand-mark">
+              <img src="assets/logo.png" alt="Cognitus Solutions logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>CS</span>';" />
+            </div>
+            <div class="brand-copy">
+              <span class="brand-title">Cognitus Solutions</span>
+              <span class="brand-subtitle">Professional Operations Platform</span>
+            </div>
+          </a>
+
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="careers.html" class="nav-link">Careers</a>
+            <a href="dashboard.html" class="nav-link active">Dashboard</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section class="page-hero compact-hero">
+          <div class="container page-hero-content">
+            <span class="eyebrow">Internal Staffing</span>
+            <h1>Staff management</h1>
+            <p>
+              Create, track, and manage staff profiles with structured roles and self-healing staff document support.
+            </p>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="container staff-layout">
+            <aside class="card staff-sidebar">
+              <div class="sidebar-stack">
+                <div class="panel-card">
+                  <div class="section-pill">Add or Ensure Staff</div>
+                  <form class="form-grid" id="staffCreateForm">
+                    <div class="form-field">
+                      <label for="staffCreateUserId">Staff User ID</label>
+                      <input id="staffCreateUserId" name="staffCreateUserId" type="text" maxlength="80" placeholder="Enter a staff user ID" required />
+                    </div>
+                    <div class="form-field">
+                      <label for="staffCreateUsername">Username</label>
+                      <input id="staffCreateUsername" name="staffCreateUsername" type="text" maxlength="80" placeholder="Enter a username" required />
+                    </div>
+                    <div class="form-field">
+                      <label for="staffCreateRole">Role</label>
+                      <select id="staffCreateRole" name="staffCreateRole" required>
+                        <option value="Administrator">Administrator</option>
+                        <option value="Manager">Manager</option>
+                        <option value="Reviewer">Reviewer</option>
+                        <option value="Support">Support</option>
+                        <option value="Public Relations">Public Relations</option>
+                      </select>
+                    </div>
+                    <button class="button button-primary" type="submit">Create or Ensure Staff</button>
+                  </form>
+                </div>
+
+                <div class="state-card info visible" id="staffManagementStateCard">
+                  <h3>Staff management ready</h3>
+                  <p>
+                    The staff management page is connected to the self-healing data layer and can create missing staff profiles instead of breaking the workflow.
+                  </p>
+                </div>
+              </div>
+            </aside>
+
+            <section class="card staff-main">
+              <div class="main-stack">
+                <div class="panel-card">
+                  <h3>Current staff directory</h3>
+                  <p>
+                    This directory reflects the current internal staff store and is prepared for future permission editing and staff-specific controls.
+                  </p>
+                </div>
+
+                <div class="staff-list" id="staffManagementList">
+                  <article class="staff-card">
+                    <h3>No staff profiles yet</h3>
+                    <p>Create or ensure a staff profile using the form on the left.</p>
+                  </article>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/firestore-helpers.js"></script>
+    <script src="assets/js/staff.js"></script>
+  </body>
+</html>
