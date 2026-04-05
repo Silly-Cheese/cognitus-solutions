@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="View a full Cognitus Solutions record with structured details, notes, and history."
+    />
+    <title>Record View | Cognitus Solutions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    <style>
+      .record-layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        align-items: start;
+      }
+
+      .record-panel,
+      .note-panel {
+        padding: 1.5rem;
+      }
+
+      .panel-stack,
+      .details-grid,
+      .notes-stack,
+      .history-stack {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .info-card,
+      .note-card,
+      .history-card,
+      .state-card {
+        padding: 1.1rem 1.15rem;
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(242,247,255,0.92));
+        border: 1px solid rgba(112, 153, 216, 0.18);
+      }
+
+      .info-card h3,
+      .note-card h3,
+      .history-card h3,
+      .state-card h3 {
+        margin: 0 0 0.45rem;
+        font-size: 1rem;
+      }
+
+      .info-card p,
+      .note-card p,
+      .history-card p,
+      .state-card p,
+      .helper-text {
+        margin: 0;
+        color: var(--text-secondary);
+        line-height: 1.7;
+      }
+
+      .identity-pill {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        background: rgba(40, 103, 200, 0.10);
+        color: var(--primary-dark);
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 0.8rem;
+      }
+
+      .details-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .detail-item {
+        padding: 0.85rem 0.95rem;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.75);
+        border: 1px solid rgba(112, 153, 216, 0.16);
+      }
+
+      .detail-label {
+        display: block;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+        font-weight: 700;
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .form-field {
+        display: grid;
+        gap: 0.45rem;
+      }
+
+      .form-field label {
+        font-size: 0.92rem;
+        font-weight: 700;
+      }
+
+      .form-field textarea {
+        width: 100%;
+        min-height: 140px;
+        border: 1px solid rgba(114, 153, 214, 0.26);
+        border-radius: 16px;
+        background: rgba(255,255,255,0.92);
+        padding: 0.95rem 1rem;
+        font: inherit;
+        color: var(--text-primary);
+        outline: none;
+        resize: vertical;
+        transition: border-color 160ms ease, box-shadow 160ms ease;
+      }
+
+      .form-field textarea:focus {
+        border-color: rgba(40, 103, 200, 0.56);
+        box-shadow: 0 0 0 4px rgba(40, 103, 200, 0.10);
+      }
+
+      .note-meta,
+      .history-meta {
+        display: block;
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        margin-bottom: 0.45rem;
+        font-weight: 600;
+      }
+
+      .state-card {
+        display: none;
+      }
+
+      .state-card.visible {
+        display: block;
+      }
+
+      .state-card.success {
+        border-color: rgba(31, 143, 97, 0.18);
+        background: rgba(31, 143, 97, 0.08);
+      }
+
+      .state-card.info {
+        border-color: rgba(40, 103, 200, 0.18);
+        background: rgba(40, 103, 200, 0.08);
+      }
+
+      @media (max-width: 980px) {
+        .record-layout,
+        .details-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body data-page="record-view-page">
+    <div class="site-shell">
+      <header class="topbar">
+        <div class="container topbar-inner">
+          <a href="index.html" class="brand" aria-label="Cognitus Solutions home">
+            <div class="brand-mark">
+              <img src="assets/logo.png" alt="Cognitus Solutions logo" onerror="this.style.display='none'; this.parentElement.innerHTML='<span>CS</span>';" />
+            </div>
+            <div class="brand-copy">
+              <span class="brand-title">Cognitus Solutions</span>
+              <span class="brand-subtitle">Professional Operations Platform</span>
+            </div>
+          </a>
+
+          <nav class="nav" aria-label="Primary navigation">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="careers.html" class="nav-link">Careers</a>
+            <a href="records.html" class="nav-link active">Records</a>
+          </nav>
+        </div>
+      </header>
+
+      <main>
+        <section class="page-hero compact-hero">
+          <div class="container page-hero-content">
+            <span class="eyebrow">Detailed Record View</span>
+            <h1>Record details</h1>
+            <p>
+              Review complete record information, staff notes, and history entries from one centralized record view.
+            </p>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="container record-layout">
+            <section class="card record-panel">
+              <div class="panel-stack">
+                <div class="info-card">
+                  <div class="identity-pill" id="recordIdentityPill">Record</div>
+                  <h3 id="recordViewTitle">No record loaded</h3>
+                  <p id="recordViewDescription">
+                    Open this page through the records workspace to load a specific record by user ID or username.
+                  </p>
+                </div>
+
+                <div class="state-card info visible" id="recordViewStateCard">
+                  <h3>Record view ready</h3>
+                  <p>
+                    The detailed record page is prepared to load a record automatically from the shared data layer and create it if the selected target does not already exist.
+                  </p>
+                </div>
+
+                <div class="info-card">
+                  <h3>Core details</h3>
+                  <div class="details-grid" id="recordDetailsGrid">
+                    <div class="detail-item">
+                      <span class="detail-label">Discord User ID</span>
+                      <strong id="recordDetailUserId">Not loaded</strong>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Username</span>
+                      <strong id="recordDetailUsername">Not loaded</strong>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Display Name</span>
+                      <strong id="recordDetailDisplayName">Not loaded</strong>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Status</span>
+                      <strong id="recordDetailStatus">Not loaded</strong>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Risk Level</span>
+                      <strong id="recordDetailRisk">Not loaded</strong>
+                    </div>
+                    <div class="detail-item">
+                      <span class="detail-label">Notes Count</span>
+                      <strong id="recordDetailNotesCount">0</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="card note-panel">
+              <div class="panel-stack">
+                <div class="info-card">
+                  <h3>Add a note</h3>
+                  <form class="form-grid" id="recordNoteForm">
+                    <div class="form-field">
+                      <label for="recordNoteContent">Note Content</label>
+                      <textarea id="recordNoteContent" name="recordNoteContent" placeholder="Write a structured staff note for this record." required></textarea>
+                    </div>
+                    <button class="button button-primary" type="submit">Add Note</button>
+                  </form>
+                </div>
+
+                <div class="info-card">
+                  <h3>Recent notes</h3>
+                  <div class="notes-stack" id="recordNotesContainer">
+                    <article class="note-card">
+                      <h3>No notes loaded</h3>
+                      <p>Once a record is loaded, its most recent notes will appear here.</p>
+                    </article>
+                  </div>
+                </div>
+
+                <div class="info-card">
+                  <h3>History</h3>
+                  <div class="history-stack" id="recordHistoryContainer">
+                    <article class="history-card">
+                      <h3>No history loaded</h3>
+                      <p>Once a record is loaded, recent history entries will appear here.</p>
+                    </article>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="assets/js/firebase-config.js"></script>
+    <script src="assets/js/firestore-helpers.js"></script>
+    <script src="assets/js/records.js"></script>
+  </body>
+</html>
