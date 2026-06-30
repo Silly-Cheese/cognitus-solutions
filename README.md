@@ -133,6 +133,17 @@ Part 6 adds the authenticated user dashboard:
 
 The dashboard displays account information, quick actions, recent checks, saved candidates, saved organizations, and notifications.
 
+## Search and Check Logging
+
+Part 7 adds the logged check system:
+
+```text
+#/search
+#/history
+```
+
+The search page supports person checks and organization checks. Every check requires a reason before running and creates a Firestore check log.
+
 ## Part Status
 
 - Part 1: Project foundation — complete
@@ -141,7 +152,7 @@ The dashboard displays account information, quick actions, recent checks, saved 
 - Part 4: Firestore models and services — complete foundation
 - Part 5: Public pages — complete foundation
 - Part 6: User dashboard — complete foundation
-- Part 7: Search and check logging
+- Part 7: Search and check logging — complete foundation
 - Part 8: Report generation and downloads
 - Part 9: Claims, appeals, and reviews
 - Part 10: Admin and owner dashboards
