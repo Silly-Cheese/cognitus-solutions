@@ -100,13 +100,28 @@ Collections are created naturally by app writes. The core service modules live i
 src/services
 ```
 
+## Public Pages
+
+Part 5 adds the public-facing portal pages:
+
+```text
+#/ 
+#/features
+#/about
+#/terms
+#/privacy
+#/password-reset
+```
+
+The password reset page now submits admin-reviewed reset requests through Firestore when Firebase is configured.
+
 ## Part Status
 
 - Part 1: Project foundation — complete
 - Part 2: Authentication and Remember Me — complete foundation
 - Part 3: Owner bootstrap and roles — complete foundation
 - Part 4: Firestore models and services — complete foundation
-- Part 5: Public pages
+- Part 5: Public pages — complete foundation
 - Part 6: User dashboard
 - Part 7: Search and check logging
 - Part 8: Report generation and downloads
