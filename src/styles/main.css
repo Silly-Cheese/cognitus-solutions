@@ -97,7 +97,8 @@ button:disabled {
   font-weight: 650;
 }
 
-.topnav a:not(.button):hover {
+.topnav a:not(.button):hover,
+.site-footer a:hover {
   color: var(--text);
 }
 
@@ -130,6 +131,10 @@ button:disabled {
   box-shadow: var(--shadow);
 }
 
+.hero-wide {
+  max-width: 980px;
+}
+
 .hero h1,
 .form-card h1 {
   margin: 0;
@@ -144,7 +149,7 @@ button:disabled {
 
 .hero p {
   margin: 0;
-  max-width: 62ch;
+  max-width: 68ch;
   color: var(--muted);
   font-size: 1.08rem;
   line-height: 1.7;
@@ -195,6 +200,10 @@ button:disabled {
   gap: 1rem;
 }
 
+.feature-grid {
+  margin-top: 1rem;
+}
+
 .card {
   padding: 1.4rem;
   background: var(--surface);
@@ -213,6 +222,39 @@ button:disabled {
 .muted {
   color: var(--muted);
   line-height: 1.65;
+}
+
+.content-panel {
+  display: grid;
+  gap: 1rem;
+  max-width: 980px;
+  margin-top: 1rem;
+  padding: clamp(1.5rem, 5vw, 3rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.content-panel h2 {
+  margin: 0;
+  letter-spacing: -0.04em;
+}
+
+.content-panel p {
+  margin: 0 0 0.8rem;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.legal-copy h2 {
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--border);
+}
+
+.legal-copy h2:first-child {
+  padding-top: 0;
+  border-top: 0;
 }
 
 .form-card {
@@ -262,6 +304,11 @@ textarea {
   color: var(--text);
 }
 
+textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
 input:focus,
 select:focus,
 textarea:focus {
@@ -279,6 +326,21 @@ textarea:focus {
 
 .notice[hidden] {
   display: none;
+}
+
+.site-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 1rem 3rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.site-footer span {
+  color: var(--text);
 }
 
 @media (max-width: 720px) {
