@@ -64,11 +64,33 @@ Remember Me is handled with Firebase Auth persistence:
 - Checked: browser local persistence
 - Unchecked: browser session persistence
 
+## Owner Bootstrap
+
+Owner bootstrap is configured in:
+
+```text
+src/config/bootstrapConfig.js
+```
+
+Before launch, replace:
+
+```text
+PASTE_OWNER_DISCORD_ID_HERE
+```
+
+with the real owner Discord ID. After the matching account logs in, visit:
+
+```text
+#/owner-bootstrap
+```
+
+The app will promote that account to Owner and create a locked bootstrap record in Firestore.
+
 ## Part Status
 
 - Part 1: Project foundation — complete
 - Part 2: Authentication and Remember Me — complete foundation
-- Part 3: Owner bootstrap and roles
+- Part 3: Owner bootstrap and roles — complete foundation
 - Part 4: Firestore models and services
 - Part 5: Public pages
 - Part 6: User dashboard
