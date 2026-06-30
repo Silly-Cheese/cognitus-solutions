@@ -4,6 +4,9 @@ import { setPageTitle } from "./utils/dom.js";
 import { startAccountStore, subscribeAccountStore, getAccountStore } from "./state/accountStore.js";
 import { renderLoginPage, renderRegisterPage } from "./pages/authPages.js";
 import { renderDashboardPage } from "./pages/dashboardPage.js";
+import { renderOwnerBootstrapPage } from "./pages/ownerBootstrapPage.js";
+import { renderAdminPage, renderOwnerPage } from "./pages/adminPage.js";
+import { isAdminOrOwner, isOwner, isReviewerOrHigher } from "./security/permissions.js";
 
 const pageRoot = document.querySelector("#page-root");
 const topnav = document.querySelector(".topnav");
@@ -14,6 +17,9 @@ const pages = {
   "/login": () => renderLoginPage(pageRoot),
   "/register": () => renderRegisterPage(pageRoot),
   "/dashboard": () => renderDashboardPage(pageRoot),
+  "/admin": () => renderAdminPage(pageRoot),
+  "/owner": () => renderOwnerPage(pageRoot),
+  "/owner-bootstrap": () => renderOwnerBootstrapPage(pageRoot),
   "/setup": renderSetupPlaceholder,
   "/password-reset": renderPasswordResetPlaceholder
 };
@@ -33,21 +39,28 @@ function navigate() {
 
 function renderNavigation() {
   const account = getAccountStore();
-  const loggedIn = Boolean(account.record);
+  const user = account.record;
 
-  topnav.innerHTML = loggedIn
-    ? `
-      <a href="#/">Home</a>
-      <a href="#/about">About</a>
-      <a href="#/dashboard">Dashboard</a>
-      <span class="nav-user">${account.record.displayName}</span>
-    `
-    : `
+  if (!user) {
+    topnav.innerHTML = `
       <a href="#/">Home</a>
       <a href="#/about">About</a>
       <a href="#/login">Login</a>
       <a class="button button-dark" href="#/register">Create Account</a>
     `;
+    return;
+  }
+
+  topnav.innerHTML = `
+    <a href="#/">Home</a>
+    <a href="#/about">About</a>
+    <a href="#/dashboard">Dashboard</a>
+    ${isReviewerOrHigher(user) ? `<a href="#/admin">Admin</a>` : ""}
+    ${isAdminOrOwner(user) ? `<a href="#/admin">Manage</a>` : ""}
+    ${isOwner(user) ? `<a href="#/owner">Owner</a>` : ""}
+    <a href="#/owner-bootstrap">Bootstrap</a>
+    <span class="nav-user">${user.displayName} · ${user.role || "user"}</span>
+  `;
 }
 
 function renderHome() {
@@ -156,7 +169,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   await startAccountStore();
   subscribeAccountStore(() => {
     renderNavigation();
-    if (["/login", "/register", "/dashboard"].includes(getRoute())) {
+    if (["/login", "/register", "/dashboard", "/admin", "/owner", "/owner-bootstrap"].includes(getRoute())) {
       navigate();
     }
   });
