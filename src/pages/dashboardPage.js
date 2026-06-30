@@ -1,4 +1,5 @@
 import { getAccountStore, signOutCurrentUser } from "../state/accountStore.js";
+import { isAdminOrOwner, isOwner, isReviewerOrHigher } from "../security/permissions.js";
 
 export function renderDashboardPage(root) {
   const account = getAccountStore();
@@ -40,6 +41,9 @@ export function renderDashboardPage(root) {
         <strong>Discord ID:</strong> ${account.record.discordId || "Not listed"}
       </div>
       <div class="hero-actions">
+        ${isReviewerOrHigher(account.record) ? `<a class="button button-dark" href="#/admin">Review/Admin Tools</a>` : ""}
+        ${isAdminOrOwner(account.record) ? `<a class="button button-light" href="#/admin">Management Console</a>` : ""}
+        ${isOwner(account.record) ? `<a class="button button-light" href="#/owner">Owner Console</a>` : ""}
         <button id="logout-button" class="button button-light" type="button">Logout</button>
       </div>
     </section>
