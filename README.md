@@ -144,6 +144,17 @@ Part 7 adds the logged check system:
 
 The search page supports person checks and organization checks. Every check requires a reason before running and creates a Firestore check log.
 
+## Report Generation
+
+Part 8 adds browser-generated reports:
+
+```text
+#/reports/quick?checkId=<checkDocumentId>
+#/reports/full?checkId=<checkDocumentId>
+```
+
+Reports can be printed or saved as PDF through the browser print dialog. Downloads are logged as report download records when the user prints/saves.
+
 ## Part Status
 
 - Part 1: Project foundation — complete
@@ -153,7 +164,7 @@ The search page supports person checks and organization checks. Every check requ
 - Part 5: Public pages — complete foundation
 - Part 6: User dashboard — complete foundation
 - Part 7: Search and check logging — complete foundation
-- Part 8: Report generation and downloads
+- Part 8: Report generation and downloads — complete foundation
 - Part 9: Claims, appeals, and reviews
 - Part 10: Admin and owner dashboards
 - Part 11: Final integration and polish
