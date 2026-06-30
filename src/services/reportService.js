@@ -20,6 +20,16 @@ export const REPORT_CATEGORIES = Object.freeze([
   "Other"
 ]);
 
+function newestFirst(items, limitCount) {
+  return items
+    .sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || new Date(a.createdAt || 0).getTime();
+      const bTime = b.createdAt?.toMillis?.() || new Date(b.createdAt || 0).getTime();
+      return bTime - aTime;
+    })
+    .slice(0, limitCount);
+}
+
 export async function submitReport({
   actor,
   subjectProfileId = null,
@@ -101,18 +111,18 @@ export async function updateReportStatus(reportId, { status, reviewedBy = null, 
 
 export async function listReportsForProfile(profileId, limitCount = 50) {
   const { firestore } = await getFirestoreModules();
-  return queryDocuments(COLLECTIONS.reports, [
+  const items = await queryDocuments(COLLECTIONS.reports, [
     firestore.where("subjectProfileId", "==", profileId),
-    firestore.orderBy("createdAt", "desc"),
-    firestore.limit(limitCount)
+    firestore.limit(100)
   ]);
+  return newestFirst(items, limitCount);
 }
 
 export async function listPendingReports(limitCount = 50) {
   const { firestore } = await getFirestoreModules();
-  return queryDocuments(COLLECTIONS.reports, [
+  const items = await queryDocuments(COLLECTIONS.reports, [
     firestore.where("status", "==", REPORT_STATUSES.pendingReview),
-    firestore.orderBy("createdAt", "desc"),
-    firestore.limit(limitCount)
+    firestore.limit(100)
   ]);
+  return newestFirst(items, limitCount);
 }
