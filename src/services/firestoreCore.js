@@ -1,4 +1,4 @@
-import { initializeFirebaseServices } from "../firebase/firebaseApp.js";
+import { FIREBASE_CDN_BASE, initializeFirebaseServices } from "../firebase/firebaseApp.js";
 
 export async function getFirestoreModules() {
   const { db, ready } = await initializeFirebaseServices();
@@ -7,7 +7,7 @@ export async function getFirestoreModules() {
     throw new Error("Firebase is not configured yet.");
   }
 
-  const firestore = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+  const firestore = await import(`${FIREBASE_CDN_BASE}/firebase-firestore.js`);
   return { db, firestore };
 }
 
