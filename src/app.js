@@ -11,6 +11,7 @@ import { renderPasswordResetPage } from "./pages/passwordResetPage.js";
 import { renderAppPlaceholder } from "./pages/appPlaceholderPages.js";
 import { renderSearchPage } from "./pages/searchPage.js";
 import { renderHistoryPage } from "./pages/historyPage.js";
+import { renderReportPage } from "./pages/reportPage.js";
 import { isAdminOrOwner, isOwner, isReviewerOrHigher } from "./security/permissions.js";
 
 const pageRoot = document.querySelector("#page-root");
@@ -28,6 +29,8 @@ const pages = {
   "/search": () => renderSearchPage(pageRoot),
   "/claims": () => renderAppPlaceholder(pageRoot, "claims"),
   "/reports/submit": () => renderAppPlaceholder(pageRoot, "submitReport"),
+  "/reports/quick": () => renderReportPage(pageRoot, "quick"),
+  "/reports/full": () => renderReportPage(pageRoot, "full"),
   "/appeals": () => renderAppPlaceholder(pageRoot, "appeals"),
   "/history": () => renderHistoryPage(pageRoot),
   "/candidates": () => renderAppPlaceholder(pageRoot, "candidates"),
@@ -52,6 +55,8 @@ const pageTitles = {
   "/search": "Run Check",
   "/claims": "Claim Profile",
   "/reports/submit": "Submit Report",
+  "/reports/quick": "Quick Report",
+  "/reports/full": "Full Report",
   "/appeals": "Appeals",
   "/history": "Check History",
   "/candidates": "Saved Candidates",
@@ -66,7 +71,8 @@ const pageTitles = {
 
 function getRoute() {
   const hash = window.location.hash.replace("#", "");
-  return hash || "/";
+  const path = hash.split("?")[0];
+  return path || "/";
 }
 
 function navigate() {
@@ -153,7 +159,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   await startAccountStore();
   subscribeAccountStore(() => {
     renderNavigation();
-    if (["/login", "/register", "/dashboard", "/admin", "/owner", "/owner-bootstrap", "/search", "/claims", "/reports/submit", "/appeals", "/history", "/candidates", "/organizations/saved", "/notifications"].includes(getRoute())) {
+    if (["/login", "/register", "/dashboard", "/admin", "/owner", "/owner-bootstrap", "/search", "/claims", "/reports/submit", "/reports/quick", "/reports/full", "/appeals", "/history", "/candidates", "/organizations/saved", "/notifications"].includes(getRoute())) {
       navigate();
     }
   });
