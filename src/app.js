@@ -16,12 +16,16 @@ import { renderReportSubmitPage } from "./pages/reportSubmitPage.js";
 import { renderClaimsPage } from "./pages/claimsPage.js";
 import { renderAppealsPage } from "./pages/appealsPage.js";
 import { renderReviewQueuePage } from "./pages/reviewQueuePage.js";
+import { renderUserManagementPage } from "./pages/userManagementPage.js";
+import { renderOrganizationManagementPage } from "./pages/organizationManagementPage.js";
+import { renderActivityLogPage } from "./pages/activityLogPage.js";
+import { renderOwnerSettingsPage } from "./pages/ownerSettingsPage.js";
 import { isAdminOrOwner, isOwner, isReviewerOrHigher } from "./security/permissions.js";
 
 const pageRoot = document.querySelector("#page-root");
 const topnav = document.querySelector(".topnav");
 
-const protectedRoutes = ["/login", "/register", "/dashboard", "/admin", "/review", "/owner", "/owner-bootstrap", "/search", "/claims", "/reports/submit", "/reports/quick", "/reports/full", "/appeals", "/history", "/candidates", "/organizations/saved", "/notifications"];
+const protectedRoutes = ["/login", "/register", "/dashboard", "/admin", "/admin/users", "/admin/organizations", "/admin/audit", "/review", "/owner", "/owner/settings", "/owner-bootstrap", "/search", "/claims", "/reports/submit", "/reports/quick", "/reports/full", "/appeals", "/history", "/candidates", "/organizations/saved", "/notifications"];
 
 const pages = {
   "/": () => renderHomePage(pageRoot),
@@ -44,7 +48,11 @@ const pages = {
   "/notifications": () => renderAppPlaceholder(pageRoot, "notifications"),
   "/review": () => renderReviewQueuePage(pageRoot),
   "/admin": () => renderAdminPage(pageRoot),
+  "/admin/users": () => renderUserManagementPage(pageRoot),
+  "/admin/organizations": () => renderOrganizationManagementPage(pageRoot),
+  "/admin/audit": () => renderActivityLogPage(pageRoot),
   "/owner": () => renderOwnerPage(pageRoot),
+  "/owner/settings": () => renderOwnerSettingsPage(pageRoot),
   "/owner-bootstrap": () => renderOwnerBootstrapPage(pageRoot),
   "/setup": renderSetupPlaceholder,
   "/password-reset": () => renderPasswordResetPage(pageRoot)
@@ -71,7 +79,11 @@ const pageTitles = {
   "/notifications": "Notifications",
   "/review": "Review Queue",
   "/admin": "Administration",
+  "/admin/users": "User Management",
+  "/admin/organizations": "Organization Management",
+  "/admin/audit": "Activity Logs",
   "/owner": "Owner",
+  "/owner/settings": "Portal Settings",
   "/owner-bootstrap": "Owner Bootstrap",
   "/setup": "Setup",
   "/password-reset": "Password Reset"
