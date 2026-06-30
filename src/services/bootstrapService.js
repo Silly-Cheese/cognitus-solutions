@@ -1,9 +1,13 @@
-import { initializeFirebaseServices } from "../firebase/firebaseApp.js";
+import { FIREBASE_CDN_BASE, initializeFirebaseServices } from "../firebase/firebaseApp.js";
 import { OWNER_BOOTSTRAP, isOwnerBootstrapConfigured } from "../config/bootstrapConfig.js";
 import { createIdForEntity } from "../utils/cognitusIds.js";
 import { USER_ROLES } from "../data/constants.js";
 
 const BOOTSTRAP_DOC_PATH = ["settings", "bootstrap"];
+
+async function loadFirestoreModule() {
+  return import(`${FIREBASE_CDN_BASE}/firebase-firestore.js`);
+}
 
 export async function getBootstrapStatus() {
   const { db, ready } = await initializeFirebaseServices();
@@ -18,7 +22,7 @@ export async function getBootstrapStatus() {
     };
   }
 
-  const firestore = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+  const firestore = await loadFirestoreModule();
   const snapshot = await firestore.getDoc(firestore.doc(db, ...BOOTSTRAP_DOC_PATH));
   const data = snapshot.exists() ? snapshot.data() : null;
 
@@ -52,7 +56,7 @@ export async function attemptOwnerBootstrap(userRecord) {
     throw new Error("This account is not authorized for owner bootstrap.");
   }
 
-  const firestore = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+  const firestore = await loadFirestoreModule();
   const bootstrapRef = firestore.doc(db, ...BOOTSTRAP_DOC_PATH);
   const userRef = firestore.doc(db, "users", userRecord.uid);
 
