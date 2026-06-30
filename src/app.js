@@ -3,8 +3,26 @@ import { createCognitusId } from "./utils/cognitusIds.js";
 import { setPageTitle } from "./utils/dom.js";
 import { startAccountStore, subscribeAccountStore, getAccountStore } from "./state/accountStore.js";
 import { isAdminOrOwner, isOwner, isReviewerOrHigher } from "./security/permissions.js";
+import { renderHomePage, renderAboutPage, renderFeaturesPage, renderTermsPage, renderPrivacyPage } from "./pages/publicPages.js";
+import { renderLoginPage, renderRegisterPage } from "./pages/authPages.js";
+import { renderPasswordResetPage } from "./pages/passwordResetPage.js";
+import { renderDashboardPage } from "./pages/dashboardPage.js";
+import { renderSearchPage } from "./pages/searchPage.js";
+import { renderClaimsPage } from "./pages/claimsPage.js";
+import { renderReportSubmitPage } from "./pages/reportSubmitPage.js";
+import { renderReportPage } from "./pages/reportPage.js";
+import { renderAppealsPage } from "./pages/appealsPage.js";
+import { renderHistoryPage } from "./pages/historyPage.js";
+import { renderReviewQueuePage } from "./pages/reviewQueuePage.js";
+import { renderAdminPage, renderOwnerPage } from "./pages/adminPage.js";
+import { renderUserManagementPage } from "./pages/userManagementPage.js";
+import { renderOrganizationManagementPage } from "./pages/organizationManagementPage.js";
+import { renderActivityLogPage } from "./pages/activityLogPage.js";
+import { renderOwnerSettingsPage } from "./pages/ownerSettingsPage.js";
+import { renderOwnerBootstrapPage } from "./pages/ownerBootstrapPage.js";
+import { renderAppPlaceholder } from "./pages/appPlaceholderPages.js";
 
-const APP_BUILD = "stabilized-2026-06-30-01";
+const APP_BUILD = "direct-router-2026-06-30-02";
 const pageRoot = document.querySelector("#page-root");
 const topnav = document.querySelector(".topnav");
 
@@ -24,9 +42,36 @@ const pageTitles = {
   "/owner-bootstrap": "Owner Bootstrap", "/setup": "Setup", "/password-reset": "Password Reset"
 };
 
-function loadPage(path) {
-  return import(`${path}?v=${APP_BUILD}`);
-}
+const routes = {
+  "/": () => renderHomePage(pageRoot),
+  "/about": () => renderAboutPage(pageRoot),
+  "/features": () => renderFeaturesPage(pageRoot),
+  "/terms": () => renderTermsPage(pageRoot),
+  "/privacy": () => renderPrivacyPage(pageRoot),
+  "/login": () => renderLoginPage(pageRoot),
+  "/register": () => renderRegisterPage(pageRoot),
+  "/password-reset": () => renderPasswordResetPage(pageRoot),
+  "/dashboard": () => renderDashboardPage(pageRoot),
+  "/search": () => renderSearchPage(pageRoot),
+  "/claims": () => renderClaimsPage(pageRoot),
+  "/reports/submit": () => renderReportSubmitPage(pageRoot),
+  "/reports/quick": () => renderReportPage(pageRoot, "quick"),
+  "/reports/full": () => renderReportPage(pageRoot, "full"),
+  "/appeals": () => renderAppealsPage(pageRoot),
+  "/history": () => renderHistoryPage(pageRoot),
+  "/review": () => renderReviewQueuePage(pageRoot),
+  "/admin": () => renderAdminPage(pageRoot),
+  "/admin/users": () => renderUserManagementPage(pageRoot),
+  "/admin/organizations": () => renderOrganizationManagementPage(pageRoot),
+  "/admin/audit": () => renderActivityLogPage(pageRoot),
+  "/owner": () => renderOwnerPage(pageRoot),
+  "/owner/settings": () => renderOwnerSettingsPage(pageRoot),
+  "/owner-bootstrap": () => renderOwnerBootstrapPage(pageRoot),
+  "/candidates": () => renderAppPlaceholder(pageRoot, "candidates"),
+  "/organizations/saved": () => renderAppPlaceholder(pageRoot, "savedOrganizations"),
+  "/notifications": () => renderAppPlaceholder(pageRoot, "notifications"),
+  "/setup": () => renderSetupPlaceholder()
+};
 
 function getRoute() {
   const hash = window.location.hash.replace("#", "");
@@ -40,55 +85,14 @@ async function navigate() {
   renderFooter();
 
   try {
-    await renderRoute(route);
+    const renderer = routes[route] || renderNotFound;
+    await renderer();
   } catch (error) {
     console.error("Cognitus route failed:", route, error);
     renderRouteError(route, error);
   }
 
   pageRoot?.focus();
-}
-
-async function renderRoute(route) {
-  if (["/", "/about", "/features", "/terms", "/privacy"].includes(route)) {
-    const mod = await loadPage("./pages/publicPages.js");
-    if (route === "/") return mod.renderHomePage(pageRoot);
-    if (route === "/about") return mod.renderAboutPage(pageRoot);
-    if (route === "/features") return mod.renderFeaturesPage(pageRoot);
-    if (route === "/terms") return mod.renderTermsPage(pageRoot);
-    return mod.renderPrivacyPage(pageRoot);
-  }
-
-  if (["/login", "/register"].includes(route)) {
-    const mod = await loadPage("./pages/authPages.js");
-    return route === "/login" ? mod.renderLoginPage(pageRoot) : mod.renderRegisterPage(pageRoot);
-  }
-
-  if (route === "/password-reset") return (await loadPage("./pages/passwordResetPage.js")).renderPasswordResetPage(pageRoot);
-  if (route === "/dashboard") return (await loadPage("./pages/dashboardPage.js")).renderDashboardPage(pageRoot);
-  if (route === "/search") return (await loadPage("./pages/searchPage.js")).renderSearchPage(pageRoot);
-  if (route === "/claims") return (await loadPage("./pages/claimsPage.js")).renderClaimsPage(pageRoot);
-  if (route === "/reports/submit") return (await loadPage("./pages/reportSubmitPage.js")).renderReportSubmitPage(pageRoot);
-  if (route === "/reports/quick") return (await loadPage("./pages/reportPage.js")).renderReportPage(pageRoot, "quick");
-  if (route === "/reports/full") return (await loadPage("./pages/reportPage.js")).renderReportPage(pageRoot, "full");
-  if (route === "/appeals") return (await loadPage("./pages/appealsPage.js")).renderAppealsPage(pageRoot);
-  if (route === "/history") return (await loadPage("./pages/historyPage.js")).renderHistoryPage(pageRoot);
-  if (route === "/review") return (await loadPage("./pages/reviewQueuePage.js")).renderReviewQueuePage(pageRoot);
-  if (route === "/admin") return (await loadPage("./pages/adminPage.js")).renderAdminPage(pageRoot);
-  if (route === "/admin/users") return (await loadPage("./pages/userManagementPage.js")).renderUserManagementPage(pageRoot);
-  if (route === "/admin/organizations") return (await loadPage("./pages/organizationManagementPage.js")).renderOrganizationManagementPage(pageRoot);
-  if (route === "/admin/audit") return (await loadPage("./pages/activityLogPage.js")).renderActivityLogPage(pageRoot);
-  if (route === "/owner") return (await loadPage("./pages/adminPage.js")).renderOwnerPage(pageRoot);
-  if (route === "/owner/settings") return (await loadPage("./pages/ownerSettingsPage.js")).renderOwnerSettingsPage(pageRoot);
-  if (route === "/owner-bootstrap") return (await loadPage("./pages/ownerBootstrapPage.js")).renderOwnerBootstrapPage(pageRoot);
-
-  if (["/candidates", "/organizations/saved", "/notifications"].includes(route)) {
-    const key = route === "/candidates" ? "candidates" : route === "/organizations/saved" ? "savedOrganizations" : "notifications";
-    return (await loadPage("./pages/appPlaceholderPages.js")).renderAppPlaceholder(pageRoot, key);
-  }
-
-  if (route === "/setup") return renderSetupPlaceholder();
-  return renderNotFound();
 }
 
 function renderNavigation() {
