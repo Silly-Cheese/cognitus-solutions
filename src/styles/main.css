@@ -41,6 +41,11 @@ textarea {
   font: inherit;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
 .app-shell {
   min-height: 100vh;
 }
@@ -96,6 +101,18 @@ textarea {
   color: var(--text);
 }
 
+.nav-user {
+  max-width: 13rem;
+  overflow: hidden;
+  padding: 0.55rem 0.8rem;
+  color: var(--text);
+  background: #eeeeee;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .page-root {
   width: min(1120px, calc(100% - 2rem));
   margin: 0 auto;
@@ -113,11 +130,16 @@ textarea {
   box-shadow: var(--shadow);
 }
 
-.hero h1 {
+.hero h1,
+.form-card h1 {
   margin: 0;
   font-size: clamp(2.2rem, 7vw, 5.2rem);
   line-height: 0.94;
   letter-spacing: -0.075em;
+}
+
+.form-card h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
 }
 
 .hero p {
@@ -194,7 +216,7 @@ textarea {
 }
 
 .form-card {
-  width: min(520px, 100%);
+  width: min(560px, 100%);
   margin: 0 auto;
   padding: clamp(1.5rem, 5vw, 2.5rem);
   background: var(--surface);
@@ -212,6 +234,21 @@ label {
   display: grid;
   gap: 0.4rem;
   font-weight: 750;
+}
+
+.checkbox-line {
+  display: flex;
+  grid-template-columns: auto 1fr;
+  align-items: flex-start;
+  gap: 0.65rem;
+  color: var(--muted);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.checkbox-line input {
+  width: auto;
+  margin-top: 0.22rem;
 }
 
 input,
@@ -238,6 +275,10 @@ textarea:focus {
   border: 1px solid var(--border);
   border-radius: 1rem;
   color: var(--muted);
+}
+
+.notice[hidden] {
+  display: none;
 }
 
 @media (max-width: 720px) {
