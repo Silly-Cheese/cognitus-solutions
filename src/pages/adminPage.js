@@ -18,12 +18,13 @@ export function renderAdminPage(root) {
     <section class="hero">
       <p class="eyebrow">Administration</p>
       <h1>Admin control center.</h1>
-      <p>Admin tools will be expanded in Part 10. This route is now role-protected and ready for future modules.</p>
+      <p>Administrative operations are being connected in stages. Review workflows are now active.</p>
+      <div class="hero-actions"><a class="button button-dark" href="#/review">Open Review Queue</a></div>
     </section>
     <section class="grid" style="margin-top: 1rem;">
-      <article class="card"><h2>Manage Users</h2><p>Role changes, restrictions, and account review will be added later.</p></article>
-      <article class="card"><h2>Manage Organizations</h2><p>Organization verification and review tools will be added later.</p></article>
-      <article class="card"><h2>Review Records</h2><p>Report, appeal, and claim queues will be connected in later parts.</p></article>
+      <article class="card"><h2>Review Records</h2><p>Review pending reports, profile claims, and appeals.</p><a class="button button-light" href="#/review">Open Queue</a></article>
+      <article class="card"><h2>Manage Users</h2><p>Role changes, restrictions, and account review will be expanded in Part 10.</p></article>
+      <article class="card"><h2>Manage Organizations</h2><p>Organization verification and review tools will be expanded in Part 10.</p></article>
     </section>
   `;
 }
@@ -45,12 +46,13 @@ export function renderOwnerPage(root) {
     <section class="hero">
       <p class="eyebrow">Owner</p>
       <h1>Owner command center.</h1>
-      <p>Owner-only tools will be built in Part 10. This route is now protected for the permanent Cognitus owner role.</p>
+      <p>Owner-only tools will be built in Part 10. Review workflows are now connected.</p>
+      <div class="hero-actions"><a class="button button-dark" href="#/review">Open Review Queue</a></div>
     </section>
     <section class="grid" style="margin-top: 1rem;">
-      <article class="card"><h2>Portal Settings</h2><p>Platform settings and standards will live here.</p></article>
-      <article class="card"><h2>Audit Logs</h2><p>Owner review of major actions will live here.</p></article>
-      <article class="card"><h2>Staff Access</h2><p>Owner management of administrators and reviewers will live here.</p></article>
+      <article class="card"><h2>Review Queue</h2><p>Owner access to pending reports, claims, and appeals.</p><a class="button button-light" href="#/review">Open Queue</a></article>
+      <article class="card"><h2>Audit Logs</h2><p>Owner review of major actions will live here in Part 10.</p></article>
+      <article class="card"><h2>Staff Access</h2><p>Owner management of administrators and reviewers will live here in Part 10.</p></article>
     </section>
   `;
 }
