@@ -94,6 +94,16 @@ const dashboardRoutes = [
   "/organizations/saved",
   "/notifications"
 ];
-const adminRoutes = ["/setup", "/review", "/admin", "/owner", "/owner-bootstrap"];
+const adminRoutes = [
+  "/setup",
+  "/review",
+  "/admin",
+  "/admin/users",
+  "/admin/organizations",
+  "/admin/audit",
+  "/owner",
+  "/owner/settings",
+  "/owner-bootstrap"
+];
 
 export const ROUTES = Object.freeze([...publicRoutes, ...accessRoutes, ...dashboardRoutes, ...adminRoutes]);
