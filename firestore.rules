@@ -6,6 +6,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function ownerDiscordId() {
+      return '1036433371393441914';
+    }
+
     function userDoc(uid) {
       return get(/databases/$(database)/documents/users/$(uid));
     }
@@ -54,10 +58,24 @@ service cloud.firestore {
       return hasUserDoc() && currentUser().organizationId != null && currentUser().organizationId == orgId;
     }
 
-    function isBootstrapConfiguredOwner() {
+    function bootstrapNotComplete() {
+      return !exists(/databases/$(database)/documents/settings/bootstrap);
+    }
+
+    function isConfiguredOwnerAccount() {
       return signedIn()
-        && request.resource.data.discordId is string
-        && request.resource.data.discordId.matches('^[0-9]{15,25}$');
+        && hasUserDoc()
+        && currentUser().discordId == ownerDiscordId();
+    }
+
+    function validFirstOwnerUserUpdate(uid) {
+      return isSelf(uid)
+        && bootstrapNotComplete()
+        && resource.data.discordId == ownerDiscordId()
+        && request.resource.data.discordId == ownerDiscordId()
+        && request.resource.data.role == 'owner'
+        && request.resource.data.status == 'active'
+        && request.resource.data.ownerBootstrap == true;
     }
 
     match /users/{uid} {
@@ -77,18 +95,19 @@ service cloud.firestore {
         && !('organizationId' in request.resource.data.diff(resource.data).changedKeys())
         && !('ownerBootstrap' in request.resource.data.diff(resource.data).changedKeys());
 
+      allow update: if validFirstOwnerUserUpdate(uid);
       allow update: if isAdmin();
       allow delete: if isOwner();
     }
 
     match /settings/bootstrap {
       allow read: if signedIn();
-      allow create: if signedIn()
-        && !exists(/databases/$(database)/documents/settings/bootstrap)
+      allow create: if isConfiguredOwnerAccount()
+        && bootstrapNotComplete()
         && request.resource.data.complete == true
         && request.resource.data.completedBy == request.auth.uid
-        && request.resource.data.completedByDiscordId is string
-        && request.resource.data.completedByDiscordId.matches('^[0-9]{15,25}$');
+        && request.resource.data.completedByDiscordId == ownerDiscordId()
+        && request.resource.data.ownerDiscordId == ownerDiscordId();
       allow update, delete: if false;
     }
 
