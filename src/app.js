@@ -12,10 +12,16 @@ import { renderAppPlaceholder } from "./pages/appPlaceholderPages.js";
 import { renderSearchPage } from "./pages/searchPage.js";
 import { renderHistoryPage } from "./pages/historyPage.js";
 import { renderReportPage } from "./pages/reportPage.js";
+import { renderReportSubmitPage } from "./pages/reportSubmitPage.js";
+import { renderClaimsPage } from "./pages/claimsPage.js";
+import { renderAppealsPage } from "./pages/appealsPage.js";
+import { renderReviewQueuePage } from "./pages/reviewQueuePage.js";
 import { isAdminOrOwner, isOwner, isReviewerOrHigher } from "./security/permissions.js";
 
 const pageRoot = document.querySelector("#page-root");
 const topnav = document.querySelector(".topnav");
+
+const protectedRoutes = ["/login", "/register", "/dashboard", "/admin", "/review", "/owner", "/owner-bootstrap", "/search", "/claims", "/reports/submit", "/reports/quick", "/reports/full", "/appeals", "/history", "/candidates", "/organizations/saved", "/notifications"];
 
 const pages = {
   "/": () => renderHomePage(pageRoot),
@@ -27,15 +33,16 @@ const pages = {
   "/register": () => renderRegisterPage(pageRoot),
   "/dashboard": () => renderDashboardPage(pageRoot),
   "/search": () => renderSearchPage(pageRoot),
-  "/claims": () => renderAppPlaceholder(pageRoot, "claims"),
-  "/reports/submit": () => renderAppPlaceholder(pageRoot, "submitReport"),
+  "/claims": () => renderClaimsPage(pageRoot),
+  "/reports/submit": () => renderReportSubmitPage(pageRoot),
   "/reports/quick": () => renderReportPage(pageRoot, "quick"),
   "/reports/full": () => renderReportPage(pageRoot, "full"),
-  "/appeals": () => renderAppPlaceholder(pageRoot, "appeals"),
+  "/appeals": () => renderAppealsPage(pageRoot),
   "/history": () => renderHistoryPage(pageRoot),
   "/candidates": () => renderAppPlaceholder(pageRoot, "candidates"),
   "/organizations/saved": () => renderAppPlaceholder(pageRoot, "savedOrganizations"),
   "/notifications": () => renderAppPlaceholder(pageRoot, "notifications"),
+  "/review": () => renderReviewQueuePage(pageRoot),
   "/admin": () => renderAdminPage(pageRoot),
   "/owner": () => renderOwnerPage(pageRoot),
   "/owner-bootstrap": () => renderOwnerBootstrapPage(pageRoot),
@@ -62,6 +69,7 @@ const pageTitles = {
   "/candidates": "Saved Candidates",
   "/organizations/saved": "Saved Organizations",
   "/notifications": "Notifications",
+  "/review": "Review Queue",
   "/admin": "Administration",
   "/owner": "Owner",
   "/owner-bootstrap": "Owner Bootstrap",
@@ -105,7 +113,9 @@ function renderNavigation() {
     <a href="#/features">Features</a>
     <a href="#/dashboard">Dashboard</a>
     <a href="#/search">Run Check</a>
-    ${isReviewerOrHigher(user) ? `<a href="#/admin">Admin</a>` : ""}
+    <a href="#/claims">Claims</a>
+    <a href="#/appeals">Appeals</a>
+    ${isReviewerOrHigher(user) ? `<a href="#/review">Review</a>` : ""}
     ${isAdminOrOwner(user) ? `<a href="#/admin">Manage</a>` : ""}
     ${isOwner(user) ? `<a href="#/owner">Owner</a>` : ""}
     <a href="#/owner-bootstrap">Bootstrap</a>
@@ -159,7 +169,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   await startAccountStore();
   subscribeAccountStore(() => {
     renderNavigation();
-    if (["/login", "/register", "/dashboard", "/admin", "/owner", "/owner-bootstrap", "/search", "/claims", "/reports/submit", "/reports/quick", "/reports/full", "/appeals", "/history", "/candidates", "/organizations/saved", "/notifications"].includes(getRoute())) {
+    if (protectedRoutes.includes(getRoute())) {
       navigate();
     }
   });
