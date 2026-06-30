@@ -9,6 +9,8 @@ import { renderAdminPage, renderOwnerPage } from "./pages/adminPage.js";
 import { renderHomePage, renderAboutPage, renderFeaturesPage, renderTermsPage, renderPrivacyPage } from "./pages/publicPages.js";
 import { renderPasswordResetPage } from "./pages/passwordResetPage.js";
 import { renderAppPlaceholder } from "./pages/appPlaceholderPages.js";
+import { renderSearchPage } from "./pages/searchPage.js";
+import { renderHistoryPage } from "./pages/historyPage.js";
 import { isAdminOrOwner, isOwner, isReviewerOrHigher } from "./security/permissions.js";
 
 const pageRoot = document.querySelector("#page-root");
@@ -23,11 +25,11 @@ const pages = {
   "/login": () => renderLoginPage(pageRoot),
   "/register": () => renderRegisterPage(pageRoot),
   "/dashboard": () => renderDashboardPage(pageRoot),
-  "/search": () => renderAppPlaceholder(pageRoot, "search"),
+  "/search": () => renderSearchPage(pageRoot),
   "/claims": () => renderAppPlaceholder(pageRoot, "claims"),
   "/reports/submit": () => renderAppPlaceholder(pageRoot, "submitReport"),
   "/appeals": () => renderAppPlaceholder(pageRoot, "appeals"),
-  "/history": () => renderAppPlaceholder(pageRoot, "history"),
+  "/history": () => renderHistoryPage(pageRoot),
   "/candidates": () => renderAppPlaceholder(pageRoot, "candidates"),
   "/organizations/saved": () => renderAppPlaceholder(pageRoot, "savedOrganizations"),
   "/notifications": () => renderAppPlaceholder(pageRoot, "notifications"),
