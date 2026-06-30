@@ -9,6 +9,7 @@ import { renderDashboardSafePage } from "./pages/dashboardSafePage.js";
 import { renderSearchPage } from "./pages/searchPage.js";
 import { renderClaimsPage } from "./pages/claimsPage.js";
 import { renderReportSubmitPage } from "./pages/reportSubmitPage.js";
+import { renderReportPage } from "./pages/reportPage.js";
 import { renderAppealsPage } from "./pages/appealsPage.js";
 import { renderHistoryPage } from "./pages/historyPage.js";
 import { renderReviewQueuePage } from "./pages/reviewQueuePage.js";
@@ -34,6 +35,8 @@ const titles = {
   "/claims": "Claims",
   "/appeals": "Appeals",
   "/reports/submit": "Submit Report",
+  "/reports/quick": "Quick Report",
+  "/reports/full": "Full Report",
   "/history": "History",
   "/review": "Review",
   "/admin": "Admin",
@@ -67,6 +70,8 @@ async function render() {
     if (current === "/search") return renderSearchPage(root);
     if (current === "/claims") return renderClaimsPage(root);
     if (current === "/reports/submit") return renderReportSubmitPage(root);
+    if (current === "/reports/quick") return renderReportPage(root, "quick");
+    if (current === "/reports/full") return renderReportPage(root, "full");
     if (current === "/appeals") return renderAppealsPage(root);
     if (current === "/history") return renderHistoryPage(root);
     if (current === "/review") return renderReviewQueuePage(root);
@@ -123,4 +128,4 @@ window.addEventListener("DOMContentLoaded", async () => {
   subscribeAccountStore(render);
 });
 
-console.info("Cognitus safe router loaded with real routes.");
+console.info("Cognitus safe router loaded with report routes.");
