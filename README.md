@@ -155,6 +155,19 @@ Part 8 adds browser-generated reports:
 
 Reports can be printed or saved as PDF through the browser print dialog. Downloads are logged as report download records when the user prints/saves.
 
+## Claims, Appeals, and Reviews
+
+Part 9 adds operational review workflows:
+
+```text
+#/claims
+#/appeals
+#/reports/submit
+#/review
+```
+
+Users can submit profile claims, appeals/correction requests, and reports. Reviewers, admins, and owners can view pending reports, claims, and appeals from the review queue.
+
 ## Part Status
 
 - Part 1: Project foundation — complete
@@ -165,7 +178,7 @@ Reports can be printed or saved as PDF through the browser print dialog. Downloa
 - Part 6: User dashboard — complete foundation
 - Part 7: Search and check logging — complete foundation
 - Part 8: Report generation and downloads — complete foundation
-- Part 9: Claims, appeals, and reviews
+- Part 9: Claims, appeals, and reviews — complete foundation
 - Part 10: Admin and owner dashboards
 - Part 11: Final integration and polish
 - Part 12: Testing and deployment configuration
