@@ -81,6 +81,17 @@ export const ACCOUNT_STATUSES = Object.freeze([
 
 const publicRoutes = ["/", "/about", "/features", "/terms", "/privacy"];
 const accessRoutes = ["/login", "/register", "/password-reset"];
-const appRoutes = ["/dashboard", "/setup", "/admin", "/owner", "/owner-bootstrap"];
+const dashboardRoutes = [
+  "/dashboard",
+  "/search",
+  "/claims",
+  "/reports/submit",
+  "/appeals",
+  "/history",
+  "/candidates",
+  "/organizations/saved",
+  "/notifications"
+];
+const adminRoutes = ["/setup", "/admin", "/owner", "/owner-bootstrap"];
 
-export const ROUTES = Object.freeze([...publicRoutes, ...accessRoutes, ...appRoutes]);
+export const ROUTES = Object.freeze([...publicRoutes, ...accessRoutes, ...dashboardRoutes, ...adminRoutes]);
