@@ -6,6 +6,13 @@ import { renderHomePage, renderAboutPage, renderFeaturesPage, renderTermsPage, r
 import { renderLoginPage, renderRegisterPage } from "./pages/authPages.js";
 import { renderPasswordResetPage } from "./pages/passwordResetPage.js";
 import { renderDashboardSafePage } from "./pages/dashboardSafePage.js";
+import { renderSearchPage } from "./pages/searchPage.js";
+import { renderClaimsPage } from "./pages/claimsPage.js";
+import { renderReportSubmitPage } from "./pages/reportSubmitPage.js";
+import { renderAppealsPage } from "./pages/appealsPage.js";
+import { renderHistoryPage } from "./pages/historyPage.js";
+import { renderReviewQueuePage } from "./pages/reviewQueuePage.js";
+import { renderAdminPage, renderOwnerPage } from "./pages/adminPage.js";
 import { renderOwnerBootstrapPage } from "./pages/ownerBootstrapPage.js";
 import { renderAppPlaceholder } from "./pages/appPlaceholderPages.js";
 
@@ -28,8 +35,12 @@ const titles = {
   "/appeals": "Appeals",
   "/reports/submit": "Submit Report",
   "/history": "History",
+  "/review": "Review",
   "/admin": "Admin",
-  "/owner": "Owner"
+  "/owner": "Owner",
+  "/candidates": "Candidates",
+  "/organizations/saved": "Saved Organizations",
+  "/notifications": "Notifications"
 };
 
 function route() {
@@ -53,16 +64,16 @@ async function render() {
     if (current === "/register") return renderRegisterPage(root);
     if (current === "/password-reset") return renderPasswordResetPage(root);
     if (current === "/dashboard") return renderDashboardSafePage(root);
+    if (current === "/search") return renderSearchPage(root);
+    if (current === "/claims") return renderClaimsPage(root);
+    if (current === "/reports/submit") return renderReportSubmitPage(root);
+    if (current === "/appeals") return renderAppealsPage(root);
+    if (current === "/history") return renderHistoryPage(root);
+    if (current === "/review") return renderReviewQueuePage(root);
+    if (current === "/admin") return renderAdminPage(root);
+    if (current === "/owner") return renderOwnerPage(root);
     if (current === "/owner-bootstrap") return renderOwnerBootstrapPage(root);
 
-    if (current === "/search") return renderAppPlaceholder(root, "search");
-    if (current === "/claims") return renderAppPlaceholder(root, "claims");
-    if (current === "/appeals") return renderAppPlaceholder(root, "appeals");
-    if (current === "/reports/submit") return renderAppPlaceholder(root, "submitReport");
-    if (current === "/history") return renderAppPlaceholder(root, "history");
-    if (current === "/admin") return renderAppPlaceholder(root, "notifications");
-    if (current === "/owner") return renderAppPlaceholder(root, "notifications");
-    if (current === "/review") return renderAppPlaceholder(root, "notifications");
     if (current === "/candidates") return renderAppPlaceholder(root, "candidates");
     if (current === "/organizations/saved") return renderAppPlaceholder(root, "savedOrganizations");
     if (current === "/notifications") return renderAppPlaceholder(root, "notifications");
@@ -112,4 +123,4 @@ window.addEventListener("DOMContentLoaded", async () => {
   subscribeAccountStore(render);
 });
 
-console.info("Cognitus safe router loaded.");
+console.info("Cognitus safe router loaded with real routes.");
