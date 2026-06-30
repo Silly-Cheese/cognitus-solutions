@@ -1,0 +1,254 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid));
+    }
+
+    function currentUser() {
+      return userDoc(request.auth.uid).data;
+    }
+
+    function hasUserDoc() {
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function role() {
+      return hasUserDoc() ? currentUser().role : null;
+    }
+
+    function isOwner() {
+      return role() == 'owner';
+    }
+
+    function isAdmin() {
+      return role() in ['admin', 'owner'];
+    }
+
+    function isReviewer() {
+      return role() in ['reviewer', 'admin', 'owner'];
+    }
+
+    function isOrgAdmin() {
+      return role() in ['org_admin', 'admin', 'owner'];
+    }
+
+    function isEmployerMember() {
+      return role() in ['verified_employer_member', 'org_admin', 'reviewer', 'admin', 'owner'];
+    }
+
+    function activeAccount() {
+      return hasUserDoc() && currentUser().status in ['active', 'pending_verification'];
+    }
+
+    function sameOrg(orgId) {
+      return hasUserDoc() && currentUser().organizationId != null && currentUser().organizationId == orgId;
+    }
+
+    function isBootstrapConfiguredOwner() {
+      return signedIn()
+        && request.resource.data.discordId is string
+        && request.resource.data.discordId.matches('^[0-9]{15,25}$');
+    }
+
+    match /users/{uid} {
+      allow create: if isSelf(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.role == 'user'
+        && request.resource.data.status == 'active'
+        && request.resource.data.realEmailCollected == false
+        && request.resource.data.discordId is string
+        && request.resource.data.discordId.matches('^[0-9]{15,25}$');
+
+      allow read: if isSelf(uid) || isReviewer();
+
+      allow update: if isSelf(uid)
+        && !('role' in request.resource.data.diff(resource.data).changedKeys())
+        && !('status' in request.resource.data.diff(resource.data).changedKeys())
+        && !('organizationId' in request.resource.data.diff(resource.data).changedKeys())
+        && !('ownerBootstrap' in request.resource.data.diff(resource.data).changedKeys());
+
+      allow update: if isAdmin();
+      allow delete: if isOwner();
+    }
+
+    match /settings/bootstrap {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && !exists(/databases/$(database)/documents/settings/bootstrap)
+        && request.resource.data.complete == true
+        && request.resource.data.completedBy == request.auth.uid
+        && request.resource.data.completedByDiscordId is string
+        && request.resource.data.completedByDiscordId.matches('^[0-9]{15,25}$');
+      allow update, delete: if false;
+    }
+
+    match /settings/portal {
+      allow read: if true;
+      allow create, update: if isOwner();
+      allow delete: if false;
+    }
+
+    match /settings/{document=**} {
+      allow read: if isAdmin();
+      allow write: if isOwner();
+    }
+
+    match /profiles/{profileId} {
+      allow read: if signedIn();
+      allow create: if isReviewer();
+      allow update: if isReviewer();
+      allow delete: if isOwner();
+    }
+
+    match /organizations/{organizationId} {
+      allow read: if signedIn();
+      allow create: if activeAccount();
+      allow update: if isAdmin() || (isOrgAdmin() && sameOrg(organizationId));
+      allow delete: if isOwner();
+    }
+
+    match /reports/{reportId} {
+      allow read: if isReviewer()
+        || (signedIn() && resource.data.submittedByUid == request.auth.uid)
+        || (signedIn() && resource.data.status in ['approved', 'published', 'disputed']);
+
+      allow create: if activeAccount()
+        && request.resource.data.submittedByUid == request.auth.uid
+        && request.resource.data.status == 'pending_review';
+
+      allow update: if isReviewer();
+      allow delete: if isOwner();
+    }
+
+    match /checkLogs/{checkId} {
+      allow read: if isReviewer()
+        || (signedIn() && resource.data.checkedByUid == request.auth.uid)
+        || (isEmployerMember() && sameOrg(resource.data.organizationId));
+
+      allow create: if activeAccount()
+        && request.resource.data.checkedByUid == request.auth.uid
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() > 0;
+
+      allow update: if isReviewer()
+        || (signedIn()
+          && resource.data.checkedByUid == request.auth.uid
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly(['downloadedReport', 'updatedAt']));
+
+      allow delete: if isOwner();
+    }
+
+    match /appeals/{appealId} {
+      allow read: if isReviewer() || (signedIn() && resource.data.submittedByUid == request.auth.uid);
+      allow create: if activeAccount()
+        && request.resource.data.submittedByUid == request.auth.uid
+        && request.resource.data.status == 'pending_review';
+      allow update: if isReviewer();
+      allow delete: if isOwner();
+    }
+
+    match /claims/{claimId} {
+      allow read: if isReviewer() || (signedIn() && resource.data.submittedByUid == request.auth.uid);
+      allow create: if activeAccount()
+        && request.resource.data.submittedByUid == request.auth.uid
+        && request.resource.data.status == 'pending_review'
+        && request.resource.data.submittedDiscordId == currentUser().discordId;
+      allow update: if isReviewer();
+      allow delete: if isOwner();
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn()
+        && (resource.data.userId == request.auth.uid || resource.data.broadcast == true || isAdmin());
+
+      allow create: if isAdmin();
+
+      allow update: if isAdmin()
+        || (signedIn()
+          && resource.data.userId == request.auth.uid
+          && request.resource.data.diff(resource.data).changedKeys().hasOnly(['read', 'readAt', 'updatedAt']));
+
+      allow delete: if isAdmin();
+    }
+
+    match /auditLogs/{auditId} {
+      allow read: if isAdmin();
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    match /passwordResetRequests/{requestId} {
+      allow read: if isAdmin();
+      allow create: if request.resource.data.discordId is string
+        && request.resource.data.discordId.matches('^[0-9]{15,25}$')
+        && request.resource.data.status == 'pending_review';
+      allow update: if isAdmin();
+      allow delete: if isOwner();
+    }
+
+    match /savedCandidates/{savedId} {
+      allow read: if signedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin() || sameOrg(resource.data.organizationId));
+      allow create: if activeAccount() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if signedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    match /savedOrganizations/{savedId} {
+      allow read: if signedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin() || sameOrg(resource.data.organizationId));
+      allow create: if activeAccount() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if signedIn()
+        && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    match /privateNotes/{noteId} {
+      allow read: if isAdmin() || sameOrg(resource.data.organizationId);
+      allow create: if activeAccount()
+        && request.resource.data.createdByUid == request.auth.uid
+        && sameOrg(request.resource.data.organizationId);
+      allow update, delete: if isAdmin() || sameOrg(resource.data.organizationId);
+    }
+
+    match /candidatePipelines/{pipelineId} {
+      allow read, write: if isAdmin() || sameOrg(resource.data.organizationId) || sameOrg(request.resource.data.organizationId);
+    }
+
+    match /downloads/{downloadId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.downloadedByUid == request.auth.uid);
+      allow create: if activeAccount() && request.resource.data.downloadedByUid == request.auth.uid;
+      allow update: if false;
+      allow delete: if isOwner();
+    }
+
+    match /duplicateReviews/{reviewId} {
+      allow read, write: if isReviewer();
+    }
+
+    match /employmentHistory/{historyId} {
+      allow read: if signedIn();
+      allow create, update: if isReviewer() || isEmployerMember();
+      allow delete: if isOwner();
+    }
+
+    match /certifications/{certId} {
+      allow read: if signedIn();
+      allow create, update: if isReviewer() || isEmployerMember();
+      allow delete: if isOwner();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
