@@ -30,12 +30,16 @@ export function recordList(items, renderItem, emptyTitle, emptyMessage) {
 
 export function checkLogItem(check) {
   return `
-    <article class="record-row">
+    <article class="record-row record-row-actions">
       <div>
         <strong>${check.searchQuery || "Unknown Search"}</strong>
         <span>${check.searchType || "Check"} · ${check.reason || "No reason listed"}</span>
+        <small>${formatDateTime(check.createdAt?.toDate?.() || check.createdAt)}</small>
       </div>
-      <small>${formatDateTime(check.createdAt?.toDate?.() || check.createdAt)}</small>
+      <div class="mini-actions">
+        <a href="#/reports/quick?checkId=${check.id}">Quick</a>
+        <a href="#/reports/full?checkId=${check.id}">Full</a>
+      </div>
     </article>
   `;
 }
