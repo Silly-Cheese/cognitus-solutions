@@ -1,0 +1,45 @@
+.workflow-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 1fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.wide-form {
+  width: min(900px, 100%);
+}
+
+.workflow-list {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.workflow-card {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  background: #f7f7f7;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+}
+
+.workflow-card h3 {
+  margin: 0;
+  letter-spacing: -0.04em;
+}
+
+.workflow-card p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.workflow-card .mini-actions {
+  justify-content: flex-start;
+}
+
+@media (max-width: 860px) {
+  .workflow-layout {
+    grid-template-columns: 1fr;
+  }
+}
