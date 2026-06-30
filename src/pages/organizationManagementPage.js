@@ -1,6 +1,6 @@
 import { getAccountStore } from "../state/accountStore.js";
 import { isAdminOrOwner } from "../security/permissions.js";
-import { listRecentOrganizations } from "../services/adminOverviewService.js";
+import { listRecentOrganizations } from "../services/adminStatsService.js";
 import { changeOrganizationTrust, changeOrganizationVerification } from "../services/managementService.js";
 import { pill, smallDate } from "../components/adminComponents.js";
 
