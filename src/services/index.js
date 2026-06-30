@@ -12,3 +12,6 @@ export * from "./savedService.js";
 export * from "./privateNoteService.js";
 export * from "./downloadService.js";
 export * from "./passwordResetService.js";
+export * from "./adminOverviewService.js";
+export * from "./managementService.js";
+export * from "./portalSettingsService.js";
