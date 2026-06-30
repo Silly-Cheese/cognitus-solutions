@@ -168,6 +168,21 @@ Part 9 adds operational review workflows:
 
 Users can submit profile claims, appeals/correction requests, and reports. Reviewers, admins, and owners can view pending reports, claims, and appeals from the review queue.
 
+## Admin and Owner Dashboards
+
+Part 10 adds management routes:
+
+```text
+#/admin
+#/admin/users
+#/admin/organizations
+#/admin/audit
+#/owner
+#/owner/settings
+```
+
+Admins can review recent activity, manage user roles/statuses, manage organization verification/trust, and view activity logs. Owners can access portal settings and owner-level controls.
+
 ## Part Status
 
 - Part 1: Project foundation — complete
@@ -179,7 +194,7 @@ Users can submit profile claims, appeals/correction requests, and reports. Revie
 - Part 7: Search and check logging — complete foundation
 - Part 8: Report generation and downloads — complete foundation
 - Part 9: Claims, appeals, and reviews — complete foundation
-- Part 10: Admin and owner dashboards
+- Part 10: Admin and owner dashboards — complete foundation
 - Part 11: Final integration and polish
 - Part 12: Testing and deployment configuration
 
