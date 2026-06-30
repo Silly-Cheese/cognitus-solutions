@@ -120,7 +120,8 @@ button:disabled {
   padding: clamp(2rem, 6vw, 5rem) 0;
 }
 
-.hero {
+.hero,
+.dashboard-hero {
   display: grid;
   gap: 1.2rem;
   max-width: 780px;
@@ -135,7 +136,14 @@ button:disabled {
   max-width: 980px;
 }
 
+.dashboard-hero {
+  max-width: none;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  align-items: end;
+}
+
 .hero h1,
+.dashboard-hero h1,
 .form-card h1 {
   margin: 0;
   font-size: clamp(2.2rem, 7vw, 5.2rem);
@@ -147,7 +155,8 @@ button:disabled {
   font-size: clamp(2rem, 5vw, 3.5rem);
 }
 
-.hero p {
+.hero p,
+.dashboard-hero p {
   margin: 0;
   max-width: 68ch;
   color: var(--muted);
@@ -164,11 +173,16 @@ button:disabled {
 }
 
 .hero-actions,
-.actions {
+.actions,
+.quick-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.8rem;
   margin-top: 0.4rem;
+}
+
+.quick-actions {
+  margin: 1rem 0;
 }
 
 .button {
@@ -194,7 +208,9 @@ button:disabled {
   background: #ffffff;
 }
 
-.grid {
+.grid,
+.stats-grid,
+.dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
   gap: 1rem;
@@ -204,7 +220,15 @@ button:disabled {
   margin-top: 1rem;
 }
 
-.card {
+.dashboard-grid {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  margin-top: 1rem;
+}
+
+.card,
+.panel,
+.stat-card,
+.account-card {
   padding: 1.4rem;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -213,15 +237,104 @@ button:disabled {
 }
 
 .card h2,
-.card h3 {
+.card h3,
+.panel h2,
+.empty-state h3 {
   margin: 0 0 0.5rem;
   letter-spacing: -0.04em;
 }
 
 .card p,
+.panel p,
+.empty-state p,
 .muted {
   color: var(--muted);
   line-height: 1.65;
+}
+
+.account-card,
+.stat-card {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.account-card span,
+.stat-card span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.account-card strong,
+.stat-card strong {
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  letter-spacing: -0.05em;
+}
+
+.account-card small,
+.stat-card small {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.panel {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+}
+
+.panel-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel-header a {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.record-list {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.record-row {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.95rem;
+  background: #f7f7f7;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+}
+
+.record-row div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.record-row span,
+.record-row small {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.record-row-strong {
+  background: #eeeeee;
+}
+
+.empty-state,
+.loading-block {
+  padding: 1rem;
+  color: var(--muted);
+  background: #f7f7f7;
+  border: 1px dashed var(--border);
+  border-radius: 1rem;
 }
 
 .content-panel {
@@ -344,14 +457,25 @@ textarea:focus {
 }
 
 @media (max-width: 720px) {
-  .topbar {
+  .topbar,
+  .dashboard-hero {
     align-items: flex-start;
     flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .topnav {
     width: 100%;
     overflow-x: auto;
     padding-bottom: 0.2rem;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .record-row,
+  .panel-header {
+    flex-direction: column;
   }
 }
