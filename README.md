@@ -86,12 +86,26 @@ with the real owner Discord ID. After the matching account logs in, visit:
 
 The app will promote that account to Owner and create a locked bootstrap record in Firestore.
 
+## Firestore Model
+
+The Firestore data layer is documented in:
+
+```text
+docs/FIRESTORE_MODEL.md
+```
+
+Collections are created naturally by app writes. The core service modules live in:
+
+```text
+src/services
+```
+
 ## Part Status
 
 - Part 1: Project foundation — complete
 - Part 2: Authentication and Remember Me — complete foundation
 - Part 3: Owner bootstrap and roles — complete foundation
-- Part 4: Firestore models and services
+- Part 4: Firestore models and services — complete foundation
 - Part 5: Public pages
 - Part 6: User dashboard
 - Part 7: Search and check logging
