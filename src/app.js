@@ -1,16 +1,21 @@
 import { APP_NAME, ROUTES } from "./data/constants.js";
 import { createCognitusId } from "./utils/cognitusIds.js";
 import { setPageTitle } from "./utils/dom.js";
+import { startAccountStore, subscribeAccountStore, getAccountStore } from "./state/accountStore.js";
+import { renderLoginPage, renderRegisterPage } from "./pages/authPages.js";
+import { renderDashboardPage } from "./pages/dashboardPage.js";
 
 const pageRoot = document.querySelector("#page-root");
+const topnav = document.querySelector(".topnav");
 
 const pages = {
   "/": renderHome,
   "/about": renderAbout,
-  "/login": renderLoginPlaceholder,
-  "/register": renderRegisterPlaceholder,
-  "/dashboard": renderDashboardPlaceholder,
-  "/setup": renderSetupPlaceholder
+  "/login": () => renderLoginPage(pageRoot),
+  "/register": () => renderRegisterPage(pageRoot),
+  "/dashboard": () => renderDashboardPage(pageRoot),
+  "/setup": renderSetupPlaceholder,
+  "/password-reset": renderPasswordResetPlaceholder
 };
 
 function getRoute() {
@@ -22,7 +27,27 @@ function navigate() {
   const route = getRoute();
   const render = pages[route] || renderNotFound;
   render();
+  renderNavigation();
   pageRoot?.focus();
+}
+
+function renderNavigation() {
+  const account = getAccountStore();
+  const loggedIn = Boolean(account.record);
+
+  topnav.innerHTML = loggedIn
+    ? `
+      <a href="#/">Home</a>
+      <a href="#/about">About</a>
+      <a href="#/dashboard">Dashboard</a>
+      <span class="nav-user">${account.record.displayName}</span>
+    `
+    : `
+      <a href="#/">Home</a>
+      <a href="#/about">About</a>
+      <a href="#/login">Login</a>
+      <a class="button button-dark" href="#/register">Create Account</a>
+    `;
 }
 
 function renderHome() {
@@ -86,65 +111,15 @@ function renderAbout() {
   `;
 }
 
-function renderLoginPlaceholder() {
-  setPageTitle("Login");
+function renderPasswordResetPlaceholder() {
+  setPageTitle("Password Reset");
   pageRoot.innerHTML = `
     <section class="form-card">
-      <p class="eyebrow">Login</p>
-      <h1>Account access</h1>
-      <p class="muted">Authentication will be connected in Part 2.</p>
-      <form class="form-stack">
-        <label>
-          Discord ID
-          <input type="text" placeholder="123456789012345678" disabled />
-        </label>
-        <label>
-          Password
-          <input type="password" placeholder="Password" disabled />
-        </label>
-        <label style="display: flex; grid-template-columns: auto 1fr; align-items: center; gap: .6rem; font-weight: 700;">
-          <input type="checkbox" disabled style="width: auto;" />
-          Remember Me
-        </label>
-        <button class="button button-dark" type="button" disabled>Login</button>
-      </form>
-    </section>
-  `;
-}
-
-function renderRegisterPlaceholder() {
-  setPageTitle("Create Account");
-  pageRoot.innerHTML = `
-    <section class="form-card">
-      <p class="eyebrow">Create Account</p>
-      <h1>Join Cognitus</h1>
-      <p class="muted">Registration will be connected in Part 2. Cognitus will not collect real emails.</p>
-      <form class="form-stack">
-        <label>
-          Discord Username
-          <input type="text" placeholder="Executive_Eagle" disabled />
-        </label>
-        <label>
-          Discord ID
-          <input type="text" placeholder="123456789012345678" disabled />
-        </label>
-        <label>
-          Password
-          <input type="password" placeholder="Create password" disabled />
-        </label>
-        <button class="button button-dark" type="button" disabled>Create Account</button>
-      </form>
-    </section>
-  `;
-}
-
-function renderDashboardPlaceholder() {
-  setPageTitle("Dashboard");
-  pageRoot.innerHTML = `
-    <section class="hero">
-      <p class="eyebrow">Dashboard</p>
-      <h1>Portal dashboard placeholder.</h1>
-      <p>Dashboard modules will be added after authentication, roles, Firestore services, and route guards are connected.</p>
+      <p class="eyebrow">Password Reset</p>
+      <h1>Request account help</h1>
+      <p class="muted">The password reset request workflow will be added with the account management features.</p>
+      <div class="notice">Because Cognitus does not collect real emails, password resets are handled by admin-reviewed requests.</div>
+      <div class="hero-actions"><a class="button button-dark" href="#/login">Back to Login</a></div>
     </section>
   `;
 }
@@ -156,7 +131,7 @@ function renderSetupPlaceholder() {
     <section class="hero">
       <p class="eyebrow">Setup</p>
       <h1>Foundation ready.</h1>
-      <p>This page confirms the Part 1 utility modules are loading. Example generated Cognitus ID: <strong>${sampleId}</strong></p>
+      <p>This page confirms the utility modules are loading. Example generated Cognitus ID: <strong>${sampleId}</strong></p>
       <div class="notice">Firebase credentials and Firestore rules will be added later, not manually created collection-by-collection.</div>
     </section>
   `;
@@ -175,6 +150,16 @@ function renderNotFound() {
 }
 
 window.addEventListener("hashchange", navigate);
-window.addEventListener("DOMContentLoaded", navigate);
+window.addEventListener("DOMContentLoaded", async () => {
+  renderNavigation();
+  navigate();
+  await startAccountStore();
+  subscribeAccountStore(() => {
+    renderNavigation();
+    if (["/login", "/register", "/dashboard"].includes(getRoute())) {
+      navigate();
+    }
+  });
+});
 
 console.info(`${APP_NAME} loaded with ${ROUTES.length} planned routes.`);
