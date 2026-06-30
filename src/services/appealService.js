@@ -14,6 +14,16 @@ export const APPEAL_STATUSES = Object.freeze({
   closed: "closed"
 });
 
+function newestFirst(items, limitCount) {
+  return items
+    .sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || new Date(a.createdAt || 0).getTime();
+      const bTime = b.createdAt?.toMillis?.() || new Date(b.createdAt || 0).getTime();
+      return bTime - aTime;
+    })
+    .slice(0, limitCount);
+}
+
 export async function submitAppeal({ actor, profileId, reportId, reason, statement }) {
   if (!actor?.uid) throw new Error("A logged-in user is required to submit appeals.");
   if (!profileId) throw new Error("Profile ID is required.");
@@ -71,18 +81,18 @@ export async function updateAppealStatus(appealId, data, actor = null) {
 
 export async function listAppealsByUser(uid, limitCount = 25) {
   const { firestore } = await getFirestoreModules();
-  return queryDocuments(COLLECTIONS.appeals, [
+  const items = await queryDocuments(COLLECTIONS.appeals, [
     firestore.where("submittedByUid", "==", uid),
-    firestore.orderBy("createdAt", "desc"),
-    firestore.limit(limitCount)
+    firestore.limit(100)
   ]);
+  return newestFirst(items, limitCount);
 }
 
 export async function listPendingAppeals(limitCount = 50) {
   const { firestore } = await getFirestoreModules();
-  return queryDocuments(COLLECTIONS.appeals, [
+  const items = await queryDocuments(COLLECTIONS.appeals, [
     firestore.where("status", "==", APPEAL_STATUSES.pendingReview),
-    firestore.orderBy("createdAt", "desc"),
-    firestore.limit(limitCount)
+    firestore.limit(100)
   ]);
+  return newestFirst(items, limitCount);
 }
