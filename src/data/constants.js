@@ -79,11 +79,7 @@ export const ACCOUNT_STATUSES = Object.freeze([
   "password_reset_required"
 ]);
 
-export const ROUTES = Object.freeze([
-  "/",
-  "/about",
-  "/login",
-  "/register",
-  "/dashboard",
-  "/setup"
-]);
+const baseRoutes = ["/", "/about", "/login", "/register", "/dashboard", "/setup"];
+const roleRoutes = ["/admin", "/owner", "/owner-bootstrap", "/password-reset"];
+
+export const ROUTES = Object.freeze([...baseRoutes, ...roleRoutes]);
