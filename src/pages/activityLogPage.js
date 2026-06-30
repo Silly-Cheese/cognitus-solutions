@@ -1,6 +1,6 @@
 import { getAccountStore } from "../state/accountStore.js";
 import { isAdminOrOwner } from "../security/permissions.js";
-import { listRecentAuditLogs } from "../services/adminOverviewService.js";
+import { listRecentAuditLogs } from "../services/adminStatsService.js";
 import { adminTable, pill, smallDate } from "../components/adminComponents.js";
 
 export async function renderActivityLogPage(root) {
