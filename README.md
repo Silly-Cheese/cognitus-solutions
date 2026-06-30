@@ -115,6 +115,24 @@ Part 5 adds the public-facing portal pages:
 
 The password reset page now submits admin-reviewed reset requests through Firestore when Firebase is configured.
 
+## Dashboard
+
+Part 6 adds the authenticated user dashboard:
+
+```text
+#/dashboard
+#/search
+#/claims
+#/reports/submit
+#/appeals
+#/history
+#/candidates
+#/organizations/saved
+#/notifications
+```
+
+The dashboard displays account information, quick actions, recent checks, saved candidates, saved organizations, and notifications.
+
 ## Part Status
 
 - Part 1: Project foundation — complete
@@ -122,7 +140,7 @@ The password reset page now submits admin-reviewed reset requests through Firest
 - Part 3: Owner bootstrap and roles — complete foundation
 - Part 4: Firestore models and services — complete foundation
 - Part 5: Public pages — complete foundation
-- Part 6: User dashboard
+- Part 6: User dashboard — complete foundation
 - Part 7: Search and check logging
 - Part 8: Report generation and downloads
 - Part 9: Claims, appeals, and reviews
