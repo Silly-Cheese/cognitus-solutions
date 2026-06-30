@@ -12,6 +12,16 @@ export const CLAIM_STATUSES = Object.freeze({
   cancelled: "cancelled"
 });
 
+function newestFirst(items, limitCount) {
+  return items
+    .sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || new Date(a.createdAt || 0).getTime();
+      const bTime = b.createdAt?.toMillis?.() || new Date(b.createdAt || 0).getTime();
+      return bTime - aTime;
+    })
+    .slice(0, limitCount);
+}
+
 export async function submitProfileClaim({ actor, profileId, statement = "" }) {
   if (!actor?.uid) throw new Error("A logged-in user is required to claim profiles.");
   if (!profileId) throw new Error("Profile ID is required.");
@@ -65,18 +75,18 @@ export async function updateClaimStatus(claimId, data, actor = null) {
 
 export async function listClaimsByUser(uid, limitCount = 25) {
   const { firestore } = await getFirestoreModules();
-  return queryDocuments(COLLECTIONS.claims, [
+  const items = await queryDocuments(COLLECTIONS.claims, [
     firestore.where("submittedByUid", "==", uid),
-    firestore.orderBy("createdAt", "desc"),
-    firestore.limit(limitCount)
+    firestore.limit(100)
   ]);
+  return newestFirst(items, limitCount);
 }
 
 export async function listPendingClaims(limitCount = 50) {
   const { firestore } = await getFirestoreModules();
-  return queryDocuments(COLLECTIONS.claims, [
+  const items = await queryDocuments(COLLECTIONS.claims, [
     firestore.where("status", "==", CLAIM_STATUSES.pendingReview),
-    firestore.orderBy("createdAt", "desc"),
-    firestore.limit(limitCount)
+    firestore.limit(100)
   ]);
+  return newestFirst(items, limitCount);
 }
