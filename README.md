@@ -42,10 +42,32 @@ This repository is intended to be deployed with GitHub Pages.
 
 The app is written as a static JavaScript application using browser modules. Firebase setup will be completed in a later part.
 
+## Authentication Model
+
+Cognitus does not collect real email addresses.
+
+Users enter:
+
+```text
+Discord ID
+Password
+```
+
+The app converts the Discord ID into an internal Firebase Authentication email:
+
+```text
+<discordId>@cognitus.local
+```
+
+Remember Me is handled with Firebase Auth persistence:
+
+- Checked: browser local persistence
+- Unchecked: browser session persistence
+
 ## Part Status
 
-- Part 1: Project foundation
-- Part 2: Authentication and Remember Me
+- Part 1: Project foundation — complete
+- Part 2: Authentication and Remember Me — complete foundation
 - Part 3: Owner bootstrap and roles
 - Part 4: Firestore models and services
 - Part 5: Public pages
