@@ -6,7 +6,6 @@ import { searchOrganizations } from "../services/organizationService.js";
 import { createCheckLog } from "../services/checkService.js";
 import { saveCandidate, saveOrganization } from "../services/savedService.js";
 
-let lastResults = [];
 let lastCheckId = null;
 
 export function renderSearchPage(root) {
@@ -153,8 +152,7 @@ async function handleCheckSubmit(root, form, actor) {
       resultSummary: results.length ? `${results.length} result(s) returned.` : "No matching records returned."
     });
 
-    lastResults = results;
-    checkIdRoot.textContent = `Check ID: ${lastCheckId}`;
+    checkIdRoot.innerHTML = `Check ID: ${lastCheckId} · <a href="#/reports/quick?checkId=${lastCheckId}">Quick Report</a> · <a href="#/reports/full?checkId=${lastCheckId}">Full Report</a>`;
     renderResults(resultsRoot, results, data.searchType, actor);
   } catch (error) {
     resultsRoot.innerHTML = `<div class="notice">${error?.message || "Search failed."}</div>`;
@@ -169,7 +167,11 @@ function renderResults(root, results, searchType, actor) {
     root.innerHTML = `
       <div class="empty-state">
         <h3>No matching records</h3>
-        <p>The check was still logged. A future part will allow authorized users to create a new profile or organization record from this search.</p>
+        <p>The check was still logged. You can still generate a report showing that no matching Cognitus record was found.</p>
+        <div class="hero-actions">
+          <a class="button button-light" href="#/reports/quick?checkId=${lastCheckId}">Quick Report</a>
+          <a class="button button-light" href="#/reports/full?checkId=${lastCheckId}">Full Report</a>
+        </div>
       </div>
     `;
     return;
@@ -208,6 +210,8 @@ function renderResultCard(item, searchType) {
         </div>
         <div class="hero-actions">
           <button class="button button-light" type="button" data-save-org="${item.id}">Save Organization</button>
+          <a class="button button-light" href="#/reports/quick?checkId=${lastCheckId}">Quick Report</a>
+          <a class="button button-light" href="#/reports/full?checkId=${lastCheckId}">Full Report</a>
         </div>
       </article>
     `;
@@ -230,6 +234,8 @@ function renderResultCard(item, searchType) {
       <div class="hero-actions">
         <button class="button button-light" type="button" data-save-profile="${item.id}">Save Candidate</button>
         <a class="button button-light" href="#/claims">Claim Profile</a>
+        <a class="button button-light" href="#/reports/quick?checkId=${lastCheckId}">Quick Report</a>
+        <a class="button button-light" href="#/reports/full?checkId=${lastCheckId}">Full Report</a>
       </div>
     </article>
   `;
