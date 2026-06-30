@@ -1,4 +1,4 @@
-import { initializeFirebaseServices } from "../firebase/firebaseApp.js";
+import { FIREBASE_CDN_BASE, initializeFirebaseServices } from "../firebase/firebaseApp.js";
 import { createIdForEntity } from "../utils/cognitusIds.js";
 import { normalizeDiscordId, normalizeInput } from "../utils/validation.js";
 
@@ -14,6 +14,14 @@ export function discordIdToAuthEmail(discordId) {
   return `${cleanDiscordId}@${AUTH_EMAIL_DOMAIN}`;
 }
 
+async function loadAuthModule() {
+  return import(`${FIREBASE_CDN_BASE}/firebase-auth.js`);
+}
+
+async function loadFirestoreModule() {
+  return import(`${FIREBASE_CDN_BASE}/firebase-firestore.js`);
+}
+
 export async function setAuthPersistenceMode(rememberMe) {
   const { auth, ready } = await initializeFirebaseServices();
 
@@ -21,7 +29,7 @@ export async function setAuthPersistenceMode(rememberMe) {
     throw new Error("Firebase is not configured yet.");
   }
 
-  const authModule = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
+  const authModule = await loadAuthModule();
   const persistence = rememberMe ? authModule.browserLocalPersistence : authModule.browserSessionPersistence;
   await authModule.setPersistence(auth, persistence);
 }
@@ -48,8 +56,8 @@ export async function registerWithDiscordAccount({
 
   await setAuthPersistenceMode(rememberMe);
 
-  const authModule = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
-  const firestore = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+  const authModule = await loadAuthModule();
+  const firestore = await loadFirestoreModule();
 
   const email = discordIdToAuthEmail(cleanDiscordId);
   const credential = await authModule.createUserWithEmailAndPassword(auth, email, password);
@@ -94,8 +102,8 @@ export async function loginWithDiscordId({ discordId, password, rememberMe = fal
 
   await setAuthPersistenceMode(rememberMe);
 
-  const authModule = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
-  const firestore = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+  const authModule = await loadAuthModule();
+  const firestore = await loadFirestoreModule();
 
   const credential = await authModule.signInWithEmailAndPassword(auth, discordIdToAuthEmail(cleanDiscordId), password);
   const userRef = firestore.doc(db, "users", credential.user.uid);
@@ -117,7 +125,7 @@ export async function logout() {
   const { auth, ready } = await initializeFirebaseServices();
   if (!ready) return;
 
-  const authModule = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
+  const authModule = await loadAuthModule();
   await authModule.signOut(auth);
 }
 
@@ -125,7 +133,7 @@ export async function getCurrentUserRecord(uid) {
   const { db, ready } = await initializeFirebaseServices();
   if (!ready || !uid) return null;
 
-  const firestore = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+  const firestore = await loadFirestoreModule();
   const snapshot = await firestore.getDoc(firestore.doc(db, "users", uid));
 
   return snapshot.exists() ? { id: snapshot.id, ...snapshot.data() } : null;
@@ -139,7 +147,7 @@ export async function onAuthStateChange(callback) {
     return () => {};
   }
 
-  const authModule = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
+  const authModule = await loadAuthModule();
 
   return authModule.onAuthStateChanged(auth, async (authUser) => {
     const userRecord = authUser ? await getCurrentUserRecord(authUser.uid) : null;
