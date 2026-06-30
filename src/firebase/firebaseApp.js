@@ -1,5 +1,8 @@
 import { firebaseConfig, firebaseReady } from "./firebaseConfig.js";
 
+export const FIREBASE_SDK_VERSION = "12.15.0";
+export const FIREBASE_CDN_BASE = `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}`;
+
 let firebaseApp = null;
 let firebaseAuth = null;
 let firebaseDb = null;
@@ -10,9 +13,9 @@ export async function initializeFirebaseServices() {
     return { app: null, auth: null, db: null, ready: false };
   }
 
-  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
-  const { getAuth } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js");
-  const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+  const { initializeApp } = await import(`${FIREBASE_CDN_BASE}/firebase-app.js`);
+  const { getAuth } = await import(`${FIREBASE_CDN_BASE}/firebase-auth.js`);
+  const { getFirestore } = await import(`${FIREBASE_CDN_BASE}/firebase-firestore.js`);
 
   firebaseApp = firebaseApp || initializeApp(firebaseConfig);
   firebaseAuth = firebaseAuth || getAuth(firebaseApp);
