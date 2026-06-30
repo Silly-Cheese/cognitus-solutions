@@ -3,6 +3,16 @@ import { createIdForEntity } from "../utils/cognitusIds.js";
 import { normalizeInput } from "../utils/validation.js";
 import { createDocument, queryDocuments, updateDocument, getFirestoreModules } from "./firestoreCore.js";
 
+function newestFirst(items, limitCount) {
+  return items
+    .sort((a, b) => {
+      const aTime = a.createdAt?.toMillis?.() || new Date(a.createdAt || 0).getTime();
+      const bTime = b.createdAt?.toMillis?.() || new Date(b.createdAt || 0).getTime();
+      return bTime - aTime;
+    })
+    .slice(0, limitCount);
+}
+
 export async function createNotification({ userId, title, message, type = "info", link = "" }) {
   if (!userId) throw new Error("Notification user ID is required.");
   if (!normalizeInput(title)) throw new Error("Notification title is required.");
@@ -21,11 +31,11 @@ export async function createNotification({ userId, title, message, type = "info"
 
 export async function listNotificationsForUser(userId, limitCount = 25) {
   const { firestore } = await getFirestoreModules();
-  return queryDocuments(COLLECTIONS.notifications, [
+  const items = await queryDocuments(COLLECTIONS.notifications, [
     firestore.where("userId", "==", userId),
-    firestore.orderBy("createdAt", "desc"),
-    firestore.limit(limitCount)
+    firestore.limit(100)
   ]);
+  return newestFirst(items, limitCount);
 }
 
 export async function markNotificationRead(notificationId) {
