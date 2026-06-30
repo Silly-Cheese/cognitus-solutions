@@ -11,6 +11,16 @@ export async function getFirestoreModules() {
   return { db, firestore };
 }
 
+function newestFirst(items, limitCount, orderField = "createdAt") {
+  return items
+    .sort((a, b) => {
+      const aTime = a[orderField]?.toMillis?.() || new Date(a[orderField] || 0).getTime();
+      const bTime = b[orderField]?.toMillis?.() || new Date(b[orderField] || 0).getTime();
+      return bTime - aTime;
+    })
+    .slice(0, limitCount);
+}
+
 export async function createDocument(collectionName, data) {
   const { db, firestore } = await getFirestoreModules();
   const ref = firestore.doc(firestore.collection(db, collectionName));
@@ -63,12 +73,12 @@ export async function listRecentDocuments(collectionName, limitCount = 25, order
   const { db, firestore } = await getFirestoreModules();
   const queryRef = firestore.query(
     firestore.collection(db, collectionName),
-    firestore.orderBy(orderField, "desc"),
-    firestore.limit(limitCount)
+    firestore.limit(Math.max(limitCount, 100))
   );
 
   const snapshot = await firestore.getDocs(queryRef);
-  return snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+  const items = snapshot.docs.map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }));
+  return newestFirst(items, limitCount, orderField);
 }
 
 export async function queryDocuments(collectionName, constraints = []) {
