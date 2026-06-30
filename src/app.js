@@ -2,61 +2,34 @@ import { APP_NAME, ROUTES } from "./data/constants.js";
 import { createCognitusId } from "./utils/cognitusIds.js";
 import { setPageTitle } from "./utils/dom.js";
 import { startAccountStore, subscribeAccountStore, getAccountStore } from "./state/accountStore.js";
-import { renderLoginPage, renderRegisterPage } from "./pages/authPages.js";
-import { renderDashboardPage } from "./pages/dashboardPage.js";
-import { renderOwnerBootstrapPage } from "./pages/ownerBootstrapPage.js";
-import { renderAdminPage, renderOwnerPage } from "./pages/adminPage.js";
-import { renderHomePage, renderAboutPage, renderFeaturesPage, renderTermsPage, renderPrivacyPage } from "./pages/publicPages.js";
-import { renderPasswordResetPage } from "./pages/passwordResetPage.js";
-import { renderAppPlaceholder } from "./pages/appPlaceholderPages.js";
-import { renderSearchPage } from "./pages/searchPage.js";
-import { renderHistoryPage } from "./pages/historyPage.js";
-import { renderReportPage } from "./pages/reportPage.js";
-import { renderReportSubmitPage } from "./pages/reportSubmitPage.js";
-import { renderClaimsPage } from "./pages/claimsPage.js";
-import { renderAppealsPage } from "./pages/appealsPage.js";
-import { renderReviewQueuePage } from "./pages/reviewQueuePage.js";
-import { renderUserManagementPage } from "./pages/userManagementPage.js";
-import { renderOrganizationManagementPage } from "./pages/organizationManagementPage.js";
-import { renderActivityLogPage } from "./pages/activityLogPage.js";
-import { renderOwnerSettingsPage } from "./pages/ownerSettingsPage.js";
 import { isAdminOrOwner, isOwner, isReviewerOrHigher } from "./security/permissions.js";
 
 const pageRoot = document.querySelector("#page-root");
 const topnav = document.querySelector(".topnav");
 
-const protectedRoutes = ["/login", "/register", "/dashboard", "/admin", "/admin/users", "/admin/organizations", "/admin/audit", "/review", "/owner", "/owner/settings", "/owner-bootstrap", "/search", "/claims", "/reports/submit", "/reports/quick", "/reports/full", "/appeals", "/history", "/candidates", "/organizations/saved", "/notifications"];
-
-const pages = {
-  "/": () => renderHomePage(pageRoot),
-  "/about": () => renderAboutPage(pageRoot),
-  "/features": () => renderFeaturesPage(pageRoot),
-  "/terms": () => renderTermsPage(pageRoot),
-  "/privacy": () => renderPrivacyPage(pageRoot),
-  "/login": () => renderLoginPage(pageRoot),
-  "/register": () => renderRegisterPage(pageRoot),
-  "/dashboard": () => renderDashboardPage(pageRoot),
-  "/search": () => renderSearchPage(pageRoot),
-  "/claims": () => renderClaimsPage(pageRoot),
-  "/reports/submit": () => renderReportSubmitPage(pageRoot),
-  "/reports/quick": () => renderReportPage(pageRoot, "quick"),
-  "/reports/full": () => renderReportPage(pageRoot, "full"),
-  "/appeals": () => renderAppealsPage(pageRoot),
-  "/history": () => renderHistoryPage(pageRoot),
-  "/candidates": () => renderAppPlaceholder(pageRoot, "candidates"),
-  "/organizations/saved": () => renderAppPlaceholder(pageRoot, "savedOrganizations"),
-  "/notifications": () => renderAppPlaceholder(pageRoot, "notifications"),
-  "/review": () => renderReviewQueuePage(pageRoot),
-  "/admin": () => renderAdminPage(pageRoot),
-  "/admin/users": () => renderUserManagementPage(pageRoot),
-  "/admin/organizations": () => renderOrganizationManagementPage(pageRoot),
-  "/admin/audit": () => renderActivityLogPage(pageRoot),
-  "/owner": () => renderOwnerPage(pageRoot),
-  "/owner/settings": () => renderOwnerSettingsPage(pageRoot),
-  "/owner-bootstrap": () => renderOwnerBootstrapPage(pageRoot),
-  "/setup": renderSetupPlaceholder,
-  "/password-reset": () => renderPasswordResetPage(pageRoot)
-};
+const protectedRoutes = new Set([
+  "/login",
+  "/register",
+  "/dashboard",
+  "/admin",
+  "/admin/users",
+  "/admin/organizations",
+  "/admin/audit",
+  "/review",
+  "/owner",
+  "/owner/settings",
+  "/owner-bootstrap",
+  "/search",
+  "/claims",
+  "/reports/submit",
+  "/reports/quick",
+  "/reports/full",
+  "/appeals",
+  "/history",
+  "/candidates",
+  "/organizations/saved",
+  "/notifications"
+]);
 
 const pageTitles = {
   "/": "Home",
@@ -95,14 +68,154 @@ function getRoute() {
   return path || "/";
 }
 
-function navigate() {
+async function navigate() {
   const route = getRoute();
-  const render = pages[route] || renderNotFound;
   setPageTitle(pageTitles[route] || "Not Found");
-  render();
   renderNavigation();
   renderFooter();
+
+  try {
+    await renderRoute(route);
+  } catch (error) {
+    console.error("Cognitus route failed:", route, error);
+    renderRouteError(route, error);
+  }
+
   pageRoot?.focus();
+}
+
+async function renderRoute(route) {
+  if (route === "/") {
+    const mod = await import("./pages/publicPages.js");
+    return mod.renderHomePage(pageRoot);
+  }
+
+  if (route === "/about") {
+    const mod = await import("./pages/publicPages.js");
+    return mod.renderAboutPage(pageRoot);
+  }
+
+  if (route === "/features") {
+    const mod = await import("./pages/publicPages.js");
+    return mod.renderFeaturesPage(pageRoot);
+  }
+
+  if (route === "/terms") {
+    const mod = await import("./pages/publicPages.js");
+    return mod.renderTermsPage(pageRoot);
+  }
+
+  if (route === "/privacy") {
+    const mod = await import("./pages/publicPages.js");
+    return mod.renderPrivacyPage(pageRoot);
+  }
+
+  if (route === "/login") {
+    const mod = await import("./pages/authPages.js");
+    return mod.renderLoginPage(pageRoot);
+  }
+
+  if (route === "/register") {
+    const mod = await import("./pages/authPages.js");
+    return mod.renderRegisterPage(pageRoot);
+  }
+
+  if (route === "/password-reset") {
+    const mod = await import("./pages/passwordResetPage.js");
+    return mod.renderPasswordResetPage(pageRoot);
+  }
+
+  if (route === "/dashboard") {
+    const mod = await import("./pages/dashboardPage.js");
+    return mod.renderDashboardPage(pageRoot);
+  }
+
+  if (route === "/search") {
+    const mod = await import("./pages/searchPage.js");
+    return mod.renderSearchPage(pageRoot);
+  }
+
+  if (route === "/claims") {
+    const mod = await import("./pages/claimsPage.js");
+    return mod.renderClaimsPage(pageRoot);
+  }
+
+  if (route === "/reports/submit") {
+    const mod = await import("./pages/reportSubmitPage.js");
+    return mod.renderReportSubmitPage(pageRoot);
+  }
+
+  if (route === "/reports/quick") {
+    const mod = await import("./pages/reportPage.js");
+    return mod.renderReportPage(pageRoot, "quick");
+  }
+
+  if (route === "/reports/full") {
+    const mod = await import("./pages/reportPage.js");
+    return mod.renderReportPage(pageRoot, "full");
+  }
+
+  if (route === "/appeals") {
+    const mod = await import("./pages/appealsPage.js");
+    return mod.renderAppealsPage(pageRoot);
+  }
+
+  if (route === "/history") {
+    const mod = await import("./pages/historyPage.js");
+    return mod.renderHistoryPage(pageRoot);
+  }
+
+  if (route === "/review") {
+    const mod = await import("./pages/reviewQueuePage.js");
+    return mod.renderReviewQueuePage(pageRoot);
+  }
+
+  if (route === "/admin") {
+    const mod = await import("./pages/adminPage.js");
+    return mod.renderAdminPage(pageRoot);
+  }
+
+  if (route === "/admin/users") {
+    const mod = await import("./pages/userManagementPage.js");
+    return mod.renderUserManagementPage(pageRoot);
+  }
+
+  if (route === "/admin/organizations") {
+    const mod = await import("./pages/organizationManagementPage.js");
+    return mod.renderOrganizationManagementPage(pageRoot);
+  }
+
+  if (route === "/admin/audit") {
+    const mod = await import("./pages/activityLogPage.js");
+    return mod.renderActivityLogPage(pageRoot);
+  }
+
+  if (route === "/owner") {
+    const mod = await import("./pages/adminPage.js");
+    return mod.renderOwnerPage(pageRoot);
+  }
+
+  if (route === "/owner/settings") {
+    const mod = await import("./pages/ownerSettingsPage.js");
+    return mod.renderOwnerSettingsPage(pageRoot);
+  }
+
+  if (route === "/owner-bootstrap") {
+    const mod = await import("./pages/ownerBootstrapPage.js");
+    return mod.renderOwnerBootstrapPage(pageRoot);
+  }
+
+  if (["/candidates", "/organizations/saved", "/notifications"].includes(route)) {
+    const key = route === "/candidates" ? "candidates" : route === "/organizations/saved" ? "savedOrganizations" : "notifications";
+    const mod = await import("./pages/appPlaceholderPages.js");
+    return mod.renderAppPlaceholder(pageRoot, key);
+  }
+
+  if (route === "/setup") {
+    return renderSetupPlaceholder();
+  }
+
+  return renderNotFound();
 }
 
 function renderNavigation() {
@@ -158,7 +271,7 @@ function renderSetupPlaceholder() {
       <p class="eyebrow">Setup</p>
       <h1>Foundation ready.</h1>
       <p>This page confirms the utility modules are loading. Example generated Cognitus ID: <strong>${sampleId}</strong></p>
-      <div class="notice">Firebase credentials and Firestore rules will be added later, not manually created collection-by-collection.</div>
+      <div class="notice">Firebase is configured. Use this page only for quick module checks.</div>
     </section>
   `;
 }
@@ -174,17 +287,37 @@ function renderNotFound() {
   `;
 }
 
+function renderRouteError(route, error) {
+  pageRoot.innerHTML = `
+    <section class="hero hero-wide">
+      <p class="eyebrow">Route Error</p>
+      <h1>This page could not load.</h1>
+      <p><strong>Route:</strong> ${route}</p>
+      <div class="notice">${error?.message || "Unknown error"}</div>
+      <div class="hero-actions">
+        <a class="button button-dark" href="#/">Home</a>
+        <a class="button button-light" href="#/login">Login</a>
+      </div>
+    </section>
+  `;
+}
+
 window.addEventListener("hashchange", navigate);
 window.addEventListener("DOMContentLoaded", async () => {
   renderNavigation();
-  navigate();
-  await startAccountStore();
-  subscribeAccountStore(() => {
-    renderNavigation();
-    if (protectedRoutes.includes(getRoute())) {
-      navigate();
-    }
-  });
+  await navigate();
+
+  try {
+    await startAccountStore();
+    subscribeAccountStore(() => {
+      renderNavigation();
+      if (protectedRoutes.has(getRoute())) {
+        navigate();
+      }
+    });
+  } catch (error) {
+    console.error("Cognitus account state failed:", error);
+  }
 });
 
-console.info(`${APP_NAME} loaded with ${ROUTES.length} planned routes.`);
+console.info(`${APP_NAME} router loaded with ${ROUTES.length} planned routes.`);
