@@ -1,16 +1,14 @@
-// Firebase configuration will be pasted here during the final setup part.
-// Do not place secret server keys in this project. Firebase web config is safe for client apps,
-// but Firestore Security Rules must enforce all real access control.
+// Firebase web configuration for Cognitus Solutions.
+// This is client-side Firebase config, not a secret server key.
+// Firestore Security Rules must enforce all real access control.
 
 export const firebaseConfig = {
-  apiKey: "PASTE_FIREBASE_API_KEY_HERE",
-  authDomain: "PASTE_FIREBASE_AUTH_DOMAIN_HERE",
-  projectId: "PASTE_FIREBASE_PROJECT_ID_HERE",
-  storageBucket: "PASTE_FIREBASE_STORAGE_BUCKET_HERE",
-  messagingSenderId: "PASTE_FIREBASE_MESSAGING_SENDER_ID_HERE",
-  appId: "PASTE_FIREBASE_APP_ID_HERE"
+  apiKey: "AIzaSyCdif9RywlIRQpLp_J-8TM_rp-u3iC49Zs",
+  authDomain: "cognitus-solutions.firebaseapp.com",
+  projectId: "cognitus-solutions",
+  storageBucket: "cognitus-solutions.firebasestorage.app",
+  messagingSenderId: "872227518492",
+  appId: "1:872227518492:web:3224cb731345a8e43607d9"
 };
 
-export const firebaseReady = !Object.values(firebaseConfig).some((value) =>
-  String(value).startsWith("PASTE_")
-);
+export const firebaseReady = true;
