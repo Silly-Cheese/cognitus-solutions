@@ -8,6 +8,7 @@ import { renderOwnerBootstrapPage } from "./pages/ownerBootstrapPage.js";
 import { renderAdminPage, renderOwnerPage } from "./pages/adminPage.js";
 import { renderHomePage, renderAboutPage, renderFeaturesPage, renderTermsPage, renderPrivacyPage } from "./pages/publicPages.js";
 import { renderPasswordResetPage } from "./pages/passwordResetPage.js";
+import { renderAppPlaceholder } from "./pages/appPlaceholderPages.js";
 import { isAdminOrOwner, isOwner, isReviewerOrHigher } from "./security/permissions.js";
 
 const pageRoot = document.querySelector("#page-root");
@@ -22,6 +23,14 @@ const pages = {
   "/login": () => renderLoginPage(pageRoot),
   "/register": () => renderRegisterPage(pageRoot),
   "/dashboard": () => renderDashboardPage(pageRoot),
+  "/search": () => renderAppPlaceholder(pageRoot, "search"),
+  "/claims": () => renderAppPlaceholder(pageRoot, "claims"),
+  "/reports/submit": () => renderAppPlaceholder(pageRoot, "submitReport"),
+  "/appeals": () => renderAppPlaceholder(pageRoot, "appeals"),
+  "/history": () => renderAppPlaceholder(pageRoot, "history"),
+  "/candidates": () => renderAppPlaceholder(pageRoot, "candidates"),
+  "/organizations/saved": () => renderAppPlaceholder(pageRoot, "savedOrganizations"),
+  "/notifications": () => renderAppPlaceholder(pageRoot, "notifications"),
   "/admin": () => renderAdminPage(pageRoot),
   "/owner": () => renderOwnerPage(pageRoot),
   "/owner-bootstrap": () => renderOwnerBootstrapPage(pageRoot),
@@ -38,6 +47,14 @@ const pageTitles = {
   "/login": "Login",
   "/register": "Create Account",
   "/dashboard": "Dashboard",
+  "/search": "Run Check",
+  "/claims": "Claim Profile",
+  "/reports/submit": "Submit Report",
+  "/appeals": "Appeals",
+  "/history": "Check History",
+  "/candidates": "Saved Candidates",
+  "/organizations/saved": "Saved Organizations",
+  "/notifications": "Notifications",
   "/admin": "Administration",
   "/owner": "Owner",
   "/owner-bootstrap": "Owner Bootstrap",
@@ -79,6 +96,7 @@ function renderNavigation() {
     <a href="#/">Home</a>
     <a href="#/features">Features</a>
     <a href="#/dashboard">Dashboard</a>
+    <a href="#/search">Run Check</a>
     ${isReviewerOrHigher(user) ? `<a href="#/admin">Admin</a>` : ""}
     ${isAdminOrOwner(user) ? `<a href="#/admin">Manage</a>` : ""}
     ${isOwner(user) ? `<a href="#/owner">Owner</a>` : ""}
@@ -133,7 +151,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   await startAccountStore();
   subscribeAccountStore(() => {
     renderNavigation();
-    if (["/login", "/register", "/dashboard", "/admin", "/owner", "/owner-bootstrap"].includes(getRoute())) {
+    if (["/login", "/register", "/dashboard", "/admin", "/owner", "/owner-bootstrap", "/search", "/claims", "/reports/submit", "/appeals", "/history", "/candidates", "/organizations/saved", "/notifications"].includes(getRoute())) {
       navigate();
     }
   });
