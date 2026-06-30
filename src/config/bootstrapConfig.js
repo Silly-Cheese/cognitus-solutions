@@ -3,8 +3,8 @@
 // The app will only bootstrap the owner role when the signed-in user's Discord ID matches this value.
 
 export const OWNER_BOOTSTRAP = Object.freeze({
-  ownerDiscordId: "PASTE_OWNER_DISCORD_ID_HERE",
-  ownerDisplayName: "Christopher Shelley",
+  ownerDiscordId: "1036433371393441914",
+  ownerDisplayName: "Executive_Eagle",
   ownerRobloxUsername: "Executive_Eagle",
   lockAfterFirstBootstrap: true
 });
