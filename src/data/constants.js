@@ -86,6 +86,8 @@ const dashboardRoutes = [
   "/search",
   "/claims",
   "/reports/submit",
+  "/reports/quick",
+  "/reports/full",
   "/appeals",
   "/history",
   "/candidates",
