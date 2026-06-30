@@ -1,7 +1,7 @@
 import { ACCOUNT_STATUSES, USER_ROLES } from "../data/constants.js";
 import { getAccountStore } from "../state/accountStore.js";
 import { isAdminOrOwner, isOwner } from "../security/permissions.js";
-import { listRecentUsers } from "../services/adminOverviewService.js";
+import { listRecentUsers } from "../services/adminStatsService.js";
 import { changeUserRole, changeUserStatus } from "../services/managementService.js";
 import { pill, smallDate } from "../components/adminComponents.js";
 
