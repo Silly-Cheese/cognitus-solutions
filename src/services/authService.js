@@ -67,24 +67,51 @@ export async function registerWithDiscordAccount({
   });
 
   const now = firestore.serverTimestamp();
+  const userCognitusId = createIdForEntity("user");
+  const profileCognitusId = createIdForEntity("profile");
   const userRef = firestore.doc(db, "users", credential.user.uid);
+  const profileRef = firestore.doc(db, "profiles", credential.user.uid);
 
-  await firestore.setDoc(userRef, {
-    uid: credential.user.uid,
-    cognitusId: createIdForEntity("user"),
-    displayName: cleanDiscordUsername,
-    discordUsername: cleanDiscordUsername,
-    discordId: cleanDiscordId,
-    accountType,
-    role: "user",
-    status: "active",
-    organizationId: null,
-    syntheticEmail: email,
-    realEmailCollected: false,
-    createdAt: now,
-    updatedAt: now,
-    lastLoginAt: now
-  });
+  await firestore.writeBatch(db)
+    .set(userRef, {
+      uid: credential.user.uid,
+      cognitusId: userCognitusId,
+      profileId: credential.user.uid,
+      displayName: cleanDiscordUsername,
+      discordUsername: cleanDiscordUsername,
+      discordId: cleanDiscordId,
+      accountType,
+      role: "user",
+      status: "active",
+      organizationId: null,
+      syntheticEmail: email,
+      realEmailCollected: false,
+      createdAt: now,
+      updatedAt: now,
+      lastLoginAt: now
+    })
+    .set(profileRef, {
+      id: credential.user.uid,
+      cognitusId: profileCognitusId,
+      linkedUserId: credential.user.uid,
+      type: "person",
+      displayName: cleanDiscordUsername,
+      robloxUsernames: [],
+      discordUsernames: [cleanDiscordUsername],
+      discordIds: [cleanDiscordId],
+      knownAliases: [],
+      claimedByUid: credential.user.uid,
+      identityStatus: "self_registered",
+      identityConfidence: 100,
+      professionalStanding: "unreviewed",
+      riskLevel: "unreviewed",
+      reportCount: 0,
+      appealCount: 0,
+      lastReviewedAt: null,
+      createdAt: now,
+      updatedAt: now
+    })
+    .commit();
 
   return credential.user;
 }
