@@ -12,11 +12,15 @@ const assert = (condition, message) => {
 
 const index = read("index.html");
 const app = read("src/app.js");
+const navigationEnhancements = read("src/navigationEnhancements.js");
 const rules = read("firestore.rules");
 const firebase = JSON.parse(read("firebase.json"));
 
 assert(index.includes('src/app.js?v='), "index.html loads the consolidated production router");
 assert(!index.includes("appV1.js") && !index.includes("appSafe.js"), "legacy routers are not production entrypoints");
+assert(index.includes("navigationEnhancements.js") && navigationEnhancements.includes("data.orgRequestTab"), "organization request navigation enhancement is loaded");
+assert(navigationEnhancements.includes('#/organizations?request=1') && navigationEnhancements.includes("#new-org-toggle"), "organization request tab opens the creation form directly");
+assert(index.includes('rel="icon"') && index.includes("data:image/svg+xml"), "inline favicon prevents the GitHub Pages favicon 404");
 assert(!app.includes("OWNER_BOOTSTRAP") && !app.includes("ownerDiscordId"), "production app contains no client owner-bootstrap credential");
 assert(app.includes('current === "/owner-bootstrap"') && app.includes("Client-side bootstrap has been retired"), "legacy bootstrap route is explicitly non-operational");
 assert(app.includes('identityStatus: "self_declared"') && app.includes("identityConfidence: 0"), "new registrations do not claim verified identity");
