@@ -30,7 +30,7 @@ assert(rules.includes("request.resource.data.professionalStanding == resource.da
 assert(rules.includes("request.resource.data.riskLevel == resource.data.riskLevel"), "self profile updates cannot rewrite risk level");
 assert(rules.includes("match /settings/bootstrap") && rules.includes("allow write: if false;"), "client-side owner bootstrap writes are disabled");
 assert(rules.includes("match /passwordResetRequests") && rules.includes("allow read, write: if false;"), "public Firestore password-reset tickets are disabled");
-assert(rules.includes("changedKeys().hasOnly") && rules.includes("'summary', 'details'"), "review workflows protect original report submission fields");
+assert(rules.includes("request.resource.data.summary == resource.data.summary") && rules.includes("request.resource.data.details == resource.data.details"), "review workflows preserve original report summary and details");
 assert((rules.match(/{/g) || []).length === (rules.match(/}/g) || []).length, "Firestore rules have balanced braces");
 
 assert(firebase?.firestore?.rules === "firestore.rules", "firebase.json points to Firestore rules");
