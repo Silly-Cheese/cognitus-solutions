@@ -22,6 +22,8 @@ assert(!app.includes("OWNER_BOOTSTRAP") && !app.includes("ownerDiscordId"), "pro
 assert(app.includes('current === "/owner-bootstrap"') && app.includes("Client-side bootstrap has been retired"), "legacy bootstrap route is explicitly non-operational");
 assert(app.includes('identityStatus: "self_declared"') && app.includes("identityConfidence: 0"), "new registrations do not claim verified identity");
 assert(app.includes("resultCount: results.length") && app.includes("results.length === 1"), "search only attaches a target when exactly one record matches");
+assert(!app.includes("Fire.orderBy("), "production queries do not depend on manual composite-index sorting");
+assert(app.includes("newestFirst(") && app.includes("alphabetic("), "chronological and directory sorting is performed client-side");
 
 assert(rules.includes("currentUser().status == 'active'"), "privileged rule evaluation requires an active account");
 assert(rules.includes("resource.data.role != 'owner'") && rules.includes("request.resource.data.role != 'owner'"), "admins cannot modify or create Owner role through user updates");
@@ -34,12 +36,13 @@ assert(rules.includes("request.resource.data.summary == resource.data.summary") 
 assert((rules.match(/{/g) || []).length === (rules.match(/}/g) || []).length, "Firestore rules have balanced braces");
 
 assert(firebase?.firestore?.rules === "firestore.rules", "firebase.json points to Firestore rules");
-assert(firebase?.firestore?.indexes === "firestore.indexes.json", "firebase.json points to Firestore indexes");
-assert(Array.isArray(indexes.indexes) && indexes.indexes.length >= 8, "required composite indexes are declared");
+assert(firebase?.firestore?.indexes === "firestore.indexes.json", "firebase.json points to the empty index manifest");
+assert(Array.isArray(indexes.indexes) && indexes.indexes.length === 0, "no manual/composite Firestore indexes are declared");
+assert(Array.isArray(indexes.fieldOverrides) && indexes.fieldOverrides.length === 0, "no custom Firestore index overrides are declared");
 
 if (process.exitCode) {
   console.error("\nCognitus validation failed.");
   process.exit(process.exitCode);
 }
 
-console.log("\nCognitus secure V2 validation passed.");
+console.log("\nCognitus secure V2 validation passed with no manual composite indexes.");
