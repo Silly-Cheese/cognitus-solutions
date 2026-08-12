@@ -1,7 +1,9 @@
 import "./controlsV4.js";
+import "./assessmentV4.js";
 
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");
+const topbar = document.querySelector(".topbar");
 let timers = [];
 
 function mountV4Styles() {
@@ -10,7 +12,7 @@ function mountV4Styles() {
   const link = document.createElement("link");
   link.id = "cognitus-ux-v4";
   link.rel = "stylesheet";
-  link.href = "./src/uxV4.css?v=20260812-2";
+  link.href = "./src/uxV4.css?v=20260812-mobile-1";
   document.head.appendChild(link);
 }
 
@@ -21,6 +23,41 @@ function isAuthenticatedNav() {
 function cleanupV3Artifacts() {
   document.querySelectorAll(".workspace-nav-shell, .ux-command-backdrop, .ux-toast-region").forEach((node) => node.remove());
   nav?.classList.remove("ux-nav-source");
+}
+
+function closeMobileMenu() {
+  if (!nav) return;
+  nav.classList.remove("v4-mobile-open");
+  const button = document.querySelector("#v4-mobile-nav-toggle");
+  button?.setAttribute("aria-expanded", "false");
+  if (button) button.querySelector("span:last-child").textContent = "Menu";
+}
+
+function ensureMobileMenu() {
+  if (!nav || !topbar) return;
+  nav.id = "cognitus-primary-nav";
+  let button = document.querySelector("#v4-mobile-nav-toggle");
+  if (!button) {
+    button = document.createElement("button");
+    button.id = "v4-mobile-nav-toggle";
+    button.className = "v4-mobile-nav-toggle";
+    button.type = "button";
+    button.setAttribute("aria-controls", nav.id);
+    button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-label", "Open navigation menu");
+    button.innerHTML = '<span class="v4-mobile-nav-icon" aria-hidden="true"><i></i><i></i><i></i></span><span>Menu</span>';
+    button.addEventListener("click", () => {
+      const open = !nav.classList.contains("v4-mobile-open");
+      nav.classList.toggle("v4-mobile-open", open);
+      button.setAttribute("aria-expanded", String(open));
+      button.setAttribute("aria-label", open ? "Close navigation menu" : "Open navigation menu");
+      button.querySelector("span:last-child").textContent = open ? "Close" : "Menu";
+    });
+    const brand = topbar.querySelector(".brand");
+    if (brand) brand.insertAdjacentElement("afterend", button);
+    else topbar.prepend(button);
+  }
+  document.body.classList.add("v4-mobile-nav-ready");
 }
 
 function ensureOrganizationRequestTab() {
@@ -99,6 +136,7 @@ function openOrganizationRequestForm() {
 
 function sync() {
   cleanupV3Artifacts();
+  ensureMobileMenu();
   if (isAuthenticatedNav()) {
     ensureOrganizationRequestTab();
     orderAuthenticatedNav();
@@ -111,12 +149,22 @@ function sync() {
 
 function scheduleSync() {
   timers.forEach((timer) => clearTimeout(timer));
-  timers = [0, 80, 220, 500, 1000, 1800].map((delay) => setTimeout(sync, delay));
+  timers = [0, 120, 420, 1000].map((delay) => setTimeout(sync, delay));
 }
 
 mountV4Styles();
 cleanupV3Artifacts();
-window.addEventListener("hashchange", scheduleSync);
+ensureMobileMenu();
+nav?.addEventListener("click", (event) => {
+  if (event.target.closest("a, #logout-button")) closeMobileMenu();
+});
+window.addEventListener("hashchange", () => {
+  closeMobileMenu();
+  scheduleSync();
+});
 window.addEventListener("DOMContentLoaded", scheduleSync);
 window.addEventListener("pageshow", scheduleSync);
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 760) closeMobileMenu();
+}, { passive: true });
 scheduleSync();

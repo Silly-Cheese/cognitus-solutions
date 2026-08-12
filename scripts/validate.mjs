@@ -14,6 +14,7 @@ const index = read("index.html");
 const app = read("src/app.js");
 const navigation = read("src/navigationEnhancements.js");
 const controls = read("src/controlsV4.js");
+const assessment = read("src/assessmentV4.js");
 const uxCss = read("src/uxV4.css");
 const rules = read("firestore.rules");
 const firebase = JSON.parse(read("firebase.json"));
@@ -22,11 +23,16 @@ assert(index.includes('src/app.js?v='), "index.html loads the consolidated produ
 assert(!index.includes("appV1.js") && !index.includes("appSafe.js"), "legacy routers are not production entrypoints");
 assert(index.includes("stability-v4"), "index.html cache-busts the stability V4 navigation layer");
 assert(navigation.includes('import "./controlsV4.js"'), "navigation loads V4 operational controls");
+assert(navigation.includes('import "./assessmentV4.js"'), "navigation loads editable profile assessment controls");
 assert(navigation.includes("uxV4.css") && uxCss.includes("#logout-button"), "fast V4 styling is loaded and keeps Logout visible");
-assert(!navigation.includes("MutationObserver") && !controls.includes("MutationObserver"), "V4 contains no DOM mutation observers");
+assert(!navigation.includes("MutationObserver") && !controls.includes("MutationObserver") && !assessment.includes("MutationObserver"), "V4 contains no DOM mutation observers");
 assert(!navigation.includes("uxV3.js"), "observer-driven UX V3 is not loaded in production");
 assert(navigation.includes('#/organizations?request=1') && navigation.includes('textContent = "New Organization"'), "New Organization is a direct navigation action");
 assert(navigation.includes("#logout-button") && navigation.includes('logout.textContent = "Logout"'), "Logout remains an explicit visible navigation control");
+assert(navigation.includes("v4-mobile-nav-toggle") && navigation.includes("v4-mobile-open"), "mobile navigation uses an explicit menu toggle");
+assert(navigation.includes("window.innerWidth > 760") && navigation.includes("closeMobileMenu"), "mobile menu closes cleanly across navigation and desktop resize");
+assert(uxCss.includes("@media (max-width: 760px)") && uxCss.includes("v4-mobile-nav-ready") && uxCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))"), "mobile layout provides a two-column expandable navigation panel");
+assert(uxCss.includes("dashboard-hero h1") && uxCss.includes("font-size: clamp(2.05rem, 11vw, 2.8rem)"), "mobile dashboard typography is bounded for phone screens");
 assert(index.includes('rel="icon"') && index.includes("data:image/svg+xml"), "inline favicon prevents the GitHub Pages favicon 404");
 assert(index.includes("secure-v2-no-index"), "index.html keeps the repaired no-index production app build");
 
@@ -36,6 +42,12 @@ assert(controls.includes("deleteOrganization") && controls.includes("Delete orga
 assert(controls.includes("Delete My Account") && controls.includes("reauthenticateWithCredential") && controls.includes("deleteUser"), "self-account deletion reauthenticates and deletes Firebase Auth");
 assert(controls.includes("Delete portal account") && controls.includes("firebaseAuthDeletionRequired"), "Owner portal-account removal clearly distinguishes Firebase Auth cleanup");
 assert(!controls.includes("Fire.orderBy("), "V4 controls do not introduce ordered compound queries");
+
+assert(assessment.includes("Professional Standing") && assessment.includes("Risk Level"), "standing and risk are editable through explicit assessment controls");
+assert(assessment.includes("PROFILE_ASSESSMENT_UPDATED") && assessment.includes("lastReviewedAt"), "assessment changes are timestamped and audited");
+assert(assessment.includes('new Set(["reviewer", "admin", "owner"])'), "assessment editing is restricted to reviewer/admin/owner roles");
+assert(assessment.includes("mountSettingsAssessment") && assessment.includes("mountAdminAssessments"), "assessment editing is available in Settings and Admin user management");
+assert(!assessment.includes("Fire.orderBy("), "assessment controls do not introduce ordered compound queries");
 
 assert(!app.includes("OWNER_BOOTSTRAP") && !app.includes("ownerDiscordId"), "production app contains no client owner-bootstrap credential");
 assert(app.includes('current === "/owner-bootstrap"') && app.includes("Client-side bootstrap has been retired"), "legacy bootstrap route is explicitly non-operational");
@@ -48,8 +60,9 @@ assert(app.includes("newestFirst(") && app.includes("alphabetic("), "chronologic
 assert(rules.includes("currentUser().status == 'active'"), "privileged rule evaluation requires an active account");
 assert(rules.includes("resource.data.role != 'owner'") && rules.includes("request.resource.data.role != 'owner'"), "admins cannot modify or create Owner role through admin updates");
 assert(rules.includes("request.resource.data.discordId == resource.data.discordId"), "Discord identity is immutable on updates");
-assert(rules.includes("request.resource.data.professionalStanding == resource.data.professionalStanding"), "self profile updates cannot rewrite professional standing");
-assert(rules.includes("request.resource.data.riskLevel == resource.data.riskLevel"), "self profile updates cannot rewrite risk level");
+assert(rules.includes("request.resource.data.professionalStanding == resource.data.professionalStanding"), "ordinary self profile updates cannot rewrite professional standing");
+assert(rules.includes("request.resource.data.riskLevel == resource.data.riskLevel"), "ordinary self profile updates cannot rewrite risk level");
+assert(rules.includes("'professionalStanding',") && rules.includes("'riskLevel',") && rules.includes("allow update: if isReviewer()"), "reviewer/admin/owner profile updates can manage standing and risk");
 assert(rules.includes("'identityVerified', 'updatedAt'") && rules.includes("request.resource.data.identityVerified is bool"), "Owner identity verification is explicitly authorized");
 assert(rules.includes("allow delete: if isOwner()") && rules.includes("resource.data.status == 'pending_review'"), "report deletion is Owner-gated with pending self-delete support");
 assert(rules.includes("allow delete: if isOwner();"), "Owner organization deletion is authorized");
