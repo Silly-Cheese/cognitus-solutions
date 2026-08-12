@@ -1,203 +1,138 @@
 # Cognitus Solutions
 
-Cognitus Solutions is a client-side employment intelligence and background check portal for Roblox and Discord-based organizations.
+Cognitus Solutions is a static Firebase-backed employment intelligence and screening portal for Roblox and Discord communities.
 
-This project is designed for:
+## Production architecture
 
-- GitHub Pages for hosting
-- Firebase Authentication for accounts
-- Cloud Firestore for data
-- No Firebase Hosting
-- No Cloud Functions for V1
-- No Firebase Storage for V1
+The production site uses one application entrypoint:
 
-## V1 Direction
+- `index.html` — shell, responsive UI, and production stylesheet
+- `src/app.js` — the only production router/application entrypoint
+- `src/firebase/firebaseApp.js` — Firebase initialization
+- `src/firebase/firebaseConfig.js` — public Firebase web configuration
+- `firestore.rules` — authoritative access control
+- `firestore.indexes.json` — required composite Firestore indexes
+- `firebase.json` — Firebase CLI deployment configuration for rules/indexes
 
-Cognitus V1 is intended to include the full portal experience:
+`src/appV1.js` and `src/appSafe.js` are legacy snapshots and are not loaded by production. They should not be used as alternate routers.
 
-- Account registration without collecting real emails
-- Login using Discord ID and password
-- Remember Me session persistence
-- Required reason before every check
-- People search by Roblox username, Discord username, or Discord ID
-- Organization search by organization name
-- Check logs
-- Downloadable reports
-- Profile claiming
-- Appeals and correction requests
-- Report submission and review
-- Organization accounts
-- Candidate tracker
-- Saved people and organizations
-- Private organization notes
-- Password reset requests
-- Owner bootstrap
-- Admin and owner dashboards
-- Audit logs
-- Firestore self-initialization through app writes
+## Security model
 
-## Hosting
+Cognitus is intentionally designed so frontend route hiding is never the security boundary. Firestore Security Rules enforce the real authorization model.
 
-This repository is intended to be deployed with GitHub Pages.
+Key rules in the secure V2 architecture:
 
-The app is written as a static JavaScript application using browser modules. Firebase setup will be completed in a later part.
+- A user's Discord ID, Cognitus ID, Auth UID, role, status, and organization identity cannot be changed through ordinary self-service writes.
+- Privileged roles only grant authority while the account status is `active`.
+- Admins cannot grant the Owner role, remove the Owner role, or modify Owner accounts.
+- Owners cannot accidentally demote their own final active session through the client.
+- Client-side Owner bootstrap has been retired. There is no public route that can elevate an account to Owner.
+- Users cannot edit their own professional standing, risk level, identity confidence, or verification state.
+- Organization administrators cannot self-verify their organization or change its trust rating.
+- Original report text, severity, category, author, and subject are immutable after filing. Reviewers change review fields only.
+- Claims require the immutable Discord ID on the claimant's account to match the target profile.
+- Appeals must reference a real report/profile pair and must concern a profile the appellant is eligible to represent.
+- Employment and certification records created by employer members are scoped to that member's organization.
+- Public password-reset tickets are disabled because a browser-only Firebase client cannot securely administer another user's Firebase Authentication password.
 
-## Authentication Model
+## Identity model
 
-Cognitus does not collect real email addresses.
+Registration accepts a Discord ID and Discord username, but Cognitus does **not** claim that typing those values proves platform ownership. Newly registered profiles are therefore created as:
 
-Users enter:
+- `identityStatus: self_declared`
+- `identityConfidence: 0`
+- `professionalStanding: unreviewed`
+- `riskLevel: unreviewed`
 
-```text
-Discord ID
-Password
-```
+Independent verification can be added later through a trusted verification process without weakening the security rules.
 
-The app converts the Discord ID into an internal Firebase Authentication email:
+## Authentication
+
+Cognitus does not collect real email addresses. A Discord ID is converted into an internal Firebase Authentication email:
 
 ```text
 <discordId>@cognitus.local
 ```
 
-Remember Me is handled with Firebase Auth persistence:
+Users log in with their Discord ID and Cognitus password. "Remember this device" uses Firebase Auth local persistence.
 
-- Checked: browser local persistence
-- Unchecked: browser session persistence
+### Password changes and recovery
 
-## Owner Bootstrap
+An authenticated user can change their own password from `#/settings` after reauthentication.
 
-Owner bootstrap is configured in:
+A fully locked-out user cannot be securely reset by this static web client. An Owner must handle that account through a trusted Firebase administrative environment. Cognitus intentionally does not pretend that a Firestore reset-request document can reset Firebase Authentication.
 
-```text
-src/config/bootstrapConfig.js
-```
+## Owner provisioning
 
-Before launch, replace:
+The previous Discord-ID-based client bootstrap was removed because a client-controlled bootstrap creates an unacceptable privilege-escalation path.
 
-```text
-PASTE_OWNER_DISCORD_ID_HERE
-```
+Initial Owner provisioning must be done from a trusted Firebase administrative environment by setting the intended user's Firestore `users/{uid}.role` to `owner` after confirming the Firebase Auth UID out-of-band. Once an Owner exists, the portal allows Owners to manage other roles while Firestore rules prevent Admin-to-Owner escalation.
 
-with the real owner Discord ID. After the matching account logs in, visit:
+Do not reintroduce a public `#/owner-bootstrap` write flow.
 
-```text
-#/owner-bootstrap
-```
+## Main routes
 
-The app will promote that account to Owner and create a locked bootstrap record in Firestore.
-
-## Firestore Model
-
-The Firestore data layer is documented in:
+Public:
 
 ```text
-docs/FIRESTORE_MODEL.md
-```
-
-Collections are created naturally by app writes. The core service modules live in:
-
-```text
-src/services
-```
-
-## Public Pages
-
-Part 5 adds the public-facing portal pages:
-
-```text
-#/ 
+#/
 #/features
 #/about
 #/terms
 #/privacy
-#/password-reset
+#/login
+#/register
+#/account-recovery
 ```
 
-The password reset page now submits admin-reviewed reset requests through Firestore when Firebase is configured.
-
-## Dashboard
-
-Part 6 adds the authenticated user dashboard:
+Authenticated:
 
 ```text
 #/dashboard
 #/search
-#/claims
+#/history
+#/reports/quick?checkId=<id>
+#/reports/full?checkId=<id>
 #/reports/submit
-#/appeals
-#/history
-#/candidates
-#/organizations/saved
-#/notifications
-```
-
-The dashboard displays account information, quick actions, recent checks, saved candidates, saved organizations, and notifications.
-
-## Search and Check Logging
-
-Part 7 adds the logged check system:
-
-```text
-#/search
-#/history
-```
-
-The search page supports person checks and organization checks. Every check requires a reason before running and creates a Firestore check log.
-
-## Report Generation
-
-Part 8 adds browser-generated reports:
-
-```text
-#/reports/quick?checkId=<checkDocumentId>
-#/reports/full?checkId=<checkDocumentId>
-```
-
-Reports can be printed or saved as PDF through the browser print dialog. Downloads are logged as report download records when the user prints/saves.
-
-## Claims, Appeals, and Reviews
-
-Part 9 adds operational review workflows:
-
-```text
 #/claims
 #/appeals
-#/reports/submit
+#/organizations
+#/settings
+```
+
+Reviewer/Admin/Owner:
+
+```text
 #/review
-```
-
-Users can submit profile claims, appeals/correction requests, and reports. Reviewers, admins, and owners can view pending reports, claims, and appeals from the review queue.
-
-## Admin and Owner Dashboards
-
-Part 10 adds management routes:
-
-```text
 #/admin
-#/admin/users
-#/admin/organizations
-#/admin/audit
-#/owner
-#/owner/settings
 ```
 
-Admins can review recent activity, manage user roles/statuses, manage organization verification/trust, and view activity logs. Owners can access portal settings and owner-level controls.
+The old `#/owner-bootstrap` route is intentionally non-operational and only explains that client-side bootstrap has been retired.
 
-## Part Status
+## Firestore deployment
 
-- Part 1: Project foundation — complete
-- Part 2: Authentication and Remember Me — complete foundation
-- Part 3: Owner bootstrap and roles — complete foundation
-- Part 4: Firestore models and services — complete foundation
-- Part 5: Public pages — complete foundation
-- Part 6: User dashboard — complete foundation
-- Part 7: Search and check logging — complete foundation
-- Part 8: Report generation and downloads — complete foundation
-- Part 9: Claims, appeals, and reviews — complete foundation
-- Part 10: Admin and owner dashboards — complete foundation
-- Part 11: Final integration and polish
-- Part 12: Testing and deployment configuration
+Rules and indexes should be deployed together from an authenticated Firebase CLI environment:
 
-## Important Security Note
+```bash
+firebase deploy --only firestore:rules,firestore:indexes
+```
 
-Because V1 does not use Cloud Functions or a traditional backend, Firestore Security Rules must enforce the real access boundaries. Frontend route protection is for user experience only and must never be treated as the only security layer.
+GitHub Pages continues to host the static site. Firebase Hosting and Cloud Functions are not required for this version.
+
+## Important operational limitation
+
+Because this version intentionally has no trusted backend, `auditLogs` are **authenticated activity events**, not a cryptographically tamper-evident audit trail. Security Rules prevent users from impersonating another actor in those events, but a truly authoritative audit system should eventually be written from a trusted server/Admin SDK environment.
+
+## Pre-merge checklist
+
+Before merging the secure V2 branch into `main`:
+
+1. Deploy `firestore.rules` and `firestore.indexes.json` to the Cognitus Firebase project.
+2. Confirm the intended Owner account already has `role: owner` in Firestore, or provision it through a trusted Firebase administrative environment.
+3. Confirm Firebase Authentication Email/Password provider is enabled.
+4. Test registration, login, logout, password change, search, check logging, quick/full reports, report submission, claim submission, appeal submission, reviewer decisions, organization creation, Admin role/status updates, and Owner-only role elevation.
+5. Verify suspended/banned privileged accounts can no longer use reviewer/admin/owner functions.
+
+## Security note
+
+Firebase web configuration values in `src/firebase/firebaseConfig.js` are public client configuration, not server credentials. Do not place Admin SDK private keys, service-account JSON, secrets, or privileged tokens in this repository.
