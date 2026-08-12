@@ -2,7 +2,7 @@ import { FIREBASE_CDN_BASE, initializeFirebaseServices } from "./firebase/fireba
 
 const root = document.querySelector("#page-root");
 const nav = document.querySelector(".topnav");
-const BUILD = "secure-v2-2026-08-12";
+const BUILD = "secure-v2-no-composite-indexes-2026-08-12";
 
 let auth = null;
 let db = null;
@@ -22,7 +22,6 @@ const CHECK_REASONS = Object.freeze([
   "Appeal/Correction Review",
   "Other"
 ]);
-
 const REPORT_CATEGORIES = Object.freeze([
   "Misconduct",
   "Abuse of Power",
@@ -37,7 +36,6 @@ const REPORT_CATEGORIES = Object.freeze([
   "Employment Verification",
   "Other"
 ]);
-
 const SEVERITIES = Object.freeze(["Informational", "Low", "Moderate", "High", "Critical"]);
 const ROLES = Object.freeze(["user", "verified_employer_member", "org_admin", "reviewer", "admin", "owner"]);
 const STATUSES = Object.freeze(["active", "pending_verification", "suspended", "restricted", "banned", "password_reset_required"]);
@@ -69,11 +67,21 @@ function createCognitusId(prefix) {
   const random = Array.from(bytes, (n) => alphabet[n % alphabet.length]).join("");
   return `${prefix}-${String(nowYear()).slice(-2)}-${random}`;
 }
-function formatTimestamp(value) {
+function timestampMs(value) {
   try {
     const date = value?.toDate?.() || (value ? new Date(value) : null);
-    return date && !Number.isNaN(date.getTime()) ? date.toLocaleString() : "—";
-  } catch { return "—"; }
+    return date && !Number.isNaN(date.getTime()) ? date.getTime() : 0;
+  } catch { return 0; }
+}
+function formatTimestamp(value) {
+  const ms = timestampMs(value);
+  return ms ? new Date(ms).toLocaleString() : "—";
+}
+function newestFirst(items, limit = Infinity) {
+  return [...items].sort((a, b) => timestampMs(b.createdAt) - timestampMs(a.createdAt)).slice(0, limit);
+}
+function alphabetic(items, field) {
+  return [...items].sort((a, b) => clean(a?.[field]).localeCompare(clean(b?.[field]), undefined, { sensitivity: "base" }));
 }
 function formObject(form) { return Object.fromEntries(new FormData(form).entries()); }
 function setBusy(button, busy, busyText, normalText) {
@@ -141,6 +149,7 @@ async function refreshAccount() {
   if (authUser && userRecord) await backfillSafeProfileSearchFields();
 }
 async function createOwnProfileIfMissing() {
+  const now = Fire.serverTimestamp();
   const profile = {
     id: authUser.uid,
     cognitusId: createCognitusId("PRF"),
@@ -160,8 +169,8 @@ async function createOwnProfileIfMissing() {
     riskLevel: "unreviewed",
     reportCount: 0,
     appealCount: 0,
-    createdAt: Fire.serverTimestamp(),
-    updatedAt: Fire.serverTimestamp()
+    createdAt: now,
+    updatedAt: now
   };
   await Fire.setDoc(Fire.doc(db, "profiles", authUser.uid), profile);
   profileRecord = { ...profile, id: authUser.uid };
@@ -169,16 +178,16 @@ async function createOwnProfileIfMissing() {
 async function backfillSafeProfileSearchFields() {
   if (!profileRecord || !authUser) return;
   const robloxNormalized = (profileRecord.robloxUsernames || []).map(lower).filter(Boolean);
-  const patch = {};
-  if (!Array.isArray(profileRecord.robloxUsernamesNormalized)) patch.robloxUsernamesNormalized = robloxNormalized;
-  if (Object.keys(patch).length) {
-    patch.updatedAt = Fire.serverTimestamp();
-    await Fire.updateDoc(Fire.doc(db, "profiles", authUser.uid), patch);
-    profileRecord = { ...profileRecord, ...patch };
+  if (!Array.isArray(profileRecord.robloxUsernamesNormalized)) {
+    await Fire.updateDoc(Fire.doc(db, "profiles", authUser.uid), {
+      robloxUsernamesNormalized: robloxNormalized,
+      updatedAt: Fire.serverTimestamp()
+    });
+    profileRecord = { ...profileRecord, robloxUsernamesNormalized: robloxNormalized };
   }
 }
 async function writeActivity(action, targetType, targetId, summary, metadata = {}) {
-  if (!authUser || !userRecord) return;
+  if (!authUser || !userRecord || !activeUser()) return;
   const ref = Fire.doc(Fire.collection(db, "auditLogs"));
   try {
     await Fire.setDoc(ref, {
@@ -211,6 +220,7 @@ function renderNav() {
     <a href="#/reports/submit">Submit Report</a>
     <a href="#/claims">Claims</a>
     <a href="#/appeals">Appeals</a>
+    <a href="#/organizations">Organizations</a>
     ${reviewer() ? `<a href="#/review">Review</a>` : ""}
     ${admin() ? `<a href="#/admin">Admin</a>` : ""}
     <a href="#/settings">Settings</a>
@@ -228,19 +238,14 @@ function renderFooter() {
     footer.className = "site-footer";
     document.querySelector("#app")?.appendChild(footer);
   }
-  footer.innerHTML = `<span>© ${nowYear()} Cognitus Solutions</span><a href="#/terms">Terms</a><a href="#/privacy">Privacy</a><a href="#/about">About</a><span class="build">${BUILD}</span>`;
+  footer.innerHTML = `<span>© ${nowYear()} Cognitus Solutions</span><a href="#/terms">Terms</a><a href="#/privacy">Privacy</a><a href="#/about">About</a><span class="build">${safe(BUILD)}</span>`;
 }
 
 function homePage() {
   setTitle("Home");
   root.innerHTML = `
     <section class="hero hero-home">
-      <div>
-        <p class="eyebrow">Employment intelligence, rebuilt</p>
-        <h1>Better records. Better decisions.</h1>
-        <p>Cognitus gives Roblox and Discord communities a structured place to run accountable checks, review submitted information, document decisions, and manage corrections.</p>
-        <div class="hero-actions">${userRecord ? buttonLink("#/dashboard", "Open Dashboard", true) + buttonLink("#/search", "Run a Check") : buttonLink("#/register", "Create Account", true) + buttonLink("#/login", "Login")}</div>
-      </div>
+      <div><p class="eyebrow">Employment intelligence, rebuilt</p><h1>Better records. Better decisions.</h1><p>Cognitus gives Roblox and Discord communities a structured place to run accountable checks, review submitted information, document decisions, and manage corrections.</p><div class="hero-actions">${userRecord ? buttonLink("#/dashboard", "Open Dashboard", true) + buttonLink("#/search", "Run a Check") : buttonLink("#/register", "Create Account", true) + buttonLink("#/login", "Login")}</div></div>
       <aside class="trust-card"><span class="trust-icon">CS</span><h2>Designed for accountability</h2><p>Every operational check requires a reason. Reviewed records are separated from self-declared identity information, and privileged actions are enforced by Firestore rules—not only by the interface.</p></aside>
     </section>
     <section class="feature-grid">
@@ -251,14 +256,15 @@ function homePage() {
 }
 function featuresPage() {
   setTitle("Features");
-  root.innerHTML = `<section class="hero hero-wide"><p class="eyebrow">Platform</p><h1>One operational portal.</h1><p>Account access, logged checks, searchable profiles, organization records, screening reports, claims, appeals, reviewer queues, administration, and account settings are now handled by one production application.</p></section><section class="feature-grid">${[
+  const cards = [
     ["Search & Checks", "Search Discord IDs, self-declared usernames, Roblox usernames, and organizations. Checks require a reason."],
     ["Screening Reports", "Generate quick or full views from a logged check and reviewed records that are permitted for screening."],
     ["Review Queue", "Reviewers can approve or deny reports, claims, and appeals without rewriting original submissions."],
     ["Administration", "Admins manage user status, non-owner roles, organization verification, and organization membership."],
     ["Owner Controls", "Only Owners may grant or remove the Owner role. There is no public client-side owner bootstrap."],
-    ["Safer Identity Model", "Discord IDs and usernames entered during registration are treated as self-declared unless independently verified."]
-  ].map(([t,p],i)=>`<article class="feature-card"><span>${String(i+1).padStart(2,"0")}</span><h3>${safe(t)}</h3><p>${safe(p)}</p></article>`).join("")}</section>`;
+    ["Simple Firestore", "The production portal uses automatic Firestore indexing only. No manually maintained composite indexes are required."]
+  ];
+  root.innerHTML = `<section class="hero hero-wide"><p class="eyebrow">Platform</p><h1>One operational portal.</h1><p>Account access, logged checks, searchable profiles, organization records, screening reports, claims, appeals, reviewer queues, administration, and account settings are handled by one production application.</p></section><section class="feature-grid">${cards.map(([t,p],i)=>`<article class="feature-card"><span>${String(i+1).padStart(2,"0")}</span><h3>${safe(t)}</h3><p>${safe(p)}</p></article>`).join("")}</section>`;
 }
 function aboutPage() {
   setTitle("About");
@@ -291,7 +297,9 @@ function loginPage() {
       await Auth.signInWithEmailAndPassword(auth, authEmail(id), data.password);
       location.hash = "#/dashboard";
     } catch (error) {
-      const friendly = ["auth/invalid-credential", "auth/user-not-found", "auth/wrong-password"].includes(error?.code) ? "The Discord ID or password is incorrect." : (error?.code === "auth/network-request-failed" ? "Network error. Check your connection and try again." : "Login could not be completed.");
+      const friendly = ["auth/invalid-credential", "auth/user-not-found", "auth/wrong-password"].includes(error?.code)
+        ? "The Discord ID or password is incorrect."
+        : error?.code === "auth/network-request-failed" ? "Network error. Check your connection and try again." : "Login could not be completed.";
       showNotice(message, friendly, "error");
     } finally { setBusy(button, false, "Signing in…", "Login"); }
   });
@@ -304,18 +312,19 @@ function registerPage() {
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const data = formObject(form);
-    const id = normalizeDiscordId(data.discordId);
+    const discordId = normalizeDiscordId(data.discordId);
     const username = clean(data.discordUsername).slice(0,64);
     const message = root.querySelector("#auth-message");
     const button = form.querySelector("button[type=submit]");
-    if (!id) return showNotice(message, "Enter a valid Discord ID.", "error");
+    if (!discordId) return showNotice(message, "Enter a valid Discord ID.", "error");
     if (clean(data.password).length < 8) return showNotice(message, "Password must be at least 8 characters.", "error");
     if (data.password !== data.confirmPassword) return showNotice(message, "Passwords do not match.", "error");
     let credential = null;
     try {
       setBusy(button, true, "Creating account…", "Create Account");
       await Auth.setPersistence(auth, Auth.browserLocalPersistence);
-      credential = await Auth.createUserWithEmailAndPassword(auth, authEmail(id), data.password);
+      credential = await Auth.createUserWithEmailAndPassword(auth, authEmail(discordId), data.password);
+      authUser = credential.user;
       await Auth.updateProfile(credential.user, { displayName: username });
       const now = Fire.serverTimestamp();
       const user = {
@@ -324,12 +333,12 @@ function registerPage() {
         profileId: credential.user.uid,
         displayName: username,
         discordUsername: username,
-        discordId: id,
+        discordId,
         role: "user",
         status: "active",
         accountType: "individual",
         organizationId: null,
-        syntheticEmail: authEmail(id),
+        syntheticEmail: authEmail(discordId),
         realEmailCollected: false,
         identityVerified: false,
         createdAt: now,
@@ -346,7 +355,7 @@ function registerPage() {
         robloxUsernamesNormalized: [],
         discordUsernames: [username],
         discordUsernamesNormalized: [lower(username)],
-        discordIds: [id],
+        discordIds: [discordId],
         knownAliases: [],
         claimedByUid: credential.user.uid,
         identityStatus: "self_declared",
@@ -367,40 +376,43 @@ function registerPage() {
       if (credential?.user && !userRecord) {
         try { await Auth.deleteUser(credential.user); } catch { /* best effort cleanup */ }
       }
-      const friendly = error?.code === "auth/email-already-in-use" ? "An account already exists for that Discord ID." : "Account creation could not be completed.";
-      showNotice(message, friendly, "error");
+      showNotice(message, error?.code === "auth/email-already-in-use" ? "An account already exists for that Discord ID." : "Account creation could not be completed.", "error");
     } finally { setBusy(button, false, "Creating account…", "Create Account"); }
   });
 }
 function accountRecoveryPage() {
   setTitle("Account Recovery");
-  root.innerHTML = `<section class="legal-card"><p class="eyebrow">Account Recovery</p><h1>No fake reset promises.</h1><p>Cognitus intentionally does not collect real email addresses. In a static Firebase-only deployment, the browser cannot securely perform an administrative password reset for another account.</p><p>If you are still signed in on another device, open <strong>Settings</strong> there and change your password. If you are fully locked out, contact a Cognitus Owner so the account can be handled through Firebase administration. Cognitus does not accept public password-reset tickets that could be spammed or used to impersonate another user.</p>${buttonLink("#/login", "Back to Login", true)}</section>`;
+  root.innerHTML = `<section class="legal-card"><p class="eyebrow">Account Recovery</p><h1>No fake reset promises.</h1><p>Cognitus intentionally does not collect real email addresses. In a static Firebase-only deployment, the browser cannot securely perform an administrative password reset for another account.</p><p>If you are still signed in on another device, open <strong>Settings</strong> there and change your password. If you are fully locked out, contact a Cognitus Owner so the account can be handled through Firebase administration.</p>${buttonLink("#/login", "Back to Login", true)}</section>`;
 }
 
 async function dashboardPage() {
   setTitle("Dashboard");
   if (loginRequired()) return;
-  const myChecks = await readQuery("checkLogs", [Fire.where("checkedByUid", "==", authUser.uid), Fire.orderBy("createdAt", "desc"), Fire.limit(8)]).catch(() => []);
+  const myChecks = newestFirst(await readQuery("checkLogs", [Fire.where("checkedByUid", "==", authUser.uid)]).catch(() => []), 8);
   root.innerHTML = `<section class="dashboard-hero"><div><p class="eyebrow">Dashboard</p><h1>Welcome, ${safe(userRecord.displayName || "User")}.</h1><p>Your Cognitus identity is currently <strong>${safe(profileRecord?.identityStatus || "self_declared")}</strong>. Self-declared identity is not independent verification.</p><div class="hero-actions">${buttonLink("#/search", "Run a Check", true)}${buttonLink("#/reports/submit", "Submit Report")}${buttonLink("#/organizations", "Organizations")}</div></div><aside class="account-card"><span>Cognitus ID</span><strong>${safe(userRecord.cognitusId || "—")}</strong><small>${safe(userRecord.role)} · ${safe(userRecord.status)}</small><small>Discord ID: ${safe(userRecord.discordId)}</small></aside></section><section class="stats-grid"><article class="stat-card"><span>Account</span><strong>${safe(userRecord.status)}</strong><small>Operational status</small></article><article class="stat-card"><span>Role</span><strong>${safe(userRecord.role)}</strong><small>Permission level</small></article><article class="stat-card"><span>Identity</span><strong>${safe(profileRecord?.identityStatus || "self_declared")}</strong><small>${Number(profileRecord?.identityConfidence || 0)}% confidence</small></article></section><section class="panel"><div class="panel-header"><div><p class="eyebrow">Recent</p><h2>Your latest checks</h2></div>${buttonLink("#/history", "View History")}</div>${myChecks.length ? `<div class="record-list">${myChecks.map((check)=>`<article class="record-row"><div><strong>${safe(check.searchQuery)}</strong><span>${safe(check.reason)} · ${safe(check.searchType)}</span><small>${safe(formatTimestamp(check.createdAt))}</small></div><div class="mini-actions">${buttonLink(`#/reports/quick?checkId=${encodeURIComponent(check.id)}`, "Quick")}${buttonLink(`#/reports/full?checkId=${encodeURIComponent(check.id)}`, "Full")}</div></article>`).join("")}</div>` : `<div class="empty-state"><h3>No checks yet</h3><p>Your logged checks will appear here.</p></div>`}</section>`;
 }
 
 async function searchPeople(field, value) {
-  const v = clean(value);
-  if (!v) return [];
+  const valueClean = clean(value);
+  if (!valueClean) return [];
   if (field === "Discord ID") {
-    const id = normalizeDiscordId(v);
-    return id ? readQuery("profiles", [Fire.where("discordIds", "array-contains", id), Fire.limit(20)]) : [];
+    const discordId = normalizeDiscordId(valueClean);
+    return discordId ? readQuery("profiles", [Fire.where("discordIds", "array-contains", discordId), Fire.limit(20)]) : [];
   }
   const normalizedField = field === "Discord Username" ? "discordUsernamesNormalized" : "robloxUsernamesNormalized";
   const rawField = field === "Discord Username" ? "discordUsernames" : "robloxUsernames";
-  let results = await readQuery("profiles", [Fire.where(normalizedField, "array-contains", lower(v)), Fire.limit(20)]).catch(() => []);
-  if (!results.length) results = await readQuery("profiles", [Fire.where(rawField, "array-contains", v), Fire.limit(20)]).catch(() => []);
+  let results = await readQuery("profiles", [Fire.where(normalizedField, "array-contains", lower(valueClean)), Fire.limit(20)]).catch(() => []);
+  if (!results.length) results = await readQuery("profiles", [Fire.where(rawField, "array-contains", valueClean), Fire.limit(20)]).catch(() => []);
   return results;
 }
 async function searchOrganizations(value) {
-  const v = lower(value);
-  if (!v) return [];
-  return readQuery("organizations", [Fire.orderBy("searchableName"), Fire.startAt(v), Fire.endAt(`${v}\uf8ff`), Fire.limit(20)]);
+  const valueClean = lower(value);
+  if (!valueClean) return [];
+  return readQuery("organizations", [
+    Fire.where("searchableName", ">=", valueClean),
+    Fire.where("searchableName", "<=", `${valueClean}\uf8ff`),
+    Fire.limit(20)
+  ]);
 }
 async function searchPage() {
   setTitle("Run Check");
@@ -452,7 +464,9 @@ async function searchPage() {
       await writeActivity("CHECK_CREATED", "check", ref.id, `Ran ${data.searchType} check.`, { reason: data.reason, searchField: data.searchField });
       root.querySelector("#check-reference").textContent = `Check ${check.cognitusId}`;
       resultsRoot.className = "";
-      resultsRoot.innerHTML = results.length ? `<div class="result-grid">${results.map((item)=>data.searchType === "Organization" ? organizationResultCard(item) : personResultCard(item)).join("")}</div><div class="hero-actions">${buttonLink(`#/reports/quick?checkId=${encodeURIComponent(ref.id)}`, "Quick Report")}${buttonLink(`#/reports/full?checkId=${encodeURIComponent(ref.id)}`, "Full Report", true)}</div>` : `<div class="empty-state"><h3>No matching Cognitus record</h3><p>The no-match check was logged and can still be used as a documented result.</p><div class="hero-actions">${buttonLink(`#/reports/quick?checkId=${encodeURIComponent(ref.id)}`, "Quick Report")}</div></div>`;
+      resultsRoot.innerHTML = results.length
+        ? `<div class="result-grid">${results.map((item)=>data.searchType === "Organization" ? organizationResultCard(item) : personResultCard(item)).join("")}</div><div class="hero-actions">${buttonLink(`#/reports/quick?checkId=${encodeURIComponent(ref.id)}`, "Quick Report")}${buttonLink(`#/reports/full?checkId=${encodeURIComponent(ref.id)}`, "Full Report", true)}</div>`
+        : `<div class="empty-state"><h3>No matching Cognitus record</h3><p>The no-match check was logged and can still be used as a documented result.</p><div class="hero-actions">${buttonLink(`#/reports/quick?checkId=${encodeURIComponent(ref.id)}`, "Quick Report")}</div></div>`;
     } catch (error) {
       resultsRoot.innerHTML = `<div class="notice notice-error">${safe(error?.message || "Search could not be completed.")}</div>`;
     } finally { setBusy(button, false, "Running check…", "Run Logged Check"); }
@@ -468,17 +482,26 @@ function organizationResultCard(item) {
 async function historyPage() {
   setTitle("History");
   if (loginRequired()) return;
-  const checks = await readQuery("checkLogs", [Fire.where("checkedByUid", "==", authUser.uid), Fire.orderBy("createdAt", "desc"), Fire.limit(100)]);
-  root.innerHTML = `<section class="hero hero-wide"><p class="eyebrow">History</p><h1>Your logged checks.</h1><p>Newest checks are shown first.</p></section><section class="panel">${checks.length ? `<div class="record-list">${checks.map((check)=>`<article class="record-row"><div><strong>${safe(check.searchQuery)}</strong><span>${safe(check.reason)} · ${safe(check.searchType)} · ${Number(check.resultCount || 0)} result(s)</span><small>${safe(formatTimestamp(check.createdAt))}</small></div><div class="mini-actions">${buttonLink(`#/reports/quick?checkId=${encodeURIComponent(check.id)}`, "Quick")}${buttonLink(`#/reports/full?checkId=${encodeURIComponent(check.id)}`, "Full")}</div></article>`).join("")}</div>` : `<div class="empty-state"><h3>No checks yet</h3><p>Run your first logged check to begin a history.</p></div>`}</section>`;
+  const checks = newestFirst(await readQuery("checkLogs", [Fire.where("checkedByUid", "==", authUser.uid)]));
+  root.innerHTML = `<section class="hero hero-wide"><p class="eyebrow">History</p><h1>Your logged checks.</h1><p>Newest checks are shown first. Sorting happens in the browser so this page does not require a composite Firestore index.</p></section><section class="panel">${checks.length ? `<div class="record-list">${checks.map((check)=>`<article class="record-row"><div><strong>${safe(check.searchQuery)}</strong><span>${safe(check.reason)} · ${safe(check.searchType)} · ${Number(check.resultCount || 0)} result(s)</span><small>${safe(formatTimestamp(check.createdAt))}</small></div><div class="mini-actions">${buttonLink(`#/reports/quick?checkId=${encodeURIComponent(check.id)}`, "Quick")}${buttonLink(`#/reports/full?checkId=${encodeURIComponent(check.id)}`, "Full")}</div></article>`).join("")}</div>` : `<div class="empty-state"><h3>No checks yet</h3><p>Run your first logged check to begin a history.</p></div>`}</section>`;
 }
-
 async function getScreeningReportsForProfile(profileId) {
   if (!profileId) return [];
-  return readQuery("reports", [Fire.where("subjectProfileId", "==", profileId), Fire.where("status", "==", "approved"), Fire.where("visibility", "==", "screening"), Fire.orderBy("createdAt", "desc"), Fire.limit(50)]).catch(() => []);
+  const rows = await readQuery("reports", [
+    Fire.where("subjectProfileId", "==", profileId),
+    Fire.where("status", "==", "approved"),
+    Fire.where("visibility", "==", "screening")
+  ]).catch(() => []);
+  return newestFirst(rows, 50);
 }
-async function getScreeningReportsForOrganization(orgId) {
-  if (!orgId) return [];
-  return readQuery("reports", [Fire.where("subjectOrganizationId", "==", orgId), Fire.where("status", "==", "approved"), Fire.where("visibility", "==", "screening"), Fire.orderBy("createdAt", "desc"), Fire.limit(50)]).catch(() => []);
+async function getScreeningReportsForOrganization(organizationId) {
+  if (!organizationId) return [];
+  const rows = await readQuery("reports", [
+    Fire.where("subjectOrganizationId", "==", organizationId),
+    Fire.where("status", "==", "approved"),
+    Fire.where("visibility", "==", "screening")
+  ]).catch(() => []);
+  return newestFirst(rows, 50);
 }
 async function reportPage(mode) {
   setTitle(mode === "full" ? "Full Report" : "Quick Report");
@@ -500,13 +523,15 @@ async function reportPage(mode) {
   }
   const riskOrder = { Informational: 0, Low: 1, Moderate: 2, High: 3, Critical: 4 };
   const highest = reports.reduce((best, report) => (riskOrder[report.severity] || 0) > (riskOrder[best] || 0) ? report.severity : best, "Informational");
-  const recommendation = !subject ? (Number(check.resultCount || 0) > 1 ? "Ambiguous Match — Refine Search" : "No Record Found") : (["High","Critical"].includes(highest) ? "Additional Investigation Recommended" : highest === "Moderate" ? "Review Before Decision" : "Standard Review");
+  const recommendation = !subject
+    ? (Number(check.resultCount || 0) > 1 ? "Ambiguous Match — Refine Search" : "No Record Found")
+    : (["High","Critical"].includes(highest) ? "Additional Investigation Recommended" : highest === "Moderate" ? "Review Before Decision" : "Standard Review");
   root.innerHTML = `<section class="report-toolbar no-print">${buttonLink("#/history", "Back to History")}<button id="print-report" class="button button-dark" type="button">Print / Save PDF</button></section><article class="report-document"><header class="report-header"><div><p class="eyebrow">Cognitus Solutions</p><h1>${mode === "full" ? "Comprehensive" : "Quick"} Screening Report</h1><p>Generated from logged check ${safe(check.cognitusId || check.id)}.</p></div><div class="report-id-card"><span>Recommendation</span><strong>${safe(recommendation)}</strong><small>Highest reviewed severity: ${safe(highest)}</small></div></header><section class="report-section"><h2>Check Metadata</h2><dl class="report-dl"><dt>Requested by</dt><dd>${safe(userRecord.displayName)}</dd><dt>Reason</dt><dd>${safe(check.reason)}</dd><dt>Query</dt><dd>${safe(check.searchQuery)}</dd><dt>Type</dt><dd>${safe(check.searchType)}</dd><dt>Results</dt><dd>${Number(check.resultCount || 0)}</dd><dt>Created</dt><dd>${safe(formatTimestamp(check.createdAt))}</dd></dl></section><section class="report-section"><h2>Subject</h2>${subject ? renderReportSubject(subjectType, subject) : `<div class="notice">${Number(check.resultCount || 0) > 1 ? "Multiple records matched. Cognitus intentionally did not attach this check to an arbitrary first result." : "No matching Cognitus subject was attached to this check."}</div>`}</section><section class="report-section"><h2>Reviewed Screening Records</h2>${reports.length ? `<div class="report-records">${reports.slice(0, mode === "full" ? 50 : 5).map((report)=>`<article><strong>${safe(report.category)}</strong><span>${safe(report.severity)} · ${safe(report.status)}</span><p>${safe(report.summary)}</p></article>`).join("")}</div>` : `<div class="notice">No reviewed records currently visible for screening.</div>`}</section>${mode === "full" ? `<section class="report-section"><h2>Additional Check Notes</h2><p>${safe(check.additionalNotes || "No additional notes were provided.")}</p></section>` : ""}<section class="report-section disclaimer"><h2>Important</h2><p>Cognitus records are one decision-support input. Self-declared identity is not proof of platform ownership, and screening results should be independently evaluated in context.</p></section></article>`;
   root.querySelector("#print-report")?.addEventListener("click", async () => {
-    const dref = Fire.doc(Fire.collection(db, "downloads"));
+    const downloadRef = Fire.doc(Fire.collection(db, "downloads"));
     try {
       const batch = Fire.writeBatch(db);
-      batch.set(dref, { id: dref.id, cognitusId: createCognitusId("DWL"), downloadedByUid: authUser.uid, checkId: check.id, reportType: mode, format: "print_pdf", createdAt: Fire.serverTimestamp() });
+      batch.set(downloadRef, { id: downloadRef.id, cognitusId: createCognitusId("DWL"), downloadedByUid: authUser.uid, checkId: check.id, reportType: mode, format: "print_pdf", createdAt: Fire.serverTimestamp() });
       batch.update(Fire.doc(db, "checkLogs", check.id), { downloadedReport: true, updatedAt: Fire.serverTimestamp() });
       await batch.commit();
       await writeActivity("REPORT_DOWNLOADED", "check", check.id, `Printed ${mode} report.`);
@@ -572,7 +597,7 @@ async function claimsPage() {
   setTitle("Claims");
   if (!ensureActive()) return;
   const profileId = params().get("profileId") || "";
-  const mine = await readQuery("claims", [Fire.where("submittedByUid", "==", authUser.uid), Fire.orderBy("createdAt", "desc"), Fire.limit(25)]).catch(() => []);
+  const mine = newestFirst(await readQuery("claims", [Fire.where("submittedByUid", "==", authUser.uid)]).catch(() => []), 25);
   root.innerHTML = `<section class="workflow-layout"><section class="form-card"><p class="eyebrow">Profile Claim</p><h1>Claim a matching profile.</h1><p>Claims are accepted only when the target profile contains the immutable Discord ID attached to your account.</p><div id="claim-message" class="notice" hidden></div><form id="claim-form" class="form-stack"><label>Profile Document ID<input name="profileId" value="${safe(profileId)}" required></label><label>Statement<textarea name="statement" maxlength="1500" rows="5"></textarea></label><button class="button button-dark" type="submit">Submit Claim</button></form></section><section class="panel"><p class="eyebrow">Your Claims</p><h2>Recent submissions</h2>${mine.length ? `<div class="record-list">${mine.map((item)=>`<article class="record-row"><div><strong>${safe(item.cognitusId || item.id)}</strong><span>${safe(item.profileId)}</span><small>${safe(item.status)} · ${safe(formatTimestamp(item.createdAt))}</small></div></article>`).join("")}</div>` : `<div class="empty-state"><p>No claims submitted.</p></div>`}</section></section>`;
   root.querySelector("#claim-form").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -584,7 +609,22 @@ async function claimsPage() {
     if (!(targetProfile.discordIds || []).includes(userRecord.discordId)) return showNotice(message, "This profile does not contain the Discord ID attached to your account.", "error");
     const ref = Fire.doc(Fire.collection(db, "claims"));
     try {
-      await Fire.setDoc(ref, { id: ref.id, cognitusId: createCognitusId("CLM"), profileId: targetProfile.id, submittedByUid: authUser.uid, submittedByCognitusId: userRecord.cognitusId, submittedDiscordId: userRecord.discordId, statement: clean(data.statement).slice(0,1500), verificationMethod: "immutable_discord_id_match", status: "pending_review", reviewedByUid: null, decisionNotes: "", closedAt: null, createdAt: Fire.serverTimestamp(), updatedAt: Fire.serverTimestamp() });
+      await Fire.setDoc(ref, {
+        id: ref.id,
+        cognitusId: createCognitusId("CLM"),
+        profileId: targetProfile.id,
+        submittedByUid: authUser.uid,
+        submittedByCognitusId: userRecord.cognitusId,
+        submittedDiscordId: userRecord.discordId,
+        statement: clean(data.statement).slice(0,1500),
+        verificationMethod: "immutable_discord_id_match",
+        status: "pending_review",
+        reviewedByUid: null,
+        decisionNotes: "",
+        closedAt: null,
+        createdAt: Fire.serverTimestamp(),
+        updatedAt: Fire.serverTimestamp()
+      });
       await writeActivity("CLAIM_SUBMITTED", "claim", ref.id, "Submitted profile claim.");
       showNotice(message, `Claim submitted. Reference: ${ref.id}`, "success");
       form.reset();
@@ -595,19 +635,38 @@ async function claimsPage() {
 async function appealsPage() {
   setTitle("Appeals");
   if (!ensureActive()) return;
-  const mine = await readQuery("appeals", [Fire.where("submittedByUid", "==", authUser.uid), Fire.orderBy("createdAt", "desc"), Fire.limit(25)]).catch(() => []);
+  const mine = newestFirst(await readQuery("appeals", [Fire.where("submittedByUid", "==", authUser.uid)]).catch(() => []), 25);
   root.innerHTML = `<section class="workflow-layout"><section class="form-card"><p class="eyebrow">Appeal / Correction</p><h1>Challenge a report tied to you.</h1><div id="appeal-message" class="notice" hidden></div><form id="appeal-form" class="form-stack"><label>Profile Document ID<input name="profileId" required></label><label>Report Document ID<input name="reportId" required></label><label>Reason<input name="reason" maxlength="200" required></label><label>Statement<textarea name="statement" maxlength="4000" rows="7" required></textarea></label><button class="button button-dark" type="submit">Submit Appeal</button></form></section><section class="panel"><p class="eyebrow">Your Appeals</p><h2>Recent submissions</h2>${mine.length ? `<div class="record-list">${mine.map((item)=>`<article class="record-row"><div><strong>${safe(item.reason)}</strong><span>${safe(item.reportId)}</span><small>${safe(item.status)} · ${safe(formatTimestamp(item.createdAt))}</small></div></article>`).join("")}</div>` : `<div class="empty-state"><p>No appeals submitted.</p></div>`}</section></section>`;
   root.querySelector("#appeal-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
     const data = formObject(form);
-    const [profile, report] = await Promise.all([readDoc("profiles", clean(data.profileId)).catch(()=>null), readDoc("reports", clean(data.reportId)).catch(()=>null)]);
+    const [profile, report] = await Promise.all([
+      readDoc("profiles", clean(data.profileId)).catch(()=>null),
+      readDoc("reports", clean(data.reportId)).catch(()=>null)
+    ]);
     const message = root.querySelector("#appeal-message");
     if (!profile || !report || report.subjectProfileId !== profile.id) return showNotice(message, "The profile and report are not a valid related record pair.", "error");
     if (profile.linkedUserId !== authUser.uid && !(profile.discordIds || []).includes(userRecord.discordId)) return showNotice(message, "You are not eligible to appeal this profile's report.", "error");
     const ref = Fire.doc(Fire.collection(db, "appeals"));
     try {
-      await Fire.setDoc(ref, { id: ref.id, cognitusId: createCognitusId("APL"), profileId: profile.id, reportId: report.id, submittedByUid: authUser.uid, submittedByCognitusId: userRecord.cognitusId, reason: clean(data.reason).slice(0,200), statement: clean(data.statement).slice(0,4000), status: "pending_review", reviewedByUid: null, decision: null, decisionNotes: "", closedAt: null, createdAt: Fire.serverTimestamp(), updatedAt: Fire.serverTimestamp() });
+      await Fire.setDoc(ref, {
+        id: ref.id,
+        cognitusId: createCognitusId("APL"),
+        profileId: profile.id,
+        reportId: report.id,
+        submittedByUid: authUser.uid,
+        submittedByCognitusId: userRecord.cognitusId,
+        reason: clean(data.reason).slice(0,200),
+        statement: clean(data.statement).slice(0,4000),
+        status: "pending_review",
+        reviewedByUid: null,
+        decision: null,
+        decisionNotes: "",
+        closedAt: null,
+        createdAt: Fire.serverTimestamp(),
+        updatedAt: Fire.serverTimestamp()
+      });
       await writeActivity("APPEAL_SUBMITTED", "appeal", ref.id, "Submitted appeal.");
       showNotice(message, `Appeal submitted. Reference: ${ref.id}`, "success");
       form.reset();
@@ -619,11 +678,14 @@ async function reviewPage() {
   setTitle("Review Queue");
   if (loginRequired()) return;
   if (!reviewer()) return hero("Access Denied", "Reviewer access required.", "Your active account does not have reviewer permissions.", buttonLink("#/dashboard", "Dashboard", true));
-  const [reports, claims, appeals] = await Promise.all([
-    readQuery("reports", [Fire.where("status", "==", "pending_review"), Fire.orderBy("createdAt", "desc"), Fire.limit(50)]),
-    readQuery("claims", [Fire.where("status", "==", "pending_review"), Fire.orderBy("createdAt", "desc"), Fire.limit(50)]),
-    readQuery("appeals", [Fire.where("status", "==", "pending_review"), Fire.orderBy("createdAt", "desc"), Fire.limit(50)])
+  const [reportRows, claimRows, appealRows] = await Promise.all([
+    readQuery("reports", [Fire.where("status", "==", "pending_review")]),
+    readQuery("claims", [Fire.where("status", "==", "pending_review")]),
+    readQuery("appeals", [Fire.where("status", "==", "pending_review")])
   ]);
+  const reports = newestFirst(reportRows, 50);
+  const claims = newestFirst(claimRows, 50);
+  const appeals = newestFirst(appealRows, 50);
   root.innerHTML = `<section class="hero hero-wide"><p class="eyebrow">Review Queue</p><h1>Decide without rewriting history.</h1><p>Original submissions remain unchanged. Review decisions are stored separately in the review fields.</p></section><section class="dashboard-grid">${reviewSection("Reports", reports, "report")}${reviewSection("Claims", claims, "claim")}${reviewSection("Appeals", appeals, "appeal")}</section>`;
   root.querySelectorAll("[data-review-action]").forEach((button) => button.addEventListener("click", async () => {
     const kind = button.dataset.kind;
@@ -632,18 +694,53 @@ async function reviewPage() {
     button.disabled = true;
     try {
       if (kind === "report") {
-        await Fire.updateDoc(Fire.doc(db, "reports", id), { status: action === "approve" ? "approved" : "denied", visibility: action === "approve" ? "screening" : "private_review", reviewedByUid: authUser.uid, reviewedAt: Fire.serverTimestamp(), decisionNotes: action === "approve" ? "Approved for screening visibility." : "Denied by reviewer.", updatedAt: Fire.serverTimestamp() });
+        await Fire.updateDoc(Fire.doc(db, "reports", id), {
+          status: action === "approve" ? "approved" : "denied",
+          visibility: action === "approve" ? "screening" : "private_review",
+          reviewedByUid: authUser.uid,
+          reviewedAt: Fire.serverTimestamp(),
+          decisionNotes: action === "approve" ? "Approved for screening visibility." : "Denied by reviewer.",
+          updatedAt: Fire.serverTimestamp()
+        });
       } else if (kind === "claim") {
         const claim = await readDoc("claims", id);
         const batch = Fire.writeBatch(db);
-        batch.update(Fire.doc(db, "claims", id), { status: action === "approve" ? "approved" : "denied", reviewedByUid: authUser.uid, decisionNotes: action === "approve" ? "Claim approved." : "Claim denied.", closedAt: Fire.serverTimestamp(), updatedAt: Fire.serverTimestamp() });
-        if (action === "approve" && claim?.profileId && claim?.submittedByUid) batch.update(Fire.doc(db, "profiles", claim.profileId), { claimedByUid: claim.submittedByUid, identityStatus: "claimed_unverified", updatedAt: Fire.serverTimestamp() });
+        batch.update(Fire.doc(db, "claims", id), {
+          status: action === "approve" ? "approved" : "denied",
+          reviewedByUid: authUser.uid,
+          decisionNotes: action === "approve" ? "Claim approved." : "Claim denied.",
+          closedAt: Fire.serverTimestamp(),
+          updatedAt: Fire.serverTimestamp()
+        });
+        if (action === "approve" && claim?.profileId && claim?.submittedByUid) {
+          batch.update(Fire.doc(db, "profiles", claim.profileId), {
+            claimedByUid: claim.submittedByUid,
+            identityStatus: "claimed_unverified",
+            updatedAt: Fire.serverTimestamp()
+          });
+        }
         await batch.commit();
       } else if (kind === "appeal") {
         const appeal = await readDoc("appeals", id);
         const batch = Fire.writeBatch(db);
-        batch.update(Fire.doc(db, "appeals", id), { status: action === "approve" ? "accepted" : "denied", reviewedByUid: authUser.uid, decision: action === "approve" ? "accepted" : "denied", decisionNotes: action === "approve" ? "Appeal accepted; linked report moved to disputed/private review." : "Appeal denied.", closedAt: Fire.serverTimestamp(), updatedAt: Fire.serverTimestamp() });
-        if (action === "approve" && appeal?.reportId) batch.update(Fire.doc(db, "reports", appeal.reportId), { status: "disputed", visibility: "private_review", appealStatus: "accepted", reviewedByUid: authUser.uid, reviewedAt: Fire.serverTimestamp(), updatedAt: Fire.serverTimestamp() });
+        batch.update(Fire.doc(db, "appeals", id), {
+          status: action === "approve" ? "accepted" : "denied",
+          reviewedByUid: authUser.uid,
+          decision: action === "approve" ? "accepted" : "denied",
+          decisionNotes: action === "approve" ? "Appeal accepted; linked report moved to disputed/private review." : "Appeal denied.",
+          closedAt: Fire.serverTimestamp(),
+          updatedAt: Fire.serverTimestamp()
+        });
+        if (action === "approve" && appeal?.reportId) {
+          batch.update(Fire.doc(db, "reports", appeal.reportId), {
+            status: "disputed",
+            visibility: "private_review",
+            appealStatus: "accepted",
+            reviewedByUid: authUser.uid,
+            reviewedAt: Fire.serverTimestamp(),
+            updatedAt: Fire.serverTimestamp()
+          });
+        }
         await batch.commit();
       }
       await writeActivity("REVIEW_DECISION", kind, id, `${kind} ${action}d.`);
@@ -661,7 +758,7 @@ function reviewSection(title, items, kind) {
 async function organizationsPage() {
   setTitle("Organizations");
   if (loginRequired()) return;
-  const orgs = await readQuery("organizations", [Fire.orderBy("name"), Fire.limit(100)]).catch(() => []);
+  const orgs = alphabetic(await readQuery("organizations").catch(() => []), "name");
   root.innerHTML = `<section class="hero hero-wide"><p class="eyebrow">Organizations</p><h1>Organization directory.</h1><p>Organization verification and trust levels are controlled by Cognitus reviewers/admins, not by the organization itself.</p>${activeUser() ? `<div class="hero-actions"><button id="new-org-toggle" class="button button-dark" type="button">Request Organization Record</button></div>` : ""}</section><section id="org-create" class="form-card" hidden><p class="eyebrow">New Organization</p><h2>Request a record</h2><div id="org-message" class="notice" hidden></div><form id="org-form" class="form-stack"><label>Name<input name="name" maxlength="100" required></label><label>Organization Type<input name="organizationType" maxlength="100" value="Roblox/Discord Community"></label><label>Country / Region<input name="country" maxlength="100"></label><button class="button button-dark" type="submit">Create Pending Record</button></form></section><section class="panel"><div class="result-grid">${orgs.map(organizationResultCard).join("") || `<div class="empty-state"><p>No organizations yet.</p></div>`}</div></section>`;
   root.querySelector("#new-org-toggle")?.addEventListener("click", () => { root.querySelector("#org-create").hidden = false; });
   root.querySelector("#org-form")?.addEventListener("submit", async (event) => {
@@ -673,7 +770,21 @@ async function organizationsPage() {
     if (!name) return showNotice(message, "Organization name is required.", "error");
     const ref = Fire.doc(Fire.collection(db, "organizations"));
     try {
-      await Fire.setDoc(ref, { id: ref.id, cognitusId: createCognitusId("ORG"), name, searchableName: lower(name), organizationType: clean(data.organizationType).slice(0,100), country: clean(data.country).slice(0,100), verificationStatus: "pending_verification", trustLevel: "unreviewed", memberCount: 0, publicNotes: "", createdByUid: authUser.uid, createdAt: Fire.serverTimestamp(), updatedAt: Fire.serverTimestamp() });
+      await Fire.setDoc(ref, {
+        id: ref.id,
+        cognitusId: createCognitusId("ORG"),
+        name,
+        searchableName: lower(name),
+        organizationType: clean(data.organizationType).slice(0,100),
+        country: clean(data.country).slice(0,100),
+        verificationStatus: "pending_verification",
+        trustLevel: "unreviewed",
+        memberCount: 0,
+        publicNotes: "",
+        createdByUid: authUser.uid,
+        createdAt: Fire.serverTimestamp(),
+        updatedAt: Fire.serverTimestamp()
+      });
       await writeActivity("ORGANIZATION_CREATED", "organization", ref.id, `Created organization request ${name}.`);
       showNotice(message, `Organization record created for review: ${ref.id}`, "success");
       form.reset();
@@ -685,11 +796,14 @@ async function adminPage() {
   setTitle("Administration");
   if (loginRequired()) return;
   if (!admin()) return hero("Access Denied", "Admin access required.", "Your active account does not have administrative permissions.", buttonLink("#/dashboard", "Dashboard", true));
-  const [users, organizations, activity] = await Promise.all([
-    readQuery("users", [Fire.orderBy("createdAt", "desc"), Fire.limit(100)]),
-    readQuery("organizations", [Fire.orderBy("createdAt", "desc"), Fire.limit(100)]),
-    readQuery("auditLogs", [Fire.orderBy("createdAt", "desc"), Fire.limit(100)]).catch(() => [])
+  const [userRows, organizationRows, activityRows] = await Promise.all([
+    readQuery("users"),
+    readQuery("organizations"),
+    readQuery("auditLogs").catch(() => [])
   ]);
+  const users = newestFirst(userRows, 100);
+  const organizations = newestFirst(organizationRows, 100);
+  const activity = newestFirst(activityRows, 100);
   root.innerHTML = `<section class="hero hero-wide"><p class="eyebrow">Administration</p><h1>Control access and verification.</h1><p>Admins may manage non-owner accounts. Only Owners may grant or remove Owner access or modify an existing Owner account.</p></section><section class="admin-tabs"><button class="button button-dark" data-tab="users" type="button">Users</button><button class="button button-light" data-tab="orgs" type="button">Organizations</button><button class="button button-light" data-tab="activity" type="button">Activity</button></section><section id="admin-users" class="panel">${renderUsersTable(users)}</section><section id="admin-orgs" class="panel" hidden>${renderOrganizationsAdmin(organizations)}</section><section id="admin-activity" class="panel" hidden>${renderActivity(activity)}</section>`;
   root.querySelectorAll("[data-tab]").forEach((button)=>button.addEventListener("click",()=>{
     ["users","orgs","activity"].forEach((tab)=>{ root.querySelector(`#admin-${tab}`).hidden = tab !== button.dataset.tab; });
@@ -697,7 +811,7 @@ async function adminPage() {
   }));
   root.querySelectorAll("[data-user-role]").forEach((select)=>select.addEventListener("change", async () => {
     const uid = select.dataset.userRole;
-    const target = users.find((u)=>u.id === uid);
+    const target = users.find((user)=>user.id === uid);
     const newRole = select.value;
     if (target?.role === "owner" && !owner()) return alert("Only an Owner can modify another Owner account.");
     if (newRole === "owner" && !owner()) return alert("Only an Owner can grant Owner access.");
@@ -708,7 +822,7 @@ async function adminPage() {
   }));
   root.querySelectorAll("[data-user-status]").forEach((select)=>select.addEventListener("change", async () => {
     const uid = select.dataset.userStatus;
-    const target = users.find((u)=>u.id === uid);
+    const target = users.find((user)=>user.id === uid);
     if (target?.role === "owner" && !owner()) return alert("Only an Owner can modify an Owner account.");
     try {
       await Fire.updateDoc(Fire.doc(db, "users", uid), { status: select.value, updatedAt: Fire.serverTimestamp() });
@@ -717,7 +831,7 @@ async function adminPage() {
   }));
   root.querySelectorAll("[data-user-org]").forEach((input)=>input.addEventListener("change", async () => {
     const uid = input.dataset.userOrg;
-    const target = users.find((u)=>u.id === uid);
+    const target = users.find((user)=>user.id === uid);
     if (target?.role === "owner" && !owner()) return alert("Only an Owner can modify an Owner account.");
     try {
       await Fire.updateDoc(Fire.doc(db, "users", uid), { organizationId: clean(input.value) || null, updatedAt: Fire.serverTimestamp() });
@@ -761,7 +875,8 @@ async function settingsPage() {
       await batch.commit();
       await Auth.updateProfile(auth.currentUser, { displayName });
       showNotice(root.querySelector("#profile-message"), "Profile updated. Identity verification fields were not changed.", "success");
-      await refreshAccount(); renderNav();
+      await refreshAccount();
+      renderNav();
     } catch (error) { showNotice(root.querySelector("#profile-message"), error?.message || "Profile update failed.", "error"); }
   });
   root.querySelector("#password-form").addEventListener("submit", async (event)=>{

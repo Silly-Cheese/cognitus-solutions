@@ -12,16 +12,22 @@ const assert = (condition, message) => {
 
 const index = read("index.html");
 const app = read("src/app.js");
+const navigationEnhancements = read("src/navigationEnhancements.js");
 const rules = read("firestore.rules");
 const firebase = JSON.parse(read("firebase.json"));
-const indexes = JSON.parse(read("firestore.indexes.json"));
 
 assert(index.includes('src/app.js?v='), "index.html loads the consolidated production router");
 assert(!index.includes("appV1.js") && !index.includes("appSafe.js"), "legacy routers are not production entrypoints");
+assert(index.includes("navigationEnhancements.js") && navigationEnhancements.includes("data.orgRequestTab"), "organization request navigation enhancement is loaded");
+assert(navigationEnhancements.includes('#/organizations?request=1') && navigationEnhancements.includes("#new-org-toggle"), "organization request tab opens the creation form directly");
+assert(index.includes('rel="icon"') && index.includes("data:image/svg+xml"), "inline favicon prevents the GitHub Pages favicon 404");
 assert(!app.includes("OWNER_BOOTSTRAP") && !app.includes("ownerDiscordId"), "production app contains no client owner-bootstrap credential");
 assert(app.includes('current === "/owner-bootstrap"') && app.includes("Client-side bootstrap has been retired"), "legacy bootstrap route is explicitly non-operational");
 assert(app.includes('identityStatus: "self_declared"') && app.includes("identityConfidence: 0"), "new registrations do not claim verified identity");
+assert(app.includes("claimedByUid: credential.user.uid") && app.includes("authUser = credential.user"), "registration is bound directly to the Firebase credential UID");
 assert(app.includes("resultCount: results.length") && app.includes("results.length === 1"), "search only attaches a target when exactly one record matches");
+assert(!app.includes("Fire.orderBy("), "production queries do not depend on ordered compound queries");
+assert(app.includes("newestFirst(") && app.includes("alphabetic("), "chronological and directory sorting is performed client-side");
 
 assert(rules.includes("currentUser().status == 'active'"), "privileged rule evaluation requires an active account");
 assert(rules.includes("resource.data.role != 'owner'") && rules.includes("request.resource.data.role != 'owner'"), "admins cannot modify or create Owner role through user updates");
@@ -34,12 +40,12 @@ assert(rules.includes("request.resource.data.summary == resource.data.summary") 
 assert((rules.match(/{/g) || []).length === (rules.match(/}/g) || []).length, "Firestore rules have balanced braces");
 
 assert(firebase?.firestore?.rules === "firestore.rules", "firebase.json points to Firestore rules");
-assert(firebase?.firestore?.indexes === "firestore.indexes.json", "firebase.json points to Firestore indexes");
-assert(Array.isArray(indexes.indexes) && indexes.indexes.length >= 8, "required composite indexes are declared");
+assert(!Object.prototype.hasOwnProperty.call(firebase?.firestore || {}, "indexes"), "firebase.json does not deploy manual indexes");
+assert(!fs.existsSync("firestore.indexes.json"), "repository contains no manual/composite Firestore index manifest");
 
 if (process.exitCode) {
   console.error("\nCognitus validation failed.");
   process.exit(process.exitCode);
 }
 
-console.log("\nCognitus secure V2 validation passed.");
+console.log("\nCognitus secure V2 validation passed with no manual composite indexes.");
