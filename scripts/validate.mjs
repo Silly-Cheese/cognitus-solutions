@@ -27,6 +27,10 @@ assert(!navigation.includes("MutationObserver") && !controls.includes("MutationO
 assert(!navigation.includes("uxV3.js"), "observer-driven UX V3 is not loaded in production");
 assert(navigation.includes('#/organizations?request=1') && navigation.includes('textContent = "New Organization"'), "New Organization is a direct navigation action");
 assert(navigation.includes("#logout-button") && navigation.includes('logout.textContent = "Logout"'), "Logout remains an explicit visible navigation control");
+assert(navigation.includes("v4-mobile-nav-toggle") && navigation.includes("v4-mobile-open"), "mobile navigation uses an explicit menu toggle");
+assert(navigation.includes("window.innerWidth > 760") && navigation.includes("closeMobileMenu"), "mobile menu closes cleanly across navigation and desktop resize");
+assert(uxCss.includes("@media (max-width: 760px)") && uxCss.includes("v4-mobile-nav-ready") && uxCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))"), "mobile layout provides a two-column expandable navigation panel");
+assert(uxCss.includes("dashboard-hero h1") && uxCss.includes("font-size: clamp(2.05rem, 11vw, 2.8rem)"), "mobile dashboard typography is bounded for phone screens");
 assert(index.includes('rel="icon"') && index.includes("data:image/svg+xml"), "inline favicon prevents the GitHub Pages favicon 404");
 assert(index.includes("secure-v2-no-index"), "index.html keeps the repaired no-index production app build");
 
