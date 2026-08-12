@@ -2,55 +2,552 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function ownerDiscordId() { return '1036433371393441914'; }
-    function userDoc(uid) { return get(/databases/$(database)/documents/users/$(uid)); }
-    function currentUser() { return userDoc(request.auth.uid).data; }
-    function hasUserDoc() { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
-    function isSelf(uid) { return signedIn() && request.auth.uid == uid; }
-    function role() { return hasUserDoc() ? currentUser().role : null; }
-    function isOwner() { return role() == 'owner'; }
-    function isAdmin() { return role() in ['admin', 'owner']; }
-    function isReviewer() { return role() in ['reviewer', 'admin', 'owner']; }
-    function isOrgAdmin() { return role() in ['org_admin', 'admin', 'owner']; }
-    function isEmployerMember() { return role() in ['verified_employer_member', 'org_admin', 'reviewer', 'admin', 'owner']; }
-    function activeAccount() { return hasUserDoc() && currentUser().status in ['active', 'pending_verification']; }
-    function sameOrg(orgId) { return hasUserDoc() && currentUser().organizationId != null && currentUser().organizationId == orgId; }
-    function bootstrapNotComplete() { return !exists(/databases/$(database)/documents/settings/bootstrap); }
-    function isConfiguredOwnerAccount() { return signedIn() && hasUserDoc() && currentUser().discordId == ownerDiscordId(); }
-    function validFirstOwnerUserUpdate(uid) {
-      return isSelf(uid) && bootstrapNotComplete() && resource.data.discordId == ownerDiscordId()
-        && request.resource.data.discordId == ownerDiscordId() && request.resource.data.role == 'owner'
-        && request.resource.data.status == 'active' && request.resource.data.ownerBootstrap == true;
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userPath(uid) {
+      return /databases/$(database)/documents/users/$(uid);
+    }
+
+    function profilePath(profileId) {
+      return /databases/$(database)/documents/profiles/$(profileId);
+    }
+
+    function organizationPath(organizationId) {
+      return /databases/$(database)/documents/organizations/$(organizationId);
+    }
+
+    function reportPath(reportId) {
+      return /databases/$(database)/documents/reports/$(reportId);
+    }
+
+    function hasUserDoc() {
+      return signedIn() && exists(userPath(request.auth.uid));
+    }
+
+    function currentUser() {
+      return get(userPath(request.auth.uid)).data;
+    }
+
+    function activeAccount() {
+      return hasUserDoc() && currentUser().status == 'active';
+    }
+
+    function role() {
+      return activeAccount() ? currentUser().role : null;
+    }
+
+    function isOwner() {
+      return role() == 'owner';
+    }
+
+    function isAdmin() {
+      return role() in ['admin', 'owner'];
+    }
+
+    function isReviewer() {
+      return role() in ['reviewer', 'admin', 'owner'];
+    }
+
+    function isEmployerMember() {
+      return role() in ['verified_employer_member', 'org_admin', 'reviewer', 'admin', 'owner'];
+    }
+
+    function sameOrg(orgId) {
+      return activeAccount()
+        && orgId != null
+        && currentUser().organizationId != null
+        && currentUser().organizationId == orgId;
+    }
+
+    function validDiscordId(value) {
+      return value is string && value.matches('^[0-9]{15,25}$');
+    }
+
+    function validCognitusId(value, prefix) {
+      return value is string && value.matches('^' + prefix + '-[0-9]{2}-[A-Z2-9]{7}$');
+    }
+
+    function shortString(value, maxLength) {
+      return value is string && value.size() <= maxLength;
+    }
+
+    function validUserRole(value) {
+      return value in ['user', 'verified_employer_member', 'org_admin', 'reviewer', 'admin', 'owner'];
+    }
+
+    function validNonOwnerRole(value) {
+      return value in ['user', 'verified_employer_member', 'org_admin', 'reviewer', 'admin'];
+    }
+
+    function validUserStatus(value) {
+      return value in ['active', 'pending_verification', 'suspended', 'restricted', 'banned', 'password_reset_required'];
+    }
+
+    function validSeverity(value) {
+      return value in ['Informational', 'Low', 'Moderate', 'High', 'Critical'];
+    }
+
+    function validReportCategory(value) {
+      return value in [
+        'Misconduct', 'Abuse of Power', 'Fraud/Scamming', 'Harassment', 'Impersonation',
+        'Leaking Information', 'Unprofessional Conduct', 'False Report', 'Organization Concern',
+        'Positive Recognition', 'Employment Verification', 'Other'
+      ];
+    }
+
+    function validCheckReason(value) {
+      return value in [
+        'Hiring Review', 'Promotion Review', 'Partnership Review', 'Internal Investigation',
+        'Safety Concern', 'Appeal/Correction Review', 'Other'
+      ];
+    }
+
+    function ownsProfile(profileId) {
+      return activeAccount()
+        && profileId != null
+        && exists(profilePath(profileId))
+        && (
+          get(profilePath(profileId)).data.linkedUserId == request.auth.uid
+          || currentUser().discordId in get(profilePath(profileId)).data.discordIds
+        );
+    }
+
+    function ownsReportSubject(reportData) {
+      return reportData.subjectProfileId != null && ownsProfile(reportData.subjectProfileId);
     }
 
     match /users/{uid} {
-      allow create: if isSelf(uid)
+      allow create: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly([
+          'uid', 'cognitusId', 'profileId', 'displayName', 'discordUsername', 'discordId',
+          'role', 'status', 'accountType', 'organizationId', 'syntheticEmail', 'realEmailCollected',
+          'identityVerified', 'createdAt', 'updatedAt', 'lastLoginAt'
+        ])
         && request.resource.data.uid == uid
+        && request.resource.data.profileId == uid
+        && validCognitusId(request.resource.data.cognitusId, 'USR')
+        && shortString(request.resource.data.displayName, 64)
+        && request.resource.data.displayName.size() > 0
+        && shortString(request.resource.data.discordUsername, 64)
+        && request.resource.data.discordUsername.size() > 0
+        && validDiscordId(request.resource.data.discordId)
+        && request.resource.data.syntheticEmail == request.resource.data.discordId + '@cognitus.local'
         && request.resource.data.role == 'user'
         && request.resource.data.status == 'active'
+        && request.resource.data.accountType == 'individual'
+        && request.resource.data.organizationId == null
         && request.resource.data.realEmailCollected == false
-        && request.resource.data.discordId is string
-        && request.resource.data.discordId.matches('^[0-9]{15,25}$');
-      allow read: if isSelf(uid) || isReviewer();
-      allow update: if isSelf(uid)
-        && !('role' in request.resource.data.diff(resource.data).changedKeys())
-        && !('status' in request.resource.data.diff(resource.data).changedKeys())
-        && !('organizationId' in request.resource.data.diff(resource.data).changedKeys())
-        && !('ownerBootstrap' in request.resource.data.diff(resource.data).changedKeys());
-      allow update: if validFirstOwnerUserUpdate(uid);
-      allow update: if isAdmin();
-      allow delete: if isOwner();
+        && request.resource.data.identityVerified == false
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.lastLoginAt == request.time;
+
+      allow read: if signedIn() && (request.auth.uid == uid || isReviewer());
+
+      allow update: if signedIn()
+        && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'displayName', 'lastLoginAt', 'lastRememberMeChoice', 'updatedAt'
+        ])
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.profileId == resource.data.profileId
+        && request.resource.data.discordUsername == resource.data.discordUsername
+        && request.resource.data.discordId == resource.data.discordId
+        && request.resource.data.syntheticEmail == resource.data.syntheticEmail
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.status == resource.data.status
+        && request.resource.data.organizationId == resource.data.organizationId
+        && shortString(request.resource.data.displayName, 64)
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'role', 'status', 'organizationId', 'updatedAt'
+        ])
+        && validUserRole(request.resource.data.role)
+        && validUserStatus(request.resource.data.status)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.discordId == resource.data.discordId
+        && request.resource.data.updatedAt == request.time
+        && (
+          uid != request.auth.uid
+          || (
+            request.resource.data.role == 'owner'
+            && request.resource.data.status == resource.data.status
+            && request.resource.data.organizationId == resource.data.organizationId
+          )
+        );
+
+      allow update: if role() == 'admin'
+        && resource.data.role != 'owner'
+        && request.resource.data.role != 'owner'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'role', 'status', 'organizationId', 'updatedAt'
+        ])
+        && validNonOwnerRole(request.resource.data.role)
+        && validUserStatus(request.resource.data.status)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.discordId == resource.data.discordId
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /profiles/{profileId} {
+      allow read: if activeAccount() || (signedIn() && profileId == request.auth.uid);
+
+      allow create: if signedIn()
+        && profileId == request.auth.uid
+        && getAfter(userPath(request.auth.uid)).data.uid == request.auth.uid
+        && getAfter(userPath(request.auth.uid)).data.status == 'active'
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'linkedUserId', 'type', 'displayName', 'robloxUsernames',
+          'robloxUsernamesNormalized', 'discordUsernames', 'discordUsernamesNormalized', 'discordIds',
+          'knownAliases', 'claimedByUid', 'identityStatus', 'identityConfidence', 'professionalStanding',
+          'riskLevel', 'reportCount', 'appealCount', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == profileId
+        && request.resource.data.linkedUserId == request.auth.uid
+        && request.resource.data.claimedByUid == request.auth.uid
+        && validCognitusId(request.resource.data.cognitusId, 'PRF')
+        && request.resource.data.type == 'person'
+        && shortString(request.resource.data.displayName, 64)
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.robloxUsernames is list
+        && request.resource.data.robloxUsernames.size() <= 10
+        && request.resource.data.robloxUsernamesNormalized is list
+        && request.resource.data.robloxUsernamesNormalized.size() <= 10
+        && request.resource.data.discordUsernames is list
+        && request.resource.data.discordUsernames.size() <= 10
+        && request.resource.data.discordUsernamesNormalized is list
+        && request.resource.data.discordUsernamesNormalized.size() <= 10
+        && request.resource.data.discordIds == [getAfter(userPath(request.auth.uid)).data.discordId]
+        && request.resource.data.knownAliases == []
+        && request.resource.data.identityStatus == 'self_declared'
+        && request.resource.data.identityConfidence == 0
+        && request.resource.data.professionalStanding == 'unreviewed'
+        && request.resource.data.riskLevel == 'unreviewed'
+        && request.resource.data.reportCount == 0
+        && request.resource.data.appealCount == 0
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if activeAccount()
+        && profileId == request.auth.uid
+        && resource.data.linkedUserId == request.auth.uid
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'displayName', 'robloxUsernames', 'robloxUsernamesNormalized', 'updatedAt'
+        ])
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.linkedUserId == resource.data.linkedUserId
+        && request.resource.data.discordIds == resource.data.discordIds
+        && request.resource.data.claimedByUid == resource.data.claimedByUid
+        && request.resource.data.identityStatus == resource.data.identityStatus
+        && request.resource.data.identityConfidence == resource.data.identityConfidence
+        && request.resource.data.professionalStanding == resource.data.professionalStanding
+        && request.resource.data.riskLevel == resource.data.riskLevel
+        && shortString(request.resource.data.displayName, 64)
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.robloxUsernames is list
+        && request.resource.data.robloxUsernames.size() <= 10
+        && request.resource.data.robloxUsernamesNormalized is list
+        && request.resource.data.robloxUsernamesNormalized.size() <= 10
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isReviewer()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'claimedByUid', 'identityStatus', 'identityConfidence', 'professionalStanding',
+          'riskLevel', 'knownAliases', 'reportCount', 'appealCount', 'lastReviewedAt', 'updatedAt'
+        ])
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.linkedUserId == resource.data.linkedUserId
+        && request.resource.data.discordIds == resource.data.discordIds
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /organizations/{organizationId} {
+      allow read: if activeAccount();
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'name', 'searchableName', 'organizationType', 'country',
+          'verificationStatus', 'trustLevel', 'memberCount', 'publicNotes', 'createdByUid',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == organizationId
+        && validCognitusId(request.resource.data.cognitusId, 'ORG')
+        && shortString(request.resource.data.name, 100)
+        && request.resource.data.name.size() > 0
+        && shortString(request.resource.data.searchableName, 100)
+        && shortString(request.resource.data.organizationType, 100)
+        && shortString(request.resource.data.country, 100)
+        && request.resource.data.verificationStatus == 'pending_verification'
+        && request.resource.data.trustLevel == 'unreviewed'
+        && request.resource.data.memberCount == 0
+        && request.resource.data.publicNotes == ''
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if role() == 'org_admin'
+        && sameOrg(organizationId)
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'name', 'searchableName', 'organizationType', 'country', 'publicNotes', 'updatedAt'
+        ])
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.verificationStatus == resource.data.verificationStatus
+        && request.resource.data.trustLevel == resource.data.trustLevel
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'name', 'searchableName', 'organizationType', 'country', 'publicNotes',
+          'verificationStatus', 'trustLevel', 'memberCount', 'updatedAt'
+        ])
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.verificationStatus in ['pending_verification', 'verified', 'unverified', 'suspended', 'restricted']
+        && request.resource.data.trustLevel in ['unreviewed', 'good', 'watch', 'concern', 'high_risk']
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /checkLogs/{checkId} {
+      allow read: if isReviewer()
+        || (signedIn() && resource.data.checkedByUid == request.auth.uid)
+        || (isEmployerMember() && sameOrg(resource.data.organizationId));
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'checkedByUid', 'checkedByCognitusId', 'organizationId',
+          'searchType', 'searchField', 'searchQuery', 'reason', 'additionalNotes',
+          'targetProfileId', 'targetOrganizationId', 'resultIds', 'resultCount', 'resultSummary',
+          'downloadedReport', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == checkId
+        && validCognitusId(request.resource.data.cognitusId, 'CHK')
+        && request.resource.data.checkedByUid == request.auth.uid
+        && request.resource.data.checkedByCognitusId == currentUser().cognitusId
+        && request.resource.data.organizationId == currentUser().organizationId
+        && request.resource.data.searchType in ['Person', 'Organization']
+        && request.resource.data.searchField in ['Discord Username', 'Discord ID', 'Roblox Username', 'Organization Name']
+        && shortString(request.resource.data.searchQuery, 100)
+        && request.resource.data.searchQuery.size() > 0
+        && validCheckReason(request.resource.data.reason)
+        && shortString(request.resource.data.additionalNotes, 1000)
+        && request.resource.data.resultIds is list
+        && request.resource.data.resultIds.size() <= 20
+        && request.resource.data.resultCount is int
+        && request.resource.data.resultCount >= 0
+        && shortString(request.resource.data.resultSummary, 200)
+        && request.resource.data.downloadedReport == false
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if (isReviewer() || (signedIn() && resource.data.checkedByUid == request.auth.uid))
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['downloadedReport', 'updatedAt'])
+        && request.resource.data.downloadedReport == true
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /reports/{reportId} {
+      allow read: if isReviewer()
+        || (signedIn() && resource.data.submittedByUid == request.auth.uid)
+        || ownsReportSubject(resource.data)
+        || (activeAccount()
+          && resource.data.status in ['approved', 'published']
+          && resource.data.visibility in ['screening', 'public']);
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'subjectProfileId', 'subjectOrganizationId', 'submittedByUid',
+          'submittedByCognitusId', 'submittedByOrganizationId', 'category', 'severity', 'summary',
+          'details', 'status', 'visibility', 'reviewedByUid', 'reviewedAt', 'decisionNotes',
+          'publishedAt', 'appealStatus', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == reportId
+        && validCognitusId(request.resource.data.cognitusId, 'RPT')
+        && request.resource.data.submittedByUid == request.auth.uid
+        && request.resource.data.submittedByCognitusId == currentUser().cognitusId
+        && request.resource.data.submittedByOrganizationId == currentUser().organizationId
+        && (
+          (
+            request.resource.data.subjectProfileId != null
+            && request.resource.data.subjectOrganizationId == null
+            && exists(profilePath(request.resource.data.subjectProfileId))
+          )
+          || (
+            request.resource.data.subjectProfileId == null
+            && request.resource.data.subjectOrganizationId != null
+            && exists(organizationPath(request.resource.data.subjectOrganizationId))
+          )
+        )
+        && validReportCategory(request.resource.data.category)
+        && validSeverity(request.resource.data.severity)
+        && shortString(request.resource.data.summary, 240)
+        && request.resource.data.summary.size() > 0
+        && shortString(request.resource.data.details, 5000)
+        && request.resource.data.details.size() > 0
+        && request.resource.data.status == 'pending_review'
+        && request.resource.data.visibility == 'private_review'
+        && request.resource.data.reviewedByUid == null
+        && request.resource.data.reviewedAt == null
+        && request.resource.data.decisionNotes == ''
+        && request.resource.data.publishedAt == null
+        && request.resource.data.appealStatus == 'none'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isReviewer()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'visibility', 'reviewedByUid', 'reviewedAt', 'decisionNotes',
+          'publishedAt', 'appealStatus', 'updatedAt'
+        ])
+        && request.resource.data.submittedByUid == resource.data.submittedByUid
+        && request.resource.data.subjectProfileId == resource.data.subjectProfileId
+        && request.resource.data.subjectOrganizationId == resource.data.subjectOrganizationId
+        && request.resource.data.category == resource.data.category
+        && request.resource.data.severity == resource.data.severity
+        && request.resource.data.summary == resource.data.summary
+        && request.resource.data.details == resource.data.details
+        && request.resource.data.status in ['pending_review', 'under_review', 'approved', 'denied', 'published', 'archived', 'disputed']
+        && request.resource.data.visibility in ['private_review', 'screening', 'public']
+        && request.resource.data.reviewedByUid == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /claims/{claimId} {
+      allow read: if isReviewer() || (signedIn() && resource.data.submittedByUid == request.auth.uid);
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'profileId', 'submittedByUid', 'submittedByCognitusId',
+          'submittedDiscordId', 'statement', 'verificationMethod', 'status', 'reviewedByUid',
+          'decisionNotes', 'closedAt', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == claimId
+        && validCognitusId(request.resource.data.cognitusId, 'CLM')
+        && request.resource.data.submittedByUid == request.auth.uid
+        && request.resource.data.submittedByCognitusId == currentUser().cognitusId
+        && request.resource.data.submittedDiscordId == currentUser().discordId
+        && request.resource.data.verificationMethod == 'immutable_discord_id_match'
+        && request.resource.data.status == 'pending_review'
+        && exists(profilePath(request.resource.data.profileId))
+        && currentUser().discordId in get(profilePath(request.resource.data.profileId)).data.discordIds
+        && shortString(request.resource.data.statement, 1500)
+        && request.resource.data.reviewedByUid == null
+        && request.resource.data.decisionNotes == ''
+        && request.resource.data.closedAt == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isReviewer()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'reviewedByUid', 'decisionNotes', 'closedAt', 'updatedAt'
+        ])
+        && request.resource.data.status in ['pending_review', 'approved', 'denied', 'cancelled']
+        && request.resource.data.reviewedByUid == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /appeals/{appealId} {
+      allow read: if isReviewer() || (signedIn() && resource.data.submittedByUid == request.auth.uid);
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'profileId', 'reportId', 'submittedByUid', 'submittedByCognitusId',
+          'reason', 'statement', 'status', 'reviewedByUid', 'decision', 'decisionNotes', 'closedAt',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == appealId
+        && validCognitusId(request.resource.data.cognitusId, 'APL')
+        && request.resource.data.submittedByUid == request.auth.uid
+        && request.resource.data.submittedByCognitusId == currentUser().cognitusId
+        && exists(profilePath(request.resource.data.profileId))
+        && exists(reportPath(request.resource.data.reportId))
+        && get(reportPath(request.resource.data.reportId)).data.subjectProfileId == request.resource.data.profileId
+        && ownsProfile(request.resource.data.profileId)
+        && shortString(request.resource.data.reason, 200)
+        && request.resource.data.reason.size() > 0
+        && shortString(request.resource.data.statement, 4000)
+        && request.resource.data.statement.size() > 0
+        && request.resource.data.status == 'pending_review'
+        && request.resource.data.reviewedByUid == null
+        && request.resource.data.decision == null
+        && request.resource.data.decisionNotes == ''
+        && request.resource.data.closedAt == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isReviewer()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'reviewedByUid', 'decision', 'decisionNotes', 'closedAt', 'updatedAt'
+        ])
+        && request.resource.data.status in ['pending_review', 'under_review', 'accepted', 'denied', 'partially_accepted', 'closed']
+        && request.resource.data.reviewedByUid == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /auditLogs/{auditId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.actorUid == request.auth.uid);
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'actorUid', 'actorCognitusId', 'actorRole', 'action',
+          'targetType', 'targetId', 'summary', 'metadata', 'createdAt'
+        ])
+        && request.resource.data.id == auditId
+        && validCognitusId(request.resource.data.cognitusId, 'AUD')
+        && request.resource.data.actorUid == request.auth.uid
+        && request.resource.data.actorCognitusId == currentUser().cognitusId
+        && request.resource.data.actorRole == currentUser().role
+        && shortString(request.resource.data.action, 80)
+        && request.resource.data.action.size() > 0
+        && shortString(request.resource.data.targetType, 80)
+        && shortString(request.resource.data.summary, 500)
+        && request.resource.data.metadata is map
+        && request.resource.data.metadata.keys().size() <= 12
+        && request.resource.data.createdAt == request.time;
+
+      allow update, delete: if false;
+    }
+
+    match /downloads/{downloadId} {
+      allow read: if isAdmin() || (signedIn() && resource.data.downloadedByUid == request.auth.uid);
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'downloadedByUid', 'checkId', 'reportType', 'format', 'createdAt'
+        ])
+        && request.resource.data.id == downloadId
+        && request.resource.data.downloadedByUid == request.auth.uid
+        && request.resource.data.reportType in ['quick', 'full']
+        && request.resource.data.format == 'print_pdf'
+        && request.resource.data.createdAt == request.time;
+
+      allow update, delete: if false;
     }
 
     match /settings/bootstrap {
-      allow read: if signedIn();
-      allow create, update: if isConfiguredOwnerAccount()
-        && request.resource.data.complete == true
-        && request.resource.data.completedBy == request.auth.uid
-        && request.resource.data.completedByDiscordId == ownerDiscordId()
-        && request.resource.data.ownerDiscordId == ownerDiscordId();
-      allow delete: if false;
+      allow read: if isOwner();
+      allow write: if false;
     }
 
     match /settings/portal {
@@ -59,116 +556,8 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    match /settings/{document=**} {
-      allow read: if isAdmin();
-      allow write: if isOwner();
-    }
-
-    match /profiles/{profileId} {
-      allow read: if signedIn();
-      allow create: if isReviewer() || (activeAccount() && profileId == request.auth.uid && request.resource.data.linkedUserId == request.auth.uid);
-      allow update: if isReviewer() || (activeAccount() && profileId == request.auth.uid && resource.data.linkedUserId == request.auth.uid);
-      allow delete: if isOwner();
-    }
-
-    match /organizations/{organizationId} {
-      allow read: if signedIn();
-      allow create: if activeAccount();
-      allow update: if isAdmin() || (isOrgAdmin() && sameOrg(organizationId));
-      allow delete: if isOwner();
-    }
-
-    match /reports/{reportId} {
-      allow read: if isReviewer() || (signedIn() && resource.data.submittedByUid == request.auth.uid) || (signedIn() && resource.data.status in ['approved', 'published', 'disputed']);
-      allow create: if activeAccount() && request.resource.data.submittedByUid == request.auth.uid && request.resource.data.status == 'pending_review';
-      allow update: if isReviewer();
-      allow delete: if isOwner();
-    }
-
-    match /checkLogs/{checkId} {
-      allow read: if isReviewer() || (signedIn() && resource.data.checkedByUid == request.auth.uid) || (isEmployerMember() && sameOrg(resource.data.organizationId));
-      allow create: if activeAccount() && request.resource.data.checkedByUid == request.auth.uid && request.resource.data.reason is string && request.resource.data.reason.size() > 0;
-      allow update: if isReviewer() || (signedIn() && resource.data.checkedByUid == request.auth.uid && request.resource.data.diff(resource.data).changedKeys().hasOnly(['downloadedReport', 'updatedAt']));
-      allow delete: if isOwner();
-    }
-
-    match /appeals/{appealId} {
-      allow read: if isReviewer() || (signedIn() && resource.data.submittedByUid == request.auth.uid);
-      allow create: if activeAccount() && request.resource.data.submittedByUid == request.auth.uid && request.resource.data.status == 'pending_review';
-      allow update: if isReviewer();
-      allow delete: if isOwner();
-    }
-
-    match /claims/{claimId} {
-      allow read: if isReviewer() || (signedIn() && resource.data.submittedByUid == request.auth.uid);
-      allow create: if activeAccount() && request.resource.data.submittedByUid == request.auth.uid && request.resource.data.status == 'pending_review' && request.resource.data.submittedDiscordId == currentUser().discordId;
-      allow update: if isReviewer();
-      allow delete: if isOwner();
-    }
-
-    match /notifications/{notificationId} {
-      allow read: if signedIn() && (resource.data.userId == request.auth.uid || resource.data.broadcast == true || isAdmin());
-      allow create: if isAdmin();
-      allow update: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid && request.resource.data.diff(resource.data).changedKeys().hasOnly(['read', 'readAt', 'updatedAt']));
-      allow delete: if isAdmin();
-    }
-
-    match /auditLogs/{auditId} {
-      allow read: if isAdmin();
-      allow create: if signedIn();
-      allow update, delete: if false;
-    }
-
     match /passwordResetRequests/{requestId} {
-      allow read: if isAdmin();
-      allow create: if request.resource.data.discordId is string && request.resource.data.discordId.matches('^[0-9]{15,25}$') && request.resource.data.status == 'pending_review';
-      allow update: if isAdmin();
-      allow delete: if isOwner();
-    }
-
-    match /savedCandidates/{savedId} {
-      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin() || sameOrg(resource.data.organizationId));
-      allow create: if activeAccount() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-    }
-
-    match /savedOrganizations/{savedId} {
-      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin() || sameOrg(resource.data.organizationId));
-      allow create: if activeAccount() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-    }
-
-    match /privateNotes/{noteId} {
-      allow read: if isAdmin() || sameOrg(resource.data.organizationId);
-      allow create: if activeAccount() && request.resource.data.createdByUid == request.auth.uid && sameOrg(request.resource.data.organizationId);
-      allow update, delete: if isAdmin() || sameOrg(resource.data.organizationId);
-    }
-
-    match /candidatePipelines/{pipelineId} {
-      allow read, write: if isAdmin() || sameOrg(resource.data.organizationId) || sameOrg(request.resource.data.organizationId);
-    }
-
-    match /downloads/{downloadId} {
-      allow read: if isAdmin() || (signedIn() && resource.data.downloadedByUid == request.auth.uid);
-      allow create: if activeAccount() && request.resource.data.downloadedByUid == request.auth.uid;
-      allow update: if false;
-      allow delete: if isOwner();
-    }
-
-    match /duplicateReviews/{reviewId} {
-      allow read, write: if isReviewer();
-    }
-
-    match /employmentHistory/{historyId} {
-      allow read: if signedIn();
-      allow create, update: if isReviewer() || isEmployerMember();
-      allow delete: if isOwner();
-    }
-
-    match /certifications/{certId} {
-      allow read: if signedIn();
-      allow create, update: if isReviewer() || isEmployerMember();
-      allow delete: if isOwner();
+      allow read, write: if false;
     }
 
     match /{document=**} {
