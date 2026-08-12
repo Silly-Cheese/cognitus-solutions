@@ -7,12 +7,162 @@
   <meta name="theme-color" content="#111111" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23111'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial,sans-serif' font-size='22' font-weight='700' fill='white'%3ECS%3C/text%3E%3C/svg%3E" />
   <title>Cognitus Solutions</title>
-  <style>/* style intentionally unchanged */</style>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f4f2;
+      --surface: #ffffff;
+      --surface-soft: #f8f8f6;
+      --text: #111111;
+      --muted: #676767;
+      --line: #deded9;
+      --line-strong: #c7c7c1;
+      --shadow: 0 28px 80px rgba(0, 0, 0, .08);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --max: 1220px;
+    }
+    * { box-sizing: border-box; }
+    html { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); scroll-behavior: smooth; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at top left, #fff 0, #f7f7f4 30%, #f0f0ed 70%, #ecece8 100%); }
+    body::before { content: ""; position: fixed; inset: 0; pointer-events: none; opacity: .2; background-image: linear-gradient(rgba(0,0,0,.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,.025) 1px, transparent 1px); background-size: 32px 32px; mask-image: linear-gradient(to bottom, #000, transparent 55%); }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+    button, select { cursor: pointer; }
+    button:disabled { opacity: .55; cursor: progress; }
+    :focus-visible { outline: 3px solid #111; outline-offset: 3px; }
+    .app-shell { min-height: 100vh; position: relative; z-index: 1; }
+    .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .85rem clamp(1rem, 4vw, 3rem); background: rgba(255,255,255,.9); border-bottom: 1px solid rgba(0,0,0,.08); backdrop-filter: blur(18px); }
+    .brand { display: flex; align-items: center; gap: .85rem; min-width: max-content; }
+    .brand-mark { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 15px; background: #111; color: #fff; font-weight: 950; letter-spacing: -.07em; box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); }
+    .brand strong { display: block; font-size: 1rem; letter-spacing: -.02em; }
+    .brand small { display: block; color: var(--muted); font-size: .76rem; margin-top: .08rem; }
+    .topnav { display: flex; align-items: center; justify-content: flex-end; gap: .25rem; overflow-x: auto; padding: .2rem; white-space: nowrap; scrollbar-width: thin; }
+    .topnav a, .topnav button, .nav-user { padding: .66rem .82rem; border-radius: 999px; font-weight: 800; font-size: .9rem; border: 0; background: transparent; }
+    .topnav a:hover, .topnav button:hover { background: #ededeb; }
+    .topnav [data-org-request-tab] { background: #111; color: #fff; }
+    .topnav [data-org-request-tab]:hover { background: #2b2b2b; }
+    .nav-user { background: #efefec; color: #333; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+    .page-root { width: min(var(--max), 100%); margin: 0 auto; padding: clamp(1.25rem, 5vw, 4rem); min-height: 75vh; }
+    .hero, .form-card, .panel, .legal-card, .report-document { background: rgba(255,255,255,.95); border: 1px solid var(--line); border-radius: var(--radius-xl); box-shadow: var(--shadow); padding: clamp(1.5rem, 5vw, 4rem); }
+    .hero { margin-bottom: 1rem; }
+    .hero-home { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .55fr); gap: 1.25rem; align-items: stretch; }
+    .hero-home > div:first-child { align-self: center; }
+    .hero h1, .form-card h1, .legal-card h1, .report-document h1 { margin: 0 0 1.15rem; line-height: .92; letter-spacing: -.07em; font-size: clamp(2.7rem, 8vw, 6.2rem); max-width: 12ch; }
+    .hero p, .form-card > p, .legal-card p, .panel p { color: var(--muted); line-height: 1.7; font-size: 1rem; }
+    .eyebrow { margin: 0 0 1rem !important; color: #111 !important; font-size: .74rem !important; font-weight: 950 !important; letter-spacing: .2em; text-transform: uppercase; }
+    .trust-card { display: flex; flex-direction: column; justify-content: flex-end; padding: 1.4rem; border-radius: 22px; background: #111; color: #fff; min-height: 320px; position: relative; overflow: hidden; }
+    .trust-card::before { content: ""; position: absolute; width: 220px; height: 220px; border-radius: 50%; border: 1px solid rgba(255,255,255,.16); top: -80px; right: -80px; box-shadow: 0 0 0 30px rgba(255,255,255,.025), 0 0 0 60px rgba(255,255,255,.02); }
+    .trust-card h2 { margin: 1rem 0 .6rem; font-size: 1.7rem; letter-spacing: -.045em; }
+    .trust-card p { color: rgba(255,255,255,.72); margin: 0; }
+    .trust-icon { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 18px; background: #fff; color: #111; font-weight: 950; letter-spacing: -.07em; position: relative; }
+    .hero-actions, .mini-actions, .admin-tabs { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; margin-top: 1.4rem; }
+    .button, button[type="submit"] { appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 43px; padding: .75rem 1.05rem; border-radius: 999px; border: 1px solid var(--line-strong); font-weight: 900; transition: transform .15s ease, background .15s ease; }
+    .button:hover, button[type="submit"]:hover { transform: translateY(-1px); }
+    .button-dark, button[type="submit"] { background: #111; color: #fff; border-color: #111; }
+    .button-light { background: #fff; color: #111; }
+    .feature-grid, .stats-grid, .result-grid, .dashboard-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1rem; margin: 1rem 0; }
+    .dashboard-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .feature-card, .stat-card, .result-card { background: rgba(255,255,255,.94); border: 1px solid var(--line); border-radius: var(--radius-lg); padding: 1.35rem; box-shadow: 0 12px 35px rgba(0,0,0,.045); }
+    .feature-card > span { display: inline-flex; min-width: 34px; height: 34px; align-items: center; justify-content: center; border-radius: 999px; background: #111; color: #fff; font-size: .72rem; font-weight: 950; }
+    .feature-card h3, .result-card h3 { margin: 1rem 0 .5rem; font-size: 1.35rem; letter-spacing: -.04em; }
+    .feature-card p, .result-card p { margin: 0; color: var(--muted); line-height: 1.6; }
+    .dashboard-hero { display: grid; grid-template-columns: minmax(0,1fr) minmax(260px,360px); gap: 1rem; margin-bottom: 1rem; }
+    .dashboard-hero > div:first-child, .account-card { background: rgba(255,255,255,.95); border: 1px solid var(--line); border-radius: var(--radius-xl); box-shadow: var(--shadow); padding: clamp(1.5rem, 4vw, 3rem); }
+    .dashboard-hero h1 { margin: 0 0 .8rem; font-size: clamp(2.4rem, 6vw, 4.8rem); letter-spacing: -.065em; line-height: .95; }
+    .dashboard-hero p { color: var(--muted); line-height: 1.65; }
+    .account-card { display: grid; align-content: center; gap: .45rem; background: #111; color: #fff; }
+    .account-card span, .account-card small { color: rgba(255,255,255,.6); }
+    .account-card strong { font-size: 1.45rem; overflow-wrap: anywhere; }
+    .stat-card span, .stat-card small { color: var(--muted); display: block; }
+    .stat-card strong { display: block; margin: .35rem 0; font-size: 1.35rem; overflow-wrap: anywhere; }
+    .form-card, .legal-card { width: min(820px,100%); margin: 0 auto 1rem; }
+    .wide-form { width: 100%; }
+    .auth-card { width: min(640px,100%); }
+    .form-card h2, .panel h2 { margin: 0 0 .8rem; font-size: clamp(1.55rem, 4vw, 2.4rem); letter-spacing: -.055em; }
+    .form-stack { display: grid; gap: 1rem; }
+    .form-row { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
+    label { display: grid; gap: .45rem; font-weight: 850; font-size: .92rem; }
+    input, select, textarea { width: 100%; border: 1px solid var(--line-strong); border-radius: var(--radius-md); background: #fff; color: #111; padding: .85rem .95rem; min-height: 44px; }
+    textarea { resize: vertical; }
+    .checkbox-line { display: flex; align-items: flex-start; gap: .65rem; line-height: 1.4; }
+    .checkbox-line input { width: auto; min-height: auto; margin-top: .18rem; }
+    .notice { padding: .95rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--line); background: var(--surface-soft); color: #494949; line-height: 1.55; overflow-wrap: anywhere; }
+    .notice-error { border-color: #c9a4a4; background: #fff7f7; color: #6c2323; }
+    .notice-success { border-color: #a6c1ab; background: #f6fbf7; color: #214c2c; }
+    .search-layout, .workflow-layout { display: grid; grid-template-columns: minmax(0,1.1fr) minmax(300px,.9fr); gap: 1rem; margin-bottom: 1rem; }
+    .workflow-layout { align-items: start; }
+    .panel { margin-bottom: 1rem; }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+    .empty-state { border: 1px dashed var(--line-strong); border-radius: var(--radius-md); padding: 1.1rem; color: var(--muted); }
+    .record-list, .workflow-list, .report-records { display: grid; gap: .7rem; }
+    .record-row, .workflow-card, .report-records article { display: flex; justify-content: space-between; gap: 1rem; padding: .95rem; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--surface-soft); }
+    .record-row span, .record-row small, .workflow-card small, .report-records span { display: block; color: var(--muted); margin-top: .2rem; }
+    .workflow-card p { margin: .35rem 0; }
+    .record-meta, .alias-list { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .9rem; }
+    .record-meta span, .alias-list span { padding: .38rem .58rem; border-radius: 999px; background: #f0f0ed; border: 1px solid var(--line); color: #575757; font-size: .78rem; font-weight: 800; }
+    .admin-tabs { margin-bottom: 1rem; }
+    .admin-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); }
+    .admin-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    .admin-table th, .admin-table td { text-align: left; padding: .85rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .admin-table th { font-size: .72rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); background: #f5f5f2; }
+    .admin-table tr:last-child td { border-bottom: 0; }
+    .admin-table select, .admin-table input { min-width: 150px; padding: .55rem .65rem; min-height: 38px; }
+    .report-toolbar { display: flex; justify-content: space-between; gap: .75rem; margin-bottom: .8rem; }
+    .report-document { width: min(1000px,100%); margin: 0 auto; }
+    .report-header { display: grid; grid-template-columns: 1fr minmax(250px,320px); gap: 1rem; align-items: end; border-bottom: 2px solid #111; padding-bottom: 1.2rem; }
+    .report-header h1 { font-size: clamp(2.2rem,5vw,4.3rem); }
+    .report-id-card { padding: 1rem; border-radius: var(--radius-md); background: #111; color: #fff; display: grid; gap: .35rem; }
+    .report-id-card span, .report-id-card small { color: rgba(255,255,255,.65); }
+    .report-section { padding: 1.3rem 0; border-bottom: 1px solid var(--line); }
+    .report-section:last-child { border-bottom: 0; }
+    .report-section h2 { margin: 0 0 .9rem; font-size: 1.35rem; letter-spacing: -.04em; }
+    .report-dl { display: grid; grid-template-columns: 180px 1fr; gap: .55rem 1rem; }
+    .report-dl dt { color: var(--muted); font-weight: 800; }
+    .report-dl dd { margin: 0; overflow-wrap: anywhere; }
+    .disclaimer { color: var(--muted); }
+    .site-footer { width: min(var(--max),100%); margin: 0 auto; padding: 2rem clamp(1.25rem,5vw,4rem) 3rem; display: flex; gap: 1rem; flex-wrap: wrap; color: var(--muted); font-size: .85rem; font-weight: 750; }
+    .site-footer .build { margin-left: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .72rem; }
+    [hidden] { display: none !important; }
+    @media (max-width: 900px) {
+      .topbar { position: static; display: block; }
+      .brand { margin-bottom: .75rem; }
+      .topnav { justify-content: flex-start; }
+      .hero-home, .dashboard-hero, .search-layout, .workflow-layout, .report-header { grid-template-columns: 1fr; }
+      .feature-grid, .stats-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .trust-card { min-height: 250px; }
+    }
+    @media (max-width: 620px) {
+      .page-root { padding: 1rem; }
+      .hero, .form-card, .panel, .legal-card, .report-document, .dashboard-hero > div:first-child, .account-card { border-radius: 20px; padding: 1.25rem; }
+      .feature-grid, .stats-grid, .dashboard-grid, .form-row, .result-grid, .report-dl { grid-template-columns: 1fr; }
+      .hero h1, .form-card h1, .legal-card h1 { font-size: clamp(2.2rem,13vw,3.8rem); }
+      .record-row, .workflow-card { display: grid; }
+      .site-footer .build { margin-left: 0; width: 100%; }
+    }
+    @media print {
+      body { background: #fff; }
+      body::before, .topbar, .site-footer, .no-print { display: none !important; }
+      .page-root { width: 100%; padding: 0; }
+      .report-document { box-shadow: none; border: 0; padding: 0; }
+    }
+  </style>
 </head>
 <body>
   <div id="app" class="app-shell">
-    <header class="topbar"><a class="brand" href="#/" aria-label="Cognitus Solutions home"><span class="brand-mark" aria-hidden="true">CS</span><span><strong>Cognitus Solutions</strong><small>Employment Intelligence Portal</small></span></a><nav class="topnav" aria-label="Primary navigation"><a href="#/">Home</a><a href="#/features">Features</a><a href="#/login">Login</a><a class="button button-dark" href="#/register">Create Account</a></nav></header>
-    <main id="page-root" class="page-root" tabindex="-1" aria-live="polite"><section class="hero"><p class="eyebrow">Loading</p><h1>Cognitus Solutions</h1><p>Starting the secure portal…</p></section></main>
+    <header class="topbar">
+      <a class="brand" href="#/" aria-label="Cognitus Solutions home">
+        <span class="brand-mark" aria-hidden="true">CS</span>
+        <span><strong>Cognitus Solutions</strong><small>Employment Intelligence Portal</small></span>
+      </a>
+      <nav class="topnav" aria-label="Primary navigation">
+        <a href="#/">Home</a><a href="#/features">Features</a><a href="#/login">Login</a><a class="button button-dark" href="#/register">Create Account</a>
+      </nav>
+    </header>
+    <main id="page-root" class="page-root" tabindex="-1" aria-live="polite">
+      <section class="hero"><p class="eyebrow">Loading</p><h1>Cognitus Solutions</h1><p>Starting the secure portal…</p></section>
+    </main>
   </div>
   <script type="module" src="./src/app.js?v=secure-v2-no-index-20260812b"></script>
   <script type="module" src="./src/navigationEnhancements.js?v=20260812"></script>
