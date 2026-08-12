@@ -324,6 +324,7 @@ function registerPage() {
       setBusy(button, true, "Creating account…", "Create Account");
       await Auth.setPersistence(auth, Auth.browserLocalPersistence);
       credential = await Auth.createUserWithEmailAndPassword(auth, authEmail(discordId), data.password);
+      authUser = credential.user;
       await Auth.updateProfile(credential.user, { displayName: username });
       const now = Fire.serverTimestamp();
       const user = {
