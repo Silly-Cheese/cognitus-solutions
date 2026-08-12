@@ -23,7 +23,10 @@ jobs:
           node-version: "22"
 
       - name: Check production JavaScript syntax
-        run: node --check src/app.js
+        run: |
+          node --check src/app.js
+          node --check src/navigationEnhancements.js
+          node --check src/uxV3.js
 
-      - name: Run secure V2 regression checks
+      - name: Run secure UX V3 regression checks
         run: node scripts/validate.mjs
