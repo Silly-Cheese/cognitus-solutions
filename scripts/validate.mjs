@@ -12,23 +12,31 @@ const assert = (condition, message) => {
 
 const index = read("index.html");
 const app = read("src/app.js");
-const navigationEnhancements = read("src/navigationEnhancements.js");
-const uxV3 = read("src/uxV3.js");
-const uxCss = read("src/uxV3.css");
+const navigation = read("src/navigationEnhancements.js");
+const controls = read("src/controlsV4.js");
+const uxCss = read("src/uxV4.css");
 const rules = read("firestore.rules");
 const firebase = JSON.parse(read("firebase.json"));
 
 assert(index.includes('src/app.js?v='), "index.html loads the consolidated production router");
 assert(!index.includes("appV1.js") && !index.includes("appSafe.js"), "legacy routers are not production entrypoints");
-assert(index.includes("navigationEnhancements.js") && navigationEnhancements.includes("orgRequestTab"), "organization request navigation enhancement is loaded");
-assert(navigationEnhancements.includes('import "./uxV3.js"'), "navigation layer loads Cognitus UX V3");
-assert(uxV3.includes("uxV3.css") && uxCss.includes(".workspace-nav-shell"), "UX V3 visual system and workspace navigation are present");
-assert(uxV3.includes("openCommandPalette") && uxV3.includes("Ctrl") && uxV3.includes("metaKey"), "UX V3 exposes keyboard quick navigation");
-assert(uxV3.includes("workspace-nav-menu") && uxV3.includes("Workflows") && uxV3.includes("Staff"), "authenticated navigation groups workflow and staff tools");
-assert(navigationEnhancements.includes('#/organizations?request=1') && navigationEnhancements.includes("#new-org-toggle"), "organization request tab opens the creation form directly");
-assert(navigationEnhancements.includes('textContent = "Org Request"'), "authenticated navigation exposes the Org Request tab");
+assert(index.includes("stability-v4"), "index.html cache-busts the stability V4 navigation layer");
+assert(navigation.includes('import "./controlsV4.js"'), "navigation loads V4 operational controls");
+assert(navigation.includes("uxV4.css") && uxCss.includes("#logout-button"), "fast V4 styling is loaded and keeps Logout visible");
+assert(!navigation.includes("MutationObserver") && !controls.includes("MutationObserver"), "V4 contains no DOM mutation observers");
+assert(!navigation.includes("uxV3.js"), "observer-driven UX V3 is not loaded in production");
+assert(navigation.includes('#/organizations?request=1') && navigation.includes('textContent = "New Organization"'), "New Organization is a direct navigation action");
+assert(navigation.includes("#logout-button") && navigation.includes('logout.textContent = "Logout"'), "Logout remains an explicit visible navigation control");
 assert(index.includes('rel="icon"') && index.includes("data:image/svg+xml"), "inline favicon prevents the GitHub Pages favicon 404");
-assert(index.includes("secure-v2-no-index"), "index.html cache-busts the repaired no-index production build");
+assert(index.includes("secure-v2-no-index"), "index.html keeps the repaired no-index production app build");
+
+assert(controls.includes("Verify my identity") && controls.includes("identityConfidence: 100"), "Owner self-verification control is present");
+assert(controls.includes("data-v4-delete-report") && controls.includes("deleteReport"), "report deletion controls are present");
+assert(controls.includes("deleteOrganization") && controls.includes("Delete organization"), "organization deletion controls are present");
+assert(controls.includes("Delete My Account") && controls.includes("reauthenticateWithCredential") && controls.includes("deleteUser"), "self-account deletion reauthenticates and deletes Firebase Auth");
+assert(controls.includes("Delete portal account") && controls.includes("firebaseAuthDeletionRequired"), "Owner portal-account removal clearly distinguishes Firebase Auth cleanup");
+assert(!controls.includes("Fire.orderBy("), "V4 controls do not introduce ordered compound queries");
+
 assert(!app.includes("OWNER_BOOTSTRAP") && !app.includes("ownerDiscordId"), "production app contains no client owner-bootstrap credential");
 assert(app.includes('current === "/owner-bootstrap"') && app.includes("Client-side bootstrap has been retired"), "legacy bootstrap route is explicitly non-operational");
 assert(app.includes('identityStatus: "self_declared"') && app.includes("identityConfidence: 0"), "new registrations do not claim verified identity");
@@ -38,10 +46,14 @@ assert(!app.includes("Fire.orderBy("), "production queries do not depend on orde
 assert(app.includes("newestFirst(") && app.includes("alphabetic("), "chronological and directory sorting is performed client-side");
 
 assert(rules.includes("currentUser().status == 'active'"), "privileged rule evaluation requires an active account");
-assert(rules.includes("resource.data.role != 'owner'") && rules.includes("request.resource.data.role != 'owner'"), "admins cannot modify or create Owner role through user updates");
-assert(rules.includes("request.resource.data.discordId == resource.data.discordId"), "Discord identity is immutable on user updates");
+assert(rules.includes("resource.data.role != 'owner'") && rules.includes("request.resource.data.role != 'owner'"), "admins cannot modify or create Owner role through admin updates");
+assert(rules.includes("request.resource.data.discordId == resource.data.discordId"), "Discord identity is immutable on updates");
 assert(rules.includes("request.resource.data.professionalStanding == resource.data.professionalStanding"), "self profile updates cannot rewrite professional standing");
 assert(rules.includes("request.resource.data.riskLevel == resource.data.riskLevel"), "self profile updates cannot rewrite risk level");
+assert(rules.includes("'identityVerified', 'updatedAt'") && rules.includes("request.resource.data.identityVerified is bool"), "Owner identity verification is explicitly authorized");
+assert(rules.includes("allow delete: if isOwner()") && rules.includes("resource.data.status == 'pending_review'"), "report deletion is Owner-gated with pending self-delete support");
+assert(rules.includes("allow delete: if isOwner();"), "Owner organization deletion is authorized");
+assert(rules.includes("request.auth.uid == uid") && rules.includes("resource.data.role != 'owner'"), "self deletion and non-Owner portal account deletion are authorized");
 assert(rules.includes("match /settings/bootstrap") && rules.includes("allow write: if false;"), "client-side owner bootstrap writes are disabled");
 assert(rules.includes("match /passwordResetRequests") && rules.includes("allow read, write: if false;"), "public Firestore password-reset tickets are disabled");
 assert(rules.includes("request.resource.data.summary == resource.data.summary") && rules.includes("request.resource.data.details == resource.data.details"), "review workflows preserve original report summary and details");
@@ -52,8 +64,8 @@ assert(!Object.prototype.hasOwnProperty.call(firebase?.firestore || {}, "indexes
 assert(!fs.existsSync("firestore.indexes.json"), "repository contains no manual/composite Firestore index manifest");
 
 if (process.exitCode) {
-  console.error("\nCognitus validation failed.");
+  console.error("\nCognitus stability V4 validation failed.");
   process.exit(process.exitCode);
 }
 
-console.log("\nCognitus UX V3 validation passed with secure no-index architecture intact.");
+console.log("\nCognitus stability V4 validation passed with secure no-index architecture intact.");

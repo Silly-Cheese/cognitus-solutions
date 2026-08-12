@@ -161,16 +161,18 @@ service cloud.firestore {
         && request.resource.data.role == resource.data.role
         && request.resource.data.status == resource.data.status
         && request.resource.data.organizationId == resource.data.organizationId
+        && request.resource.data.identityVerified == resource.data.identityVerified
         && shortString(request.resource.data.displayName, 64)
         && request.resource.data.displayName.size() > 0
         && request.resource.data.updatedAt == request.time;
 
       allow update: if isOwner()
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
-          'role', 'status', 'organizationId', 'updatedAt'
+          'role', 'status', 'organizationId', 'identityVerified', 'updatedAt'
         ])
         && validUserRole(request.resource.data.role)
         && validUserStatus(request.resource.data.status)
+        && request.resource.data.identityVerified is bool
         && request.resource.data.uid == resource.data.uid
         && request.resource.data.cognitusId == resource.data.cognitusId
         && request.resource.data.discordId == resource.data.discordId
@@ -180,7 +182,6 @@ service cloud.firestore {
           || (
             request.resource.data.role == 'owner'
             && request.resource.data.status == resource.data.status
-            && request.resource.data.organizationId == resource.data.organizationId
           )
         );
 
@@ -195,9 +196,11 @@ service cloud.firestore {
         && request.resource.data.uid == resource.data.uid
         && request.resource.data.cognitusId == resource.data.cognitusId
         && request.resource.data.discordId == resource.data.discordId
+        && request.resource.data.identityVerified == resource.data.identityVerified
         && request.resource.data.updatedAt == request.time;
 
-      allow delete: if false;
+      allow delete: if (signedIn() && request.auth.uid == uid)
+        || (isOwner() && resource.data.role != 'owner');
     }
 
     match /profiles/{profileId} {
@@ -271,7 +274,10 @@ service cloud.firestore {
         && request.resource.data.discordIds == resource.data.discordIds
         && request.resource.data.updatedAt == request.time;
 
-      allow delete: if false;
+      allow delete: if (signedIn()
+          && profileId == request.auth.uid
+          && resource.data.linkedUserId == request.auth.uid)
+        || isOwner();
     }
 
     match /organizations/{organizationId} {
@@ -318,7 +324,7 @@ service cloud.firestore {
         && request.resource.data.trustLevel in ['unreviewed', 'good', 'watch', 'concern', 'high_risk']
         && request.resource.data.updatedAt == request.time;
 
-      allow delete: if false;
+      allow delete: if isOwner();
     }
 
     match /checkLogs/{checkId} {
@@ -426,7 +432,10 @@ service cloud.firestore {
         && request.resource.data.reviewedByUid == request.auth.uid
         && request.resource.data.updatedAt == request.time;
 
-      allow delete: if false;
+      allow delete: if isOwner()
+        || (activeAccount()
+          && resource.data.submittedByUid == request.auth.uid
+          && resource.data.status == 'pending_review');
     }
 
     match /claims/{claimId} {

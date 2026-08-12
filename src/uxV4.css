@@ -1,0 +1,251 @@
+/* Cognitus Stability + Controls V4
+   Fast, direct, observer-free interface layer. */
+:root {
+  --v4-accent: #2557d6;
+  --v4-accent-soft: #eef3ff;
+  --v4-danger: #a61b1b;
+  --v4-danger-soft: #fff1f1;
+  --v4-success: #17653a;
+  --v4-success-soft: #eef9f2;
+  --v4-shadow: 0 16px 42px rgba(20, 24, 33, .08);
+}
+
+/* Remove remnants from the observer-driven V3 workspace bar. */
+.workspace-nav-shell,
+.ux-command-backdrop,
+.ux-toast-region { display: none !important; }
+.topnav.ux-nav-source { display: flex !important; }
+
+body { background: #f3f4f6; }
+.topbar {
+  position: sticky;
+  top: 0;
+  padding: .72rem clamp(.85rem, 2vw, 1.6rem);
+  background: rgba(255,255,255,.97);
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 2px 12px rgba(0,0,0,.035);
+}
+.brand-mark { border-radius: 12px; }
+.topnav {
+  gap: .28rem;
+  padding: .2rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  max-width: calc(100vw - 285px);
+}
+.topnav a,
+.topnav button,
+.topnav .nav-user {
+  min-height: 38px;
+  padding: .54rem .72rem;
+  border-radius: 10px;
+  font-size: .82rem;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+.topnav a:hover,
+.topnav button:hover { background: #f0f2f5; }
+.topnav a.v4-active {
+  background: #111827;
+  color: #fff;
+}
+.topnav [data-org-request-tab] {
+  background: var(--v4-accent-soft);
+  color: #173b95;
+  border: 1px solid #cfdcff;
+}
+#logout-button {
+  display: inline-flex !important;
+  background: var(--v4-danger-soft) !important;
+  color: var(--v4-danger) !important;
+  border: 1px solid #efc6c6 !important;
+}
+.nav-user {
+  background: #f4f4f5 !important;
+  color: #3f3f46 !important;
+  max-width: 190px !important;
+}
+
+.page-root { padding: clamp(1.1rem, 3vw, 2.6rem); }
+.hero,
+.form-card,
+.panel,
+.legal-card,
+.report-document,
+.dashboard-hero > div:first-child,
+.account-card {
+  border-radius: 20px;
+  box-shadow: var(--v4-shadow);
+  border-color: #e3e5e8;
+}
+.hero,
+.form-card,
+.panel,
+.legal-card { padding: clamp(1.35rem, 3vw, 2.4rem); }
+.hero h1,
+.form-card h1,
+.legal-card h1,
+.report-document h1 {
+  font-size: clamp(2.15rem, 5vw, 4.5rem);
+  letter-spacing: -.055em;
+  line-height: .98;
+}
+.dashboard-hero h1 { font-size: clamp(2.15rem, 4vw, 3.6rem); }
+.eyebrow { color: #52525b !important; letter-spacing: .16em; }
+
+.button,
+button[type="submit"] {
+  border-radius: 10px;
+  min-height: 42px;
+  padding: .7rem .95rem;
+}
+.button-dark,
+button[type="submit"] { background: #111827; border-color: #111827; }
+.button-danger,
+.v4-danger-button {
+  background: var(--v4-danger-soft) !important;
+  color: var(--v4-danger) !important;
+  border: 1px solid #e5b5b5 !important;
+}
+.v4-primary-button {
+  background: var(--v4-accent) !important;
+  color: #fff !important;
+  border-color: var(--v4-accent) !important;
+}
+
+input,
+select,
+textarea {
+  border-radius: 10px;
+  border-color: #d4d7dc;
+  background: #fff;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 3px solid rgba(37,87,214,.15);
+  border-color: var(--v4-accent);
+}
+
+.feature-card,
+.stat-card,
+.result-card,
+.record-row,
+.workflow-card,
+.report-records article { border-color: #e2e4e8; }
+.record-row,
+.workflow-card,
+.report-records article { background: #fafafa; }
+.admin-table-wrap { border-color: #dedfe3; }
+.admin-table th { background: #f6f7f8; }
+
+.v4-toast-region {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2000;
+  display: grid;
+  gap: 8px;
+  width: min(390px, calc(100vw - 36px));
+}
+.v4-toast {
+  background: #111827;
+  color: #fff;
+  border-radius: 12px;
+  padding: .82rem 1rem;
+  box-shadow: 0 18px 45px rgba(0,0,0,.22);
+  line-height: 1.45;
+}
+.v4-toast.is-error { background: #7f1d1d; }
+.v4-toast.is-success { background: #14532d; }
+
+.v4-controls-card {
+  margin-top: 1rem;
+  border: 1px solid #dfe3e8;
+  border-radius: 16px;
+  padding: 1.1rem;
+  background: #fff;
+}
+.v4-controls-card h3 { margin: 0 0 .35rem; font-size: 1.15rem; }
+.v4-controls-card p { margin: .2rem 0 .85rem; color: #666; line-height: 1.55; }
+.v4-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+  align-items: center;
+}
+.v4-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: .28rem .55rem;
+  border-radius: 999px;
+  font-size: .76rem;
+  font-weight: 850;
+  background: #f1f3f5;
+  color: #4b5563;
+}
+.v4-badge.is-verified { background: var(--v4-success-soft); color: var(--v4-success); }
+.v4-badge.is-pending { background: #fff7e6; color: #8a5312; }
+
+.v4-danger-zone {
+  border: 1px solid #eccaca;
+  background: #fffafa;
+}
+.v4-danger-zone h3 { color: #8d1d1d; }
+.v4-danger-zone input { background: #fff; }
+
+.v4-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15,23,42,.52);
+  backdrop-filter: blur(5px);
+}
+.v4-modal-backdrop[hidden] { display: none !important; }
+.v4-modal {
+  width: min(520px, 100%);
+  border-radius: 18px;
+  background: #fff;
+  border: 1px solid #e4e4e7;
+  box-shadow: 0 28px 80px rgba(0,0,0,.24);
+  padding: 1.3rem;
+}
+.v4-modal h2 { margin: 0 0 .55rem; letter-spacing: -.03em; }
+.v4-modal p { color: #61616b; line-height: 1.6; }
+.v4-modal-actions { display: flex; justify-content: flex-end; gap: .55rem; margin-top: 1.1rem; }
+
+.v4-admin-action-cell { min-width: 190px; }
+.v4-admin-action-cell .v4-action-row { flex-wrap: nowrap; }
+.v4-reports-panel .record-row { align-items: center; }
+.v4-reports-panel .record-row > div:first-child { min-width: 0; }
+.v4-reports-panel .record-row strong,
+.v4-reports-panel .record-row span { overflow-wrap: anywhere; }
+.v4-admin-note {
+  margin: 0 0 1rem;
+  padding: .85rem 1rem;
+  border: 1px solid #dbe4ff;
+  background: #f5f8ff;
+  border-radius: 12px;
+  color: #38518e;
+}
+
+@media (max-width: 980px) {
+  .topbar { position: static; display: block; }
+  .brand { margin-bottom: .65rem; }
+  .topnav { max-width: 100%; justify-content: flex-start; }
+}
+@media (max-width: 620px) {
+  .page-root { padding: .85rem; }
+  .hero, .form-card, .panel, .legal-card, .report-document, .dashboard-hero > div:first-child, .account-card {
+    border-radius: 15px;
+    padding: 1.1rem;
+  }
+  .topnav a, .topnav button, .topnav .nav-user { font-size: .79rem; }
+  .v4-action-row { align-items: stretch; }
+  .v4-action-row .button,
+  .v4-action-row button { width: 100%; }
+}
