@@ -13,12 +13,18 @@ const assert = (condition, message) => {
 const index = read("index.html");
 const app = read("src/app.js");
 const navigationEnhancements = read("src/navigationEnhancements.js");
+const uxV3 = read("src/uxV3.js");
+const uxCss = read("src/uxV3.css");
 const rules = read("firestore.rules");
 const firebase = JSON.parse(read("firebase.json"));
 
 assert(index.includes('src/app.js?v='), "index.html loads the consolidated production router");
 assert(!index.includes("appV1.js") && !index.includes("appSafe.js"), "legacy routers are not production entrypoints");
 assert(index.includes("navigationEnhancements.js") && navigationEnhancements.includes("orgRequestTab"), "organization request navigation enhancement is loaded");
+assert(navigationEnhancements.includes('import "./uxV3.js"'), "navigation layer loads Cognitus UX V3");
+assert(uxV3.includes("uxV3.css") && uxCss.includes(".workspace-nav-shell"), "UX V3 visual system and workspace navigation are present");
+assert(uxV3.includes("openCommandPalette") && uxV3.includes("Ctrl") && uxV3.includes("metaKey"), "UX V3 exposes keyboard quick navigation");
+assert(uxV3.includes("workspace-nav-menu") && uxV3.includes("Workflows") && uxV3.includes("Staff"), "authenticated navigation groups workflow and staff tools");
 assert(navigationEnhancements.includes('#/organizations?request=1') && navigationEnhancements.includes("#new-org-toggle"), "organization request tab opens the creation form directly");
 assert(navigationEnhancements.includes('textContent = "Org Request"'), "authenticated navigation exposes the Org Request tab");
 assert(index.includes('rel="icon"') && index.includes("data:image/svg+xml"), "inline favicon prevents the GitHub Pages favicon 404");
@@ -50,4 +56,4 @@ if (process.exitCode) {
   process.exit(process.exitCode);
 }
 
-console.log("\nCognitus secure V2 validation passed with no manual composite indexes.");
+console.log("\nCognitus UX V3 validation passed with secure no-index architecture intact.");
