@@ -11,10 +11,19 @@ The production site uses one application entrypoint:
 - `src/firebase/firebaseApp.js` — Firebase initialization
 - `src/firebase/firebaseConfig.js` — public Firebase web configuration
 - `firestore.rules` — authoritative access control
-- `firestore.indexes.json` — required composite Firestore indexes
-- `firebase.json` — Firebase CLI deployment configuration for rules/indexes
+- `firebase.json` — Firebase CLI deployment configuration for Firestore rules
 
 `src/appV1.js` and `src/appSafe.js` are legacy snapshots and are not loaded by production. They should not be used as alternate routers.
+
+## Firestore indexing policy
+
+Cognitus intentionally uses **no manually maintained composite/complex Firestore indexes**.
+
+Production queries are designed around Firestore's automatic single-field indexes and automatic index merging for equality filters. Queries that need chronological or alphabetical presentation return only authorized records and sort them in the browser rather than combining a filter with a separate `orderBy` field.
+
+There is deliberately no `firestore.indexes.json` deployment manifest, and `firebase.json` does not contain an indexes deployment target.
+
+This policy is guarded by the repository validation script so a future change that adds production `Fire.orderBy(...)` dependencies or a manual index manifest fails CI.
 
 ## Security model
 
@@ -111,11 +120,13 @@ The old `#/owner-bootstrap` route is intentionally non-operational and only expl
 
 ## Firestore deployment
 
-Rules and indexes should be deployed together from an authenticated Firebase CLI environment:
+Only the security rules need to be deployed from an authenticated Firebase CLI environment:
 
 ```bash
-firebase deploy --only firestore:rules,firestore:indexes
+firebase deploy --only firestore:rules
 ```
+
+No manual/composite-index deployment step is part of Cognitus.
 
 GitHub Pages continues to host the static site. Firebase Hosting and Cloud Functions are not required for this version.
 
@@ -127,11 +138,12 @@ Because this version intentionally has no trusted backend, `auditLogs` are **aut
 
 Before merging the secure V2 branch into `main`:
 
-1. Deploy `firestore.rules` and `firestore.indexes.json` to the Cognitus Firebase project.
+1. Deploy `firestore.rules` to the Cognitus Firebase project.
 2. Confirm the intended Owner account already has `role: owner` in Firestore, or provision it through a trusted Firebase administrative environment.
 3. Confirm Firebase Authentication Email/Password provider is enabled.
 4. Test registration, login, logout, password change, search, check logging, quick/full reports, report submission, claim submission, appeal submission, reviewer decisions, organization creation, Admin role/status updates, and Owner-only role elevation.
 5. Verify suspended/banned privileged accounts can no longer use reviewer/admin/owner functions.
+6. Confirm no production query asks Firestore for a manually created composite index.
 
 ## Security note
 
