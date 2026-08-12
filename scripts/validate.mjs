@@ -18,9 +18,11 @@ const firebase = JSON.parse(read("firebase.json"));
 
 assert(index.includes('src/app.js?v='), "index.html loads the consolidated production router");
 assert(!index.includes("appV1.js") && !index.includes("appSafe.js"), "legacy routers are not production entrypoints");
-assert(index.includes("navigationEnhancements.js") && navigationEnhancements.includes("data.orgRequestTab"), "organization request navigation enhancement is loaded");
+assert(index.includes("navigationEnhancements.js") && navigationEnhancements.includes("orgRequestTab"), "organization request navigation enhancement is loaded");
 assert(navigationEnhancements.includes('#/organizations?request=1') && navigationEnhancements.includes("#new-org-toggle"), "organization request tab opens the creation form directly");
+assert(navigationEnhancements.includes('textContent = "Org Request"'), "authenticated navigation exposes an Org Request tab");
 assert(index.includes('rel="icon"') && index.includes("data:image/svg+xml"), "inline favicon prevents the GitHub Pages favicon 404");
+assert(index.includes("secure-v2-no-index"), "index.html cache-busts the repaired no-index production build");
 assert(!app.includes("OWNER_BOOTSTRAP") && !app.includes("ownerDiscordId"), "production app contains no client owner-bootstrap credential");
 assert(app.includes('current === "/owner-bootstrap"') && app.includes("Client-side bootstrap has been retired"), "legacy bootstrap route is explicitly non-operational");
 assert(app.includes('identityStatus: "self_declared"') && app.includes("identityConfidence: 0"), "new registrations do not claim verified identity");
