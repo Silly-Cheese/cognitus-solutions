@@ -14,7 +14,6 @@ const index = read("index.html");
 const app = read("src/app.js");
 const rules = read("firestore.rules");
 const firebase = JSON.parse(read("firebase.json"));
-const indexes = JSON.parse(read("firestore.indexes.json"));
 
 assert(index.includes('src/app.js?v='), "index.html loads the consolidated production router");
 assert(!index.includes("appV1.js") && !index.includes("appSafe.js"), "legacy routers are not production entrypoints");
@@ -22,7 +21,7 @@ assert(!app.includes("OWNER_BOOTSTRAP") && !app.includes("ownerDiscordId"), "pro
 assert(app.includes('current === "/owner-bootstrap"') && app.includes("Client-side bootstrap has been retired"), "legacy bootstrap route is explicitly non-operational");
 assert(app.includes('identityStatus: "self_declared"') && app.includes("identityConfidence: 0"), "new registrations do not claim verified identity");
 assert(app.includes("resultCount: results.length") && app.includes("results.length === 1"), "search only attaches a target when exactly one record matches");
-assert(!app.includes("Fire.orderBy("), "production queries do not depend on manual composite-index sorting");
+assert(!app.includes("Fire.orderBy("), "production queries do not depend on ordered compound queries");
 assert(app.includes("newestFirst(") && app.includes("alphabetic("), "chronological and directory sorting is performed client-side");
 
 assert(rules.includes("currentUser().status == 'active'"), "privileged rule evaluation requires an active account");
@@ -36,9 +35,8 @@ assert(rules.includes("request.resource.data.summary == resource.data.summary") 
 assert((rules.match(/{/g) || []).length === (rules.match(/}/g) || []).length, "Firestore rules have balanced braces");
 
 assert(firebase?.firestore?.rules === "firestore.rules", "firebase.json points to Firestore rules");
-assert(firebase?.firestore?.indexes === "firestore.indexes.json", "firebase.json points to the empty index manifest");
-assert(Array.isArray(indexes.indexes) && indexes.indexes.length === 0, "no manual/composite Firestore indexes are declared");
-assert(Array.isArray(indexes.fieldOverrides) && indexes.fieldOverrides.length === 0, "no custom Firestore index overrides are declared");
+assert(!Object.prototype.hasOwnProperty.call(firebase?.firestore || {}, "indexes"), "firebase.json does not deploy manual indexes");
+assert(!fs.existsSync("firestore.indexes.json"), "repository contains no manual/composite Firestore index manifest");
 
 if (process.exitCode) {
   console.error("\nCognitus validation failed.");
