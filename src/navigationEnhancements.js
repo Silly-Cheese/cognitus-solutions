@@ -1,3 +1,5 @@
+import "./uxV3.js";
+
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");
 let syncing = false;
