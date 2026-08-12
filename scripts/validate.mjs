@@ -20,6 +20,7 @@ assert(!index.includes("appV1.js") && !index.includes("appSafe.js"), "legacy rou
 assert(!app.includes("OWNER_BOOTSTRAP") && !app.includes("ownerDiscordId"), "production app contains no client owner-bootstrap credential");
 assert(app.includes('current === "/owner-bootstrap"') && app.includes("Client-side bootstrap has been retired"), "legacy bootstrap route is explicitly non-operational");
 assert(app.includes('identityStatus: "self_declared"') && app.includes("identityConfidence: 0"), "new registrations do not claim verified identity");
+assert(app.includes("claimedByUid: credential.user.uid") && app.includes("authUser = credential.user"), "registration is bound directly to the Firebase credential UID");
 assert(app.includes("resultCount: results.length") && app.includes("results.length === 1"), "search only attaches a target when exactly one record matches");
 assert(!app.includes("Fire.orderBy("), "production queries do not depend on ordered compound queries");
 assert(app.includes("newestFirst(") && app.includes("alphabetic("), "chronological and directory sorting is performed client-side");
