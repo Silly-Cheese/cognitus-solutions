@@ -1,4 +1,5 @@
 import "./controlsV4.js";
+import "./assessmentV4.js";
 
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");
