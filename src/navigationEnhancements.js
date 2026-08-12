@@ -1,5 +1,6 @@
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");
+let syncing = false;
 
 function isAuthenticatedNav() {
   return Boolean(nav?.querySelector('a[href="#/dashboard"]'));
@@ -13,6 +14,7 @@ function ensureOrganizationRequestTab() {
   link.dataset.orgRequestTab = "true";
   link.textContent = "Org Request";
   link.title = "Create or request an organization record";
+  link.setAttribute("aria-label", "Create or request an organization record");
 
   const organizationsLink = nav.querySelector('a[href="#/organizations"]');
   if (organizationsLink) {
@@ -44,12 +46,18 @@ function openOrganizationRequestForm() {
 }
 
 function syncEnhancements() {
-  ensureOrganizationRequestTab();
-  openOrganizationRequestForm();
+  if (syncing) return;
+  syncing = true;
+  try {
+    ensureOrganizationRequestTab();
+    openOrganizationRequestForm();
+  } finally {
+    syncing = false;
+  }
 }
 
 const observer = new MutationObserver(syncEnhancements);
-if (nav) observer.observe(nav, { childList: true, subtree: true });
+if (nav) observer.observe(nav, { childList: true });
 if (root) observer.observe(root, { childList: true, subtree: true });
 
 window.addEventListener("hashchange", syncEnhancements);
