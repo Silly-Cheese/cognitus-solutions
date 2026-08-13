@@ -22,6 +22,10 @@ service cloud.firestore {
       return /databases/$(database)/documents/reports/$(reportId);
     }
 
+    function reportGrantPath(reportId) {
+      return /databases/$(database)/documents/reportAccessGrants/$(reportId);
+    }
+
     function hasUserDoc() {
       return signedIn() && exists(userPath(request.auth.uid));
     }
@@ -116,6 +120,13 @@ service cloud.firestore {
 
     function ownsReportSubject(reportData) {
       return reportData.subjectProfileId != null && ownsProfile(reportData.subjectProfileId);
+    }
+
+    function hasReportGrant(reportId) {
+      return activeAccount()
+        && exists(reportGrantPath(reportId))
+        && get(reportGrantPath(reportId)).data.approvedUids is list
+        && request.auth.uid in get(reportGrantPath(reportId)).data.approvedUids;
     }
 
     match /users/{uid} {
@@ -371,7 +382,9 @@ service cloud.firestore {
       allow read: if isReviewer()
         || (signedIn() && resource.data.submittedByUid == request.auth.uid)
         || ownsReportSubject(resource.data)
+        || hasReportGrant(reportId)
         || (activeAccount()
+          && resource.data.subjectOrganizationId != null
           && resource.data.status in ['approved', 'published']
           && resource.data.visibility in ['screening', 'public']);
 
@@ -436,6 +449,142 @@ service cloud.firestore {
         || (activeAccount()
           && resource.data.submittedByUid == request.auth.uid
           && resource.data.status == 'pending_review');
+    }
+
+    match /screeningReportSummaries/{summaryId} {
+      allow read: if activeAccount();
+
+      allow create, update: if isReviewer()
+        && request.resource.data.keys().hasOnly([
+          'id', 'reportId', 'reportCognitusId', 'subjectProfileId', 'subjectOrganizationId',
+          'category', 'severity', 'summary', 'status', 'visibility', 'reportCreatedAt',
+          'reviewedAt', 'updatedAt'
+        ])
+        && request.resource.data.id == summaryId
+        && request.resource.data.reportId == summaryId
+        && exists(reportPath(summaryId))
+        && request.resource.data.reportCognitusId == get(reportPath(summaryId)).data.cognitusId
+        && request.resource.data.subjectProfileId == get(reportPath(summaryId)).data.subjectProfileId
+        && request.resource.data.subjectOrganizationId == get(reportPath(summaryId)).data.subjectOrganizationId
+        && request.resource.data.category == get(reportPath(summaryId)).data.category
+        && request.resource.data.severity == get(reportPath(summaryId)).data.severity
+        && request.resource.data.summary == get(reportPath(summaryId)).data.summary
+        && request.resource.data.status == get(reportPath(summaryId)).data.status
+        && request.resource.data.visibility == get(reportPath(summaryId)).data.visibility
+        && request.resource.data.reportCreatedAt == get(reportPath(summaryId)).data.createdAt
+        && request.resource.data.reviewedAt == get(reportPath(summaryId)).data.reviewedAt
+        && request.resource.data.status in ['approved', 'published']
+        && request.resource.data.visibility in ['screening', 'public']
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isReviewer();
+    }
+
+    match /reportAccessRequests/{requestId} {
+      allow read: if isReviewer()
+        || (signedIn() && resource.data.requesterUid == request.auth.uid)
+        || ownsProfile(resource.data.subjectProfileId);
+
+      allow create: if isEmployerMember()
+        && request.resource.data.keys().hasOnly([
+          'id', 'reportId', 'reportCognitusId', 'subjectProfileId', 'requesterUid',
+          'requesterCognitusId', 'requesterDisplayName', 'requesterOrganizationId',
+          'requestReason', 'status', 'decidedAt', 'decidedByUid', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == requestId
+        && requestId == request.resource.data.reportId + '__' + request.auth.uid
+        && request.resource.data.requesterUid == request.auth.uid
+        && request.resource.data.requesterCognitusId == currentUser().cognitusId
+        && request.resource.data.requesterDisplayName == currentUser().displayName
+        && request.resource.data.requesterOrganizationId == currentUser().organizationId
+        && shortString(request.resource.data.requestReason, 500)
+        && request.resource.data.requestReason.size() > 0
+        && request.resource.data.status == 'pending'
+        && request.resource.data.decidedAt == null
+        && request.resource.data.decidedByUid == null
+        && exists(reportPath(request.resource.data.reportId))
+        && get(reportPath(request.resource.data.reportId)).data.subjectProfileId != null
+        && request.resource.data.subjectProfileId == get(reportPath(request.resource.data.reportId)).data.subjectProfileId
+        && request.resource.data.reportCognitusId == get(reportPath(request.resource.data.reportId)).data.cognitusId
+        && get(reportPath(request.resource.data.reportId)).data.status in ['approved', 'published']
+        && get(reportPath(request.resource.data.reportId)).data.visibility in ['screening', 'public']
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if ownsProfile(resource.data.subjectProfileId)
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'decidedAt', 'decidedByUid', 'updatedAt'
+        ])
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.reportId == resource.data.reportId
+        && request.resource.data.reportCognitusId == resource.data.reportCognitusId
+        && request.resource.data.subjectProfileId == resource.data.subjectProfileId
+        && request.resource.data.requesterUid == resource.data.requesterUid
+        && request.resource.data.requesterCognitusId == resource.data.requesterCognitusId
+        && request.resource.data.requesterDisplayName == resource.data.requesterDisplayName
+        && request.resource.data.requesterOrganizationId == resource.data.requesterOrganizationId
+        && request.resource.data.requestReason == resource.data.requestReason
+        && (
+          (resource.data.status == 'pending' && request.resource.data.status in ['approved', 'denied'])
+          || (resource.data.status == 'approved' && request.resource.data.status == 'revoked')
+        )
+        && request.resource.data.decidedAt == request.time
+        && request.resource.data.decidedByUid == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if activeAccount()
+        && resource.data.requesterUid == request.auth.uid
+        && resource.data.status in ['denied', 'revoked', 'cancelled']
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'requestReason', 'status', 'decidedAt', 'decidedByUid', 'updatedAt'
+        ])
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.reportId == resource.data.reportId
+        && request.resource.data.reportCognitusId == resource.data.reportCognitusId
+        && request.resource.data.subjectProfileId == resource.data.subjectProfileId
+        && request.resource.data.requesterUid == resource.data.requesterUid
+        && request.resource.data.requesterCognitusId == resource.data.requesterCognitusId
+        && request.resource.data.requesterDisplayName == resource.data.requesterDisplayName
+        && request.resource.data.requesterOrganizationId == resource.data.requesterOrganizationId
+        && shortString(request.resource.data.requestReason, 500)
+        && request.resource.data.requestReason.size() > 0
+        && request.resource.data.status == 'pending'
+        && request.resource.data.decidedAt == null
+        && request.resource.data.decidedByUid == null
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /reportAccessGrants/{reportId} {
+      allow read: if isReviewer()
+        || ownsProfile(resource.data.subjectProfileId)
+        || (activeAccount()
+          && resource.data.approvedUids is list
+          && request.auth.uid in resource.data.approvedUids);
+
+      allow create: if (isReviewer() || ownsProfile(request.resource.data.subjectProfileId))
+        && request.resource.data.keys().hasOnly([
+          'reportId', 'subjectProfileId', 'approvedUids', 'updatedAt'
+        ])
+        && request.resource.data.reportId == reportId
+        && exists(reportPath(reportId))
+        && get(reportPath(reportId)).data.subjectProfileId == request.resource.data.subjectProfileId
+        && request.resource.data.approvedUids is list
+        && request.resource.data.approvedUids.size() <= 100
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if (isReviewer() || ownsProfile(resource.data.subjectProfileId))
+        && request.resource.data.keys().hasOnly([
+          'reportId', 'subjectProfileId', 'approvedUids', 'updatedAt'
+        ])
+        && request.resource.data.reportId == resource.data.reportId
+        && request.resource.data.subjectProfileId == resource.data.subjectProfileId
+        && request.resource.data.approvedUids is list
+        && request.resource.data.approvedUids.size() <= 100
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isReviewer() || ownsProfile(resource.data.subjectProfileId);
     }
 
     match /claims/{claimId} {
