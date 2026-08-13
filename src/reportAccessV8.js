@@ -10,10 +10,10 @@ let userDoc = null;
 let timers = [];
 let routeCache = new Map();
 let syncInFlight = null;
+let lastSummarySync = 0;
 
 const EMPLOYER_ROLES = new Set(["verified_employer_member", "org_admin", "reviewer", "admin", "owner"]);
 const REVIEWER_ROLES = new Set(["reviewer", "admin", "owner"]);
-const ACCESS_STATES = new Set(["pending", "approved", "denied", "revoked", "cancelled"]);
 
 const route = () => location.hash.replace(/^#/, "").split("?")[0] || "/";
 const params = () => new URLSearchParams(location.hash.split("?")[1] || "");
@@ -67,7 +67,7 @@ function mountStyles() {
   const link = document.createElement("link");
   link.id = "cognitus-report-access-v8";
   link.rel = "stylesheet";
-  link.href = "./src/reportAccessV8.css?v=20260812-1";
+  link.href = "./src/reportAccessV8.css?v=20260812-2";
   document.head.appendChild(link);
 }
 
@@ -185,7 +185,8 @@ async function decideAccess(request, action) {
     updatedAt: Fire.serverTimestamp()
   });
   await batch.commit();
-  await writeAudit(`REPORT_ACCESS_${action.toUpperCase()}D`, "report", request.reportId, `${humanize(action)}d full-report access for ${request.requesterDisplayName || request.requesterCognitusId}.`, { requestId: request.id, requesterUid: request.requesterUid });
+  const auditAction = action === "approve" ? "REPORT_ACCESS_APPROVED" : action === "deny" ? "REPORT_ACCESS_DENIED" : "REPORT_ACCESS_REVOKED";
+  await writeAudit(auditAction, "report", request.reportId, `${humanize(action)}d full-report access for ${request.requesterDisplayName || request.requesterCognitusId}.`, { requestId: request.id, requesterUid: request.requesterUid });
   routeCache.clear();
 }
 
@@ -231,8 +232,10 @@ function showRequestDialog(summary, onComplete) {
   dialog.showModal();
 }
 
-async function syncScreeningSummaries() {
-  if (!isReviewer() || syncInFlight) return syncInFlight;
+async function syncScreeningSummaries(force = false) {
+  if (!isReviewer()) return;
+  if (!force && Date.now() - lastSummarySync < 30000) return;
+  if (syncInFlight) return syncInFlight;
   syncInFlight = (async () => {
     const [approved, published, existing] = await Promise.all([
       readWhere("reports", "status", "==", "approved").catch(() => []),
@@ -269,6 +272,7 @@ async function syncScreeningSummaries() {
       }
     }
     if (writes) await batch.commit();
+    lastSummarySync = Date.now();
   })().catch((error) => console.warn("Screening summary synchronization failed", error)).finally(() => { syncInFlight = null; });
   return syncInFlight;
 }
@@ -358,9 +362,7 @@ async function loadHubData(force = false) {
 }
 
 async function requesterContext(request) {
-  return {
-    organizationName: await getOrganizationName(request.requesterOrganizationId)
-  };
+  return { organizationName: await getOrganizationName(request.requesterOrganizationId) };
 }
 
 function ownReportCard(report) {
@@ -426,7 +428,7 @@ async function renderReportsHub() {
     const request = data.incoming.find((item) => item.id === button.dataset.requestId);
     if (!request) return;
     const action = button.dataset.v8AccessAction;
-    const confirmation = action === "approve" ? `Allow ${request.requesterDisplayName || "this requester"} to open the complete report?` : action === "revoke" ? `Revoke ${request.requesterDisplayName || "this requester"}'s access to the complete report?` : `Deny this access request?`;
+    const confirmation = action === "approve" ? `Allow ${request.requesterDisplayName || "this requester"} to open the complete report?` : action === "revoke" ? `Revoke ${request.requesterDisplayName || "this requester"}'s access to the complete report?` : "Deny this access request?";
     if (!window.confirm(confirmation)) return;
     button.disabled = true;
     try {
@@ -438,6 +440,10 @@ async function renderReportsHub() {
       button.disabled = false;
     }
   }));
+
+  if (params().get("section") === "access") {
+    setTimeout(() => root.querySelector("#who-has-access")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+  }
 }
 
 async function renderFullReportPage() {
@@ -448,7 +454,7 @@ async function renderFullReportPage() {
   let report = null;
   try {
     report = await readDoc("reports", reportId);
-  } catch (error) {
+  } catch {
     report = null;
   }
   document.title = "Full Report · Cognitus Solutions";
@@ -511,7 +517,7 @@ async function enhanceProfile() {
   const accessPanel = document.createElement("section");
   accessPanel.className = "panel v5-profile-section v8-profile-access-panel";
   accessPanel.dataset.v8ProfileAccess = "true";
-  accessPanel.innerHTML = `<div class="panel-header"><div><p class="eyebrow">Report Privacy</p><h2>Who has access</h2></div><a class="button button-dark" href="#/reports#who-has-access">Manage Access</a></div><div class="v8-profile-access-stats"><div><span>Pending requests</span><strong>${pending.length}</strong></div><div><span>Active grants</span><strong>${approved.length}</strong></div></div><p>You can read every complete report about yourself. Employers must request access to a specific full report, and you can approve, deny, or revoke that access from Reports & Access.</p>`;
+  accessPanel.innerHTML = `<div class="panel-header"><div><p class="eyebrow">Report Privacy</p><h2>Who has access</h2></div><a class="button button-dark" href="#/reports?section=access">Manage Access</a></div><div class="v8-profile-access-stats"><div><span>Pending requests</span><strong>${pending.length}</strong></div><div><span>Active grants</span><strong>${approved.length}</strong></div></div><p>You can read every complete report about yourself. Employers must request access to a specific full report, and you can approve, deny, or revoke that access from Reports & Access.</p>`;
   profileReports.insertAdjacentElement("afterend", accessPanel);
   profileReports.dataset.v8AccessEnhanced = "true";
 }
@@ -519,7 +525,7 @@ async function enhanceProfile() {
 function scheduleSummarySyncAfterReview(event) {
   const button = event.target.closest("[data-review-action]");
   if (!button || !["report", "appeal"].includes(button.dataset.kind)) return;
-  [500, 1300, 2800].forEach((delay) => setTimeout(() => syncScreeningSummaries(), delay));
+  [500, 1300, 2800].forEach((delay) => setTimeout(() => syncScreeningSummaries(true), delay));
 }
 
 async function enhance() {
