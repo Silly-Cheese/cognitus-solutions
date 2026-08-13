@@ -120,8 +120,7 @@ function ensureOrganizationRequestTab() {
   if (organizations && link.previousElementSibling !== organizations) organizations.insertAdjacentElement("afterend", link);
 }
 
-function menuLink(href, label, note) {
-  const link = nav?.querySelector(`a[href="${href}"]`);
+function decorateMenuLink(link, label, note) {
   if (!link) return null;
   link.innerHTML = `<span class="nav6-menu-label">${label}</span><span class="nav6-menu-note">${note}</span>`;
   return link;
@@ -148,14 +147,19 @@ function ensureMoreMenu() {
   }
 
   const menu = more.querySelector("[data-nav6-menu]");
+  const pool = new Map();
+  nav.querySelectorAll('a[href^="#/"]').forEach((link) => pool.set(link.getAttribute("href"), link));
   menu.replaceChildren();
 
   for (const item of SECONDARY_NAV) {
-    const link = menuLink(item.href, item.label, item.note);
+    const link = decorateMenuLink(pool.get(item.href), item.label, item.note);
     if (link) menu.appendChild(link);
   }
 
-  const staffLinks = STAFF_NAV.map((item) => ({ ...item, link: menuLink(item.href, item.label, item.note) })).filter((item) => item.link);
+  const staffLinks = STAFF_NAV.map((item) => ({
+    ...item,
+    link: decorateMenuLink(pool.get(item.href), item.label, item.note)
+  })).filter((item) => item.link);
   if (staffLinks.length) {
     const section = document.createElement("div");
     section.className = "nav6-menu-section";
@@ -188,13 +192,14 @@ function orderAuthenticatedNav() {
     "#/organizations?request=1"
   ];
   const more = nav.querySelector(".nav6-more");
+  const anchor = more || nav.querySelector('a[href="#/settings"]') || null;
   for (const href of primaryOrder) {
     const node = href === "#/profile"
       ? nav.querySelector("[data-profile-tab]")
       : href.includes("?request=1")
         ? nav.querySelector("[data-org-request-tab]")
         : nav.querySelector(`a[href="${href}"]`);
-    if (node) nav.insertBefore(node, more || nav.querySelector('a[href="#/settings"]') || nav.firstChild);
+    if (node) nav.insertBefore(node, anchor);
   }
 
   const settings = nav.querySelector('a[href="#/settings"]');
