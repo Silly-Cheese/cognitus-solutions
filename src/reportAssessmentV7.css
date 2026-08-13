@@ -1,0 +1,175 @@
+/* Cognitus Report Assessment V7 */
+:root {
+  --v7-green: #177245;
+  --v7-green-bg: #eef9f3;
+  --v7-green-line: #b9e4ca;
+  --v7-amber: #8a5a00;
+  --v7-amber-bg: #fff8e6;
+  --v7-amber-line: #eed59a;
+  --v7-orange: #a4440d;
+  --v7-orange-bg: #fff2e9;
+  --v7-orange-line: #efc0a1;
+  --v7-red: #9f1f24;
+  --v7-red-bg: #fff0f1;
+  --v7-red-line: #edb7ba;
+  --v7-neutral: #5f6672;
+  --v7-neutral-bg: #f4f5f7;
+  --v7-neutral-line: #d9dce1;
+}
+
+.report-document[data-v7-assessment-tone="positive"] { border-top: 5px solid var(--v7-green); }
+.report-document[data-v7-assessment-tone="caution"] { border-top: 5px solid #c28a16; }
+.report-document[data-v7-assessment-tone="elevated"] { border-top: 5px solid #d6631f; }
+.report-document[data-v7-assessment-tone="critical"] { border-top: 5px solid var(--v7-red); }
+.report-document[data-v7-assessment-tone="neutral"] { border-top: 5px solid #8a909a; }
+
+.v7-assessment-band {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+  gap: 1rem 1.25rem;
+  margin: 1.15rem 0 .15rem;
+  padding: 1.15rem 1.2rem;
+  border: 1px solid;
+  border-radius: 16px;
+}
+
+.v7-assessment-band.is-positive {
+  background: var(--v7-green-bg);
+  border-color: var(--v7-green-line);
+}
+.v7-assessment-band.is-caution {
+  background: var(--v7-amber-bg);
+  border-color: var(--v7-amber-line);
+}
+.v7-assessment-band.is-elevated {
+  background: var(--v7-orange-bg);
+  border-color: var(--v7-orange-line);
+}
+.v7-assessment-band.is-critical {
+  background: var(--v7-red-bg);
+  border-color: var(--v7-red-line);
+}
+.v7-assessment-band.is-neutral {
+  background: var(--v7-neutral-bg);
+  border-color: var(--v7-neutral-line);
+}
+
+.v7-assessment-copy { min-width: 0; }
+.v7-assessment-kicker {
+  display: block;
+  margin-bottom: .32rem;
+  color: #666d78;
+  font-size: .68rem;
+  font-weight: 950;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+.v7-assessment-copy h2 {
+  margin: 0 0 .32rem;
+  font-size: clamp(1.3rem, 2.4vw, 1.8rem);
+  letter-spacing: -.035em;
+}
+.v7-assessment-copy p {
+  max-width: 68ch;
+  margin: 0;
+  color: #555d68;
+  font-size: .88rem;
+  line-height: 1.55;
+}
+
+.v7-assessment-values {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .65rem;
+  align-self: center;
+}
+.v7-assessment-chip {
+  display: grid;
+  gap: .18rem;
+  min-width: 0;
+  padding: .78rem .82rem;
+  border: 1px solid;
+  border-radius: 13px;
+  background: rgba(255,255,255,.82);
+}
+.v7-assessment-chip::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  margin-bottom: .22rem;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 0 0 4px color-mix(in srgb, currentColor 14%, transparent);
+}
+.v7-assessment-chip.is-positive { color: var(--v7-green); border-color: var(--v7-green-line); }
+.v7-assessment-chip.is-caution { color: var(--v7-amber); border-color: var(--v7-amber-line); }
+.v7-assessment-chip.is-elevated { color: var(--v7-orange); border-color: var(--v7-orange-line); }
+.v7-assessment-chip.is-critical { color: var(--v7-red); border-color: var(--v7-red-line); }
+.v7-assessment-chip.is-neutral { color: var(--v7-neutral); border-color: var(--v7-neutral-line); }
+.v7-chip-label {
+  color: #727984;
+  font-size: .66rem;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.v7-assessment-chip strong {
+  color: currentColor;
+  font-size: .98rem;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.v7-assessment-legend {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem .8rem;
+  padding-top: .75rem;
+  border-top: 1px solid rgba(80,86,96,.13);
+  color: #6a717c;
+  font-size: .7rem;
+  font-weight: 750;
+}
+.v7-assessment-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: .32rem;
+}
+.v7-assessment-legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+.v7-assessment-legend i.is-positive { background: var(--v7-green); }
+.v7-assessment-legend i.is-caution { background: #c28a16; }
+.v7-assessment-legend i.is-elevated { background: #d6631f; }
+.v7-assessment-legend i.is-critical { background: var(--v7-red); }
+.v7-assessment-legend i.is-neutral { background: #8a909a; }
+
+@media (max-width: 760px) {
+  .v7-assessment-band {
+    grid-template-columns: 1fr;
+    margin-top: .8rem;
+    padding: .9rem;
+    border-radius: 13px;
+  }
+  .v7-assessment-values { grid-template-columns: 1fr 1fr; }
+  .v7-assessment-legend {
+    gap: .38rem .65rem;
+    font-size: .65rem;
+  }
+}
+
+@media (max-width: 410px) {
+  .v7-assessment-values { grid-template-columns: 1fr; }
+}
+
+@media print {
+  .v7-assessment-band {
+    break-inside: avoid;
+    box-shadow: none;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
