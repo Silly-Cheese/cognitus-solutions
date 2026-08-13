@@ -35,3 +35,6 @@ jobs:
 
       - name: Run Navigation V6 regression checks
         run: node scripts/validate-navigation-v6.mjs
+
+      - name: Run assessment persistence regression checks
+        run: node scripts/validate-assessment-save.mjs

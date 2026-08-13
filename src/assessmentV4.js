@@ -55,6 +55,16 @@ function labelFor(values, value) {
   return values.find(([key]) => key === value)?.[1] || clean(value) || "Unreviewed";
 }
 
+function friendlyError(error) {
+  if (error?.code === "permission-denied" || error?.code === "firestore/permission-denied") {
+    return "Firebase rejected the standing/risk update. Deploy the latest firestore.rules and try again.";
+  }
+  if (error?.code === "unavailable" || error?.code === "firestore/unavailable") {
+    return "Firebase is temporarily unavailable. Check your connection and try again.";
+  }
+  return error?.message || "Assessment could not be updated.";
+}
+
 function toast(message, tone = "success") {
   let region = document.querySelector(".v4-toast-region");
   if (!region) {
@@ -67,7 +77,7 @@ function toast(message, tone = "success") {
   node.className = `v4-toast${tone === "error" ? " is-error" : " is-success"}`;
   node.textContent = message;
   region.appendChild(node);
-  setTimeout(() => node.remove(), 3600);
+  setTimeout(() => node.remove(), 4200);
 }
 
 async function readDoc(collectionName, id) {
@@ -124,19 +134,33 @@ async function updateAssessment(profileId, professionalStanding, riskLevel) {
   if (!canAssess()) throw new Error("Reviewer, Admin, or Owner access is required.");
   if (!STANDING.some(([value]) => value === professionalStanding)) throw new Error("Choose a valid professional standing.");
   if (!RISK.some(([value]) => value === riskLevel)) throw new Error("Choose a valid risk level.");
-  const profile = await readDoc("profiles", profileId);
-  if (!profile) throw new Error("Profile could not be found.");
-  const next = { professionalStanding, riskLevel };
+
+  const previous = await readDoc("profiles", profileId);
+  if (!previous) throw new Error("Profile could not be found.");
+
   await Fire.updateDoc(Fire.doc(db, "profiles", profileId), {
     professionalStanding,
     riskLevel,
     lastReviewedAt: Fire.serverTimestamp(),
     updatedAt: Fire.serverTimestamp()
   });
-  await writeAudit(profileId, profile, next);
-  if (profileId === authUser.uid) {
-    profileDoc = { ...profile, ...next };
+
+  // Re-read the record so the UI only reports success after Firestore confirms persistence.
+  const persisted = await readDoc("profiles", profileId);
+  if (!persisted || persisted.professionalStanding !== professionalStanding || persisted.riskLevel !== riskLevel) {
+    throw new Error("The assessment write was not confirmed by Firestore. Please try again.");
   }
+
+  await writeAudit(profileId, previous, persisted);
+  if (profileId === authUser.uid) profileDoc = persisted;
+  return persisted;
+}
+
+function setInlineStatus(node, message, tone = "neutral") {
+  if (!node) return;
+  node.hidden = false;
+  node.textContent = message;
+  node.className = `notice${tone === "error" ? " notice-error" : tone === "success" ? " notice-success" : ""}`;
 }
 
 function mountDashboardSummary() {
@@ -157,13 +181,14 @@ function mountSettingsAssessment() {
   if (route() !== "/settings" || !canAssess() || !profileDoc) return;
   const container = root()?.querySelector("[data-v4-settings-controls]");
   if (!container || container.querySelector("[data-v4-assessment-self]")) return;
+
   const card = document.createElement("section");
   card.className = "form-card v4-assessment-card";
   card.dataset.v4AssessmentSelf = "true";
   card.innerHTML = `
     <p class="eyebrow">Assessment</p>
     <h2>Standing & risk</h2>
-    <p>These fields are part of Cognitus's reviewed profile assessment. Changes are logged.</p>
+    <p>These fields are part of Cognitus's reviewed profile assessment. Changes are saved directly to your profile and logged.</p>
     <form class="form-stack" data-v4-assessment-form>
       <div class="form-row">
         <label>Professional Standing
@@ -173,8 +198,10 @@ function mountSettingsAssessment() {
           <select name="riskLevel">${options(RISK, profileDoc.riskLevel || "unreviewed")}</select>
         </label>
       </div>
+      <div class="notice" data-v4-assessment-status hidden></div>
       <button class="button v4-primary-button" type="submit">Save assessment</button>
     </form>`;
+
   const danger = container.querySelector(".v4-danger-zone");
   if (danger) danger.insertAdjacentElement("beforebegin", card);
   else container.appendChild(card);
@@ -184,14 +211,22 @@ function mountSettingsAssessment() {
     const form = event.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
     const button = form.querySelector("button[type=submit]");
+    const status = form.querySelector("[data-v4-assessment-status]");
     button.disabled = true;
+    button.textContent = "Saving…";
+    setInlineStatus(status, "Saving standing and risk…");
     try {
-      await updateAssessment(authUser.uid, clean(data.professionalStanding), clean(data.riskLevel));
+      const persisted = await updateAssessment(authUser.uid, clean(data.professionalStanding), clean(data.riskLevel));
+      const message = `Saved: ${labelFor(STANDING, persisted.professionalStanding)} · ${labelFor(RISK, persisted.riskLevel)}.`;
+      setInlineStatus(status, message, "success");
       toast("Standing and risk updated.");
     } catch (error) {
-      toast(error?.message || "Assessment could not be updated.", "error");
+      const message = friendlyError(error);
+      setInlineStatus(status, message, "error");
+      toast(message, "error");
     } finally {
       button.disabled = false;
+      button.textContent = "Save assessment";
     }
   });
 }
@@ -207,70 +242,99 @@ function insertHeader(table, key, label) {
   else head.appendChild(th);
 }
 
+function makeAdminAssessmentCell(profile, kind) {
+  const td = document.createElement("td");
+  td.dataset[kind === "standing" ? "v4AssessmentStanding" : "v4AssessmentRisk"] = profile.id;
+  const values = kind === "standing" ? STANDING : RISK;
+  const selected = kind === "standing" ? profile.professionalStanding : profile.riskLevel;
+  const label = kind === "standing" ? "Professional standing" : "Risk level";
+  td.innerHTML = `<select aria-label="${label} for ${escapeHtml(profile.displayName || profile.id)}">${options(values, selected || "unreviewed")}</select>`;
+  return td;
+}
+
+function makeAdminSaveButton(uid, profile, standingCell, riskCell) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "button button-light";
+  button.dataset.v4SaveAssessment = uid;
+  button.textContent = "Save";
+  button.title = "Save standing and risk";
+  button.addEventListener("click", async () => {
+    const standing = standingCell.querySelector("select")?.value;
+    const risk = riskCell.querySelector("select")?.value;
+    button.disabled = true;
+    button.textContent = "Saving…";
+    try {
+      const persisted = await updateAssessment(uid, standing, risk);
+      button.textContent = "Saved ✓";
+      toast(`Assessment updated for ${profile.displayName || "user"}.`);
+      window.setTimeout(() => {
+        if (button.isConnected) button.textContent = "Save";
+      }, 1600);
+      standingCell.querySelector("select").value = persisted.professionalStanding;
+      riskCell.querySelector("select").value = persisted.riskLevel;
+    } catch (error) {
+      const message = friendlyError(error);
+      toast(message, "error");
+      button.textContent = "Save";
+    } finally {
+      button.disabled = false;
+    }
+  });
+  return button;
+}
+
 async function mountAdminAssessments() {
   if (route() !== "/admin" || !canAssess()) return;
   const panel = root()?.querySelector("#admin-users");
   const table = panel?.querySelector("table");
-  if (!table || table.dataset.v4AssessmentMounted) return;
+  if (!table) return;
+
   const rows = [...table.querySelectorAll("tbody tr")];
   if (!rows.length || !rows.some((row) => row.querySelector("[data-user-role]"))) return;
+
   const profiles = await readAll("profiles");
   const byId = new Map(profiles.map((profile) => [profile.id, profile]));
-
   insertHeader(table, "standing", "Standing");
   insertHeader(table, "risk", "Risk");
 
+  let mountedRows = 0;
   for (const row of rows) {
     const roleSelect = row.querySelector("[data-user-role]");
-    if (!roleSelect || row.querySelector("[data-v4-assessment-standing]")) continue;
+    if (!roleSelect) continue;
     const uid = roleSelect.dataset.userRole;
     const profile = byId.get(uid);
     if (!profile) continue;
 
-    const standingCell = document.createElement("td");
-    standingCell.dataset.v4AssessmentStanding = uid;
-    standingCell.innerHTML = `<select aria-label="Professional standing for ${escapeHtml(profile.displayName || uid)}">${options(STANDING, profile.professionalStanding || "unreviewed")}</select>`;
-    const riskCell = document.createElement("td");
-    riskCell.dataset.v4AssessmentRisk = uid;
-    riskCell.innerHTML = `<select aria-label="Risk level for ${escapeHtml(profile.displayName || uid)}">${options(RISK, profile.riskLevel || "unreviewed")}</select>`;
+    let standingCell = row.querySelector(`[data-v4-assessment-standing="${CSS.escape(uid)}"]`);
+    let riskCell = row.querySelector(`[data-v4-assessment-risk="${CSS.escape(uid)}"]`);
+
+    if (!standingCell) standingCell = makeAdminAssessmentCell(profile, "standing");
+    if (!riskCell) riskCell = makeAdminAssessmentCell(profile, "risk");
 
     const actionCell = row.querySelector(".v4-admin-action-cell");
-    if (actionCell) {
-      actionCell.insertAdjacentElement("beforebegin", standingCell);
-      actionCell.insertAdjacentElement("beforebegin", riskCell);
-    } else {
-      row.append(standingCell, riskCell);
+    if (!standingCell.isConnected || !riskCell.isConnected) {
+      if (actionCell) {
+        if (!standingCell.isConnected) actionCell.insertAdjacentElement("beforebegin", standingCell);
+        if (!riskCell.isConnected) actionCell.insertAdjacentElement("beforebegin", riskCell);
+      } else {
+        if (!standingCell.isConnected) row.appendChild(standingCell);
+        if (!riskCell.isConnected) row.appendChild(riskCell);
+      }
     }
 
-    let actionRow = actionCell?.querySelector(".v4-action-row");
-    if (!actionRow && actionCell) {
-      actionRow = document.createElement("div");
-      actionRow.className = "v4-action-row";
-      actionCell.appendChild(actionRow);
+    if (!riskCell.querySelector("[data-v4-save-assessment]")) {
+      const saveWrap = document.createElement("div");
+      saveWrap.className = "mini-actions";
+      saveWrap.style.marginTop = ".45rem";
+      saveWrap.appendChild(makeAdminSaveButton(uid, profile, standingCell, riskCell));
+      riskCell.appendChild(saveWrap);
     }
-    if (actionRow && !actionRow.querySelector("[data-v4-save-assessment]")) {
-      const save = document.createElement("button");
-      save.type = "button";
-      save.className = "button button-light";
-      save.dataset.v4SaveAssessment = uid;
-      save.textContent = "Save standing/risk";
-      save.addEventListener("click", async () => {
-        const standing = standingCell.querySelector("select").value;
-        const risk = riskCell.querySelector("select").value;
-        save.disabled = true;
-        try {
-          await updateAssessment(uid, standing, risk);
-          toast(`Assessment updated for ${profile.displayName || "user"}.`);
-        } catch (error) {
-          toast(error?.message || "Assessment could not be updated.", "error");
-        } finally {
-          save.disabled = false;
-        }
-      });
-      actionRow.prepend(save);
-    }
+    mountedRows += 1;
   }
-  table.dataset.v4AssessmentMounted = "true";
+
+  // Mark complete only after every profile row has its own independent Save control.
+  if (mountedRows > 0) table.dataset.v4AssessmentMounted = "true";
 }
 
 async function enhance() {
@@ -286,7 +350,7 @@ async function enhance() {
 
 function schedule() {
   timers.forEach(clearTimeout);
-  timers = [0, 150, 450, 900, 1600, 2400].map((delay) => setTimeout(enhance, delay));
+  timers = [0, 120, 320, 650, 1100, 1800].map((delay) => setTimeout(enhance, delay));
 }
 
 async function initialize() {
