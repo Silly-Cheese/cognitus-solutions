@@ -32,3 +32,6 @@ jobs:
 
       - name: Run Profile V5 regression checks
         run: node scripts/validate.mjs
+
+      - name: Run Navigation V6 regression checks
+        run: node scripts/validate-navigation-v6.mjs
