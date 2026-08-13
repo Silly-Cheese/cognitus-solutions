@@ -46,3 +46,6 @@ jobs:
 
       - name: Run controlled report access checks
         run: node scripts/validate-report-access-v8.mjs
+
+      - name: Compile Firestore rules in emulator
+        run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus "echo Firestore rules compiled"
