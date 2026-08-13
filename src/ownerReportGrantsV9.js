@@ -137,42 +137,47 @@ async function revokeOwnerGrant(reportId, granteeUid) {
   await writeAudit("OWNER_REPORT_ACCESS_REVOKED", reportId, `Owner revoked direct access for ${granteeUid}.`, { granteeUid, grantSource: "owner_direct" });
 }
 
+async function restoreOwnerGrantAfterRequestDecision(requestId) {
+  if (!requestId || !authUser) return;
+  const request = await readDoc("reportAccessRequests", requestId).catch(() => null);
+  if (!request?.reportId || !request?.requesterUid || request.subjectProfileId !== authUser.uid) return;
+  const grant = await readDoc("reportAccessGrants", request.reportId).catch(() => null);
+  const approved = new Set(Array.isArray(grant?.approvedUids) ? grant.approvedUids : []);
+  if (!approved.has(ownerMarker(request.requesterUid)) || approved.has(request.requesterUid)) return;
+  approved.add(request.requesterUid);
+  await Fire.updateDoc(Fire.doc(db, "reportAccessGrants", request.reportId), {
+    approvedUids: [...approved],
+    updatedAt: Fire.serverTimestamp()
+  }).catch((error) => console.warn("Could not preserve Owner-issued grant after request decision", error));
+}
+
+function preserveOwnerAuthorization(event) {
+  const button = event.target.closest?.("[data-v8-access-action][data-request-id]");
+  if (!button || !["deny", "revoke"].includes(button.dataset.v8AccessAction)) return;
+  const requestId = button.dataset.requestId;
+  [550, 1200].forEach((delay) => setTimeout(() => restoreOwnerGrantAfterRequestDecision(requestId), delay));
+}
+
 function directGrantees(grant) {
   const values = Array.isArray(grant?.approvedUids) ? grant.approvedUids : [];
-  return values
-    .filter((value) => typeof value === "string" && value.startsWith("owner:"))
-    .map((value) => value.slice(6))
-    .filter(Boolean);
+  return values.filter((value) => typeof value === "string" && value.startsWith("owner:")).map((value) => value.slice(6)).filter(Boolean);
 }
 
 async function ownerGrantRows(grants, users, reports) {
   const usersById = new Map(users.map((user) => [user.id, user]));
   const reportsById = new Map(reports.map((report) => [report.id, report]));
   const rows = [];
-  for (const grant of grants) {
-    for (const uid of directGrantees(grant)) {
-      rows.push({ grant, uid, user: usersById.get(uid), report: reportsById.get(grant.id) || reportsById.get(grant.reportId) });
-    }
-  }
+  for (const grant of grants) for (const uid of directGrantees(grant)) rows.push({ grant, uid, user: usersById.get(uid), report: reportsById.get(grant.id) || reportsById.get(grant.reportId) });
   return rows.sort((a, b) => timestampMs(b.grant?.updatedAt) - timestampMs(a.grant?.updatedAt));
 }
-
-function reportOption(report) {
-  return `${report.cognitusId || report.id} · ${report.category || "Report"} · ${humanize(report.status)} · ${report.summary || "No summary"}`.slice(0, 150);
-}
-function userOption(user) {
-  return `${user.displayName || user.discordUsername || "Cognitus User"} · ${user.cognitusId || user.id} · ${humanize(user.role)}`;
-}
+function reportOption(report) { return `${report.cognitusId || report.id} · ${report.category || "Report"} · ${humanize(report.status)} · ${report.summary || "No summary"}`.slice(0, 150); }
+function userOption(user) { return `${user.displayName || user.discordUsername || "Cognitus User"} · ${user.cognitusId || user.id} · ${humanize(user.role)}`; }
 
 async function mountOwnerPanel() {
   if (route() !== "/reports" || !isOwner() || !root) return;
   const hub = root.querySelector("[data-v8-reports-hub]");
   if (!hub || hub.querySelector("[data-v9-owner-panel]")) return;
-  const [reports, users, grants] = await Promise.all([
-    readAll("reports").catch(() => []),
-    readAll("users").catch(() => []),
-    readAll("reportAccessGrants").catch(() => [])
-  ]);
+  const [reports, users, grants] = await Promise.all([readAll("reports").catch(() => []), readAll("users").catch(() => []), readAll("reportAccessGrants").catch(() => [])]);
   const eligibleReports = reports.filter((report) => report.subjectProfileId && ELIGIBLE_STATUSES.has(report.status)).sort((a, b) => timestampMs(b.createdAt) - timestampMs(a.createdAt));
   const activeUsers = users.filter((user) => user.status === "active").sort((a, b) => clean(a.displayName || a.discordUsername).localeCompare(clean(b.displayName || b.discordUsername)));
   const rows = await ownerGrantRows(grants, users, reports);
@@ -180,17 +185,7 @@ async function mountOwnerPanel() {
   const panel = document.createElement("section");
   panel.className = "panel v8-section v9-owner-panel";
   panel.dataset.v9OwnerPanel = "true";
-  panel.innerHTML = `
-    <div class="panel-header"><div><p class="eyebrow">Owner Authority</p><h2>Give direct report access</h2></div><span>${rows.length} Owner grant${rows.length === 1 ? "" : "s"}</span></div>
-    <div class="v9-owner-warning"><strong>Owner authorization bypasses the normal request/approval workflow.</strong><span>The report subject can see that direct access exists. Owner grants are tracked separately from normal subject-approved requests.</span></div>
-    <form class="v9-owner-grant-form" data-v9-owner-grant-form>
-      <label>Report<select name="reportId" required><option value="">Select an eligible person report</option>${eligibleReports.map((report) => `<option value="${escapeHtml(report.id)}">${escapeHtml(reportOption(report))}</option>`).join("")}</select></label>
-      <label>Give Access To<select name="granteeUid" required><option value="">Select an active Cognitus account</option>${activeUsers.map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(userOption(user))}</option>`).join("")}</select></label>
-      <label class="v9-owner-reason">Authorization Reason<textarea name="reason" maxlength="500" rows="3" required placeholder="Explain why Cognitus Owner is granting access to this specific report."></textarea></label>
-      <div class="v9-owner-form-actions"><button class="button button-dark" type="submit">Grant Report Access</button><span data-v9-owner-message aria-live="polite"></span></div>
-    </form>
-    <div class="v9-owner-grants"><h3>Active Owner-issued grants</h3>${rows.length ? `<div class="v9-owner-grant-list">${rows.map((row) => `<article><div><strong>${escapeHtml(row.user?.displayName || row.user?.cognitusId || row.uid)}</strong><span>${escapeHtml(row.report?.cognitusId || row.grant.reportId || row.grant.id)}</span><small>Direct Owner authorization · last changed ${escapeHtml(formatTimestamp(row.grant.updatedAt))}</small></div><button class="button button-danger" type="button" data-v9-revoke-report="${escapeHtml(row.grant.reportId || row.grant.id)}" data-v9-revoke-user="${escapeHtml(row.uid)}">Revoke</button></article>`).join("")}</div>` : `<div class="empty-state"><p>No direct Owner grants are active.</p></div>`}</div>`;
-
+  panel.innerHTML = `<div class="panel-header"><div><p class="eyebrow">Owner Authority</p><h2>Give direct report access</h2></div><span>${rows.length} Owner grant${rows.length === 1 ? "" : "s"}</span></div><div class="v9-owner-warning"><strong>Owner authorization bypasses the normal request/approval workflow.</strong><span>The report subject can see that direct access exists. Owner grants are tracked separately from normal subject-approved requests.</span></div><form class="v9-owner-grant-form" data-v9-owner-grant-form><label>Report<select name="reportId" required><option value="">Select an eligible person report</option>${eligibleReports.map((report) => `<option value="${escapeHtml(report.id)}">${escapeHtml(reportOption(report))}</option>`).join("")}</select></label><label>Give Access To<select name="granteeUid" required><option value="">Select an active Cognitus account</option>${activeUsers.map((user) => `<option value="${escapeHtml(user.id)}">${escapeHtml(userOption(user))}</option>`).join("")}</select></label><label class="v9-owner-reason">Authorization Reason<textarea name="reason" maxlength="500" rows="3" required placeholder="Explain why Cognitus Owner is granting access to this specific report."></textarea></label><div class="v9-owner-form-actions"><button class="button button-dark" type="submit">Grant Report Access</button><span data-v9-owner-message aria-live="polite"></span></div></form><div class="v9-owner-grants"><h3>Active Owner-issued grants</h3>${rows.length ? `<div class="v9-owner-grant-list">${rows.map((row) => `<article><div><strong>${escapeHtml(row.user?.displayName || row.user?.cognitusId || row.uid)}</strong><span>${escapeHtml(row.report?.cognitusId || row.grant.reportId || row.grant.id)}</span><small>Direct Owner authorization · last changed ${escapeHtml(formatTimestamp(row.grant.updatedAt))}</small></div><button class="button button-danger" type="button" data-v9-revoke-report="${escapeHtml(row.grant.reportId || row.grant.id)}" data-v9-revoke-user="${escapeHtml(row.uid)}">Revoke</button></article>`).join("")}</div>` : `<div class="empty-state"><p>No direct Owner grants are active.</p></div>`}</div>`;
   const hero = hub.querySelector(".v8-reports-hero");
   (hero || hub.firstElementChild)?.insertAdjacentElement("afterend", panel);
 
@@ -214,18 +209,11 @@ async function mountOwnerPanel() {
       button.disabled = false;
     }
   });
-
   panel.querySelectorAll("[data-v9-revoke-report]").forEach((button) => button.addEventListener("click", async () => {
     if (!window.confirm("Revoke this Owner-issued report permission?")) return;
     button.disabled = true;
-    try {
-      await revokeOwnerGrant(button.dataset.v9RevokeReport, button.dataset.v9RevokeUser);
-      panel.remove();
-      schedule();
-    } catch (error) {
-      window.alert(error?.message || "Owner grant could not be revoked.");
-      button.disabled = false;
-    }
+    try { await revokeOwnerGrant(button.dataset.v9RevokeReport, button.dataset.v9RevokeUser); panel.remove(); schedule(); }
+    catch (error) { window.alert(error?.message || "Owner grant could not be revoked."); button.disabled = false; }
   }));
 }
 
@@ -255,7 +243,6 @@ async function mountSubjectVisibility() {
   if (!directRows.length) return;
   const users = await Promise.all([...new Set(directRows.map((row) => row.uid))].map((uid) => readDoc("users", uid).catch(() => null)));
   const usersById = new Map(users.filter(Boolean).map((user) => [user.id, user]));
-
   const panel = document.createElement("section");
   panel.className = "panel v8-section v9-subject-panel";
   panel.dataset.v9SubjectOwnerGrants = "true";
@@ -306,6 +293,7 @@ async function initialize() {
     userDoc = user ? await readDoc("users", user.uid).catch(() => null) : null;
     schedule();
   });
+  document.addEventListener("click", preserveOwnerAuthorization, true);
   window.addEventListener("hashchange", schedule);
   window.addEventListener("pageshow", schedule);
   window.addEventListener("DOMContentLoaded", schedule);
