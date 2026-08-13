@@ -1,6 +1,7 @@
 import "./controlsV4.js";
 import "./assessmentV4.js";
 import "./profileV5.js";
+import "./reportAssessmentV7.js";
 
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");
@@ -32,6 +33,13 @@ function mountV4Styles() {
     link.id = "cognitus-nav-v6";
     link.rel = "stylesheet";
     link.href = "./src/navigationV6.css?v=20260812-1";
+    document.head.appendChild(link);
+  }
+  if (!document.querySelector("#cognitus-report-assessment-v7")) {
+    const link = document.createElement("link");
+    link.id = "cognitus-report-assessment-v7";
+    link.rel = "stylesheet";
+    link.href = "./src/reportAssessmentV7.css?v=20260812-1";
     document.head.appendChild(link);
   }
 }
