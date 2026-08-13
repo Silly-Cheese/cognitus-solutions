@@ -202,7 +202,6 @@
 }
 
 @media (max-width: 1180px) {
-  .topnav > a[data-profile-tab] { display: none; }
   .nav-user { display: none !important; }
   .topnav { max-width: calc(100vw - 250px); }
 }
