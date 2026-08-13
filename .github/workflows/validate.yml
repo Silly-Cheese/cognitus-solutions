@@ -29,6 +29,7 @@ jobs:
           node --check src/controlsV4.js
           node --check src/assessmentV4.js
           node --check src/profileV5.js
+          node --check src/reportAssessmentV7.js
 
       - name: Run Profile V5 regression checks
         run: node scripts/validate.mjs
@@ -38,3 +39,6 @@ jobs:
 
       - name: Run assessment persistence regression checks
         run: node scripts/validate-assessment-save.mjs
+
+      - name: Run report assessment visualization checks
+        run: node scripts/validate-report-assessment.mjs
