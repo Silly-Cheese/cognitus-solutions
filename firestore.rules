@@ -26,6 +26,14 @@ service cloud.firestore {
       return /databases/$(database)/documents/reportAccessGrants/$(reportId);
     }
 
+    function ownerGrantId(reportId, uid) {
+      return reportId + '__' + uid;
+    }
+
+    function ownerReportGrantPath(reportId, uid) {
+      return /databases/$(database)/documents/ownerReportAccessGrants/$(ownerGrantId(reportId, uid));
+    }
+
     function hasUserDoc() {
       return signedIn() && exists(userPath(request.auth.uid));
     }
@@ -122,11 +130,26 @@ service cloud.firestore {
       return reportData.subjectProfileId != null && ownsProfile(reportData.subjectProfileId);
     }
 
-    function hasReportGrant(reportId) {
+    function hasSubjectReportGrant(reportId) {
       return activeAccount()
         && exists(reportGrantPath(reportId))
         && get(reportGrantPath(reportId)).data.approvedUids is list
-        && request.auth.uid in get(reportGrantPath(reportId)).data.approvedUids;
+        && (
+          request.auth.uid in get(reportGrantPath(reportId)).data.approvedUids
+          || ('owner:' + request.auth.uid) in get(reportGrantPath(reportId)).data.approvedUids
+        );
+    }
+
+    function hasOwnerReportGrant(reportId) {
+      return activeAccount()
+        && exists(ownerReportGrantPath(reportId, request.auth.uid))
+        && get(ownerReportGrantPath(reportId, request.auth.uid)).data.granteeUid == request.auth.uid
+        && get(ownerReportGrantPath(reportId, request.auth.uid)).data.reportId == reportId
+        && get(ownerReportGrantPath(reportId, request.auth.uid)).data.status == 'active';
+    }
+
+    function hasReportGrant(reportId) {
+      return hasSubjectReportGrant(reportId) || hasOwnerReportGrant(reportId);
     }
 
     match /users/{uid} {
@@ -561,7 +584,10 @@ service cloud.firestore {
         || ownsProfile(resource.data.subjectProfileId)
         || (activeAccount()
           && resource.data.approvedUids is list
-          && request.auth.uid in resource.data.approvedUids);
+          && (
+            request.auth.uid in resource.data.approvedUids
+            || ('owner:' + request.auth.uid) in resource.data.approvedUids
+          ));
 
       allow create: if (isReviewer() || ownsProfile(request.resource.data.subjectProfileId))
         && request.resource.data.keys().hasOnly([
@@ -585,6 +611,50 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
 
       allow delete: if isReviewer() || ownsProfile(resource.data.subjectProfileId);
+    }
+
+    match /ownerReportAccessGrants/{grantId} {
+      allow read: if isOwner()
+        || (activeAccount() && resource.data.granteeUid == request.auth.uid)
+        || ownsProfile(resource.data.subjectProfileId);
+
+      allow create: if isOwner()
+        && request.resource.data.keys().hasOnly([
+          'id', 'reportId', 'subjectProfileId', 'granteeUid', 'grantedByUid',
+          'grantedByCognitusId', 'reason', 'status', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == grantId
+        && grantId == request.resource.data.reportId + '__' + request.resource.data.granteeUid
+        && exists(reportPath(request.resource.data.reportId))
+        && get(reportPath(request.resource.data.reportId)).data.subjectProfileId != null
+        && get(reportPath(request.resource.data.reportId)).data.subjectProfileId == request.resource.data.subjectProfileId
+        && exists(userPath(request.resource.data.granteeUid))
+        && get(userPath(request.resource.data.granteeUid)).data.status == 'active'
+        && request.resource.data.grantedByUid == request.auth.uid
+        && request.resource.data.grantedByCognitusId == currentUser().cognitusId
+        && shortString(request.resource.data.reason, 500)
+        && request.resource.data.reason.size() > 0
+        && request.resource.data.status == 'active'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'reason', 'grantedByUid', 'grantedByCognitusId', 'updatedAt'
+        ])
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.reportId == resource.data.reportId
+        && request.resource.data.subjectProfileId == resource.data.subjectProfileId
+        && request.resource.data.granteeUid == resource.data.granteeUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.grantedByUid == request.auth.uid
+        && request.resource.data.grantedByCognitusId == currentUser().cognitusId
+        && shortString(request.resource.data.reason, 500)
+        && request.resource.data.reason.size() > 0
+        && request.resource.data.status in ['active', 'revoked']
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isOwner();
     }
 
     match /claims/{claimId} {
