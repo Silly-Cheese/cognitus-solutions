@@ -15,6 +15,8 @@ const app = read("src/app.js");
 const navigation = read("src/navigationEnhancements.js");
 const controls = read("src/controlsV4.js");
 const assessment = read("src/assessmentV4.js");
+const profileV5 = read("src/profileV5.js");
+const profileCss = read("src/profileV5.css");
 const uxCss = read("src/uxV4.css");
 const rules = read("firestore.rules");
 const firebase = JSON.parse(read("firebase.json"));
@@ -24,10 +26,12 @@ assert(!index.includes("appV1.js") && !index.includes("appSafe.js"), "legacy rou
 assert(index.includes("stability-v4"), "index.html cache-busts the stability V4 navigation layer");
 assert(navigation.includes('import "./controlsV4.js"'), "navigation loads V4 operational controls");
 assert(navigation.includes('import "./assessmentV4.js"'), "navigation loads editable profile assessment controls");
+assert(navigation.includes('import "./profileV5.js"'), "navigation loads Profile V5 and smart appeal workflows");
 assert(navigation.includes("uxV4.css") && uxCss.includes("#logout-button"), "fast V4 styling is loaded and keeps Logout visible");
-assert(!navigation.includes("MutationObserver") && !controls.includes("MutationObserver") && !assessment.includes("MutationObserver"), "V4 contains no DOM mutation observers");
+assert(!navigation.includes("MutationObserver") && !controls.includes("MutationObserver") && !assessment.includes("MutationObserver") && !profileV5.includes("MutationObserver"), "production enhancements contain no DOM mutation observers");
 assert(!navigation.includes("uxV3.js"), "observer-driven UX V3 is not loaded in production");
 assert(navigation.includes('#/organizations?request=1') && navigation.includes('textContent = "New Organization"'), "New Organization is a direct navigation action");
+assert(navigation.includes('#/profile') && navigation.includes('textContent = "Profile"'), "authenticated navigation exposes the Profile page");
 assert(navigation.includes("#logout-button") && navigation.includes('logout.textContent = "Logout"'), "Logout remains an explicit visible navigation control");
 assert(navigation.includes("v4-mobile-nav-toggle") && navigation.includes("v4-mobile-open"), "mobile navigation uses an explicit menu toggle");
 assert(navigation.includes("window.innerWidth > 760") && navigation.includes("closeMobileMenu"), "mobile menu closes cleanly across navigation and desktop resize");
@@ -48,6 +52,13 @@ assert(assessment.includes("PROFILE_ASSESSMENT_UPDATED") && assessment.includes(
 assert(assessment.includes('new Set(["reviewer", "admin", "owner"])'), "assessment editing is restricted to reviewer/admin/owner roles");
 assert(assessment.includes("mountSettingsAssessment") && assessment.includes("mountAdminAssessments"), "assessment editing is available in Settings and Admin user management");
 assert(!assessment.includes("Fire.orderBy("), "assessment controls do not introduce ordered compound queries");
+
+assert(profileV5.includes('route() !== "/profile"') && profileV5.includes("Reports about you") && profileV5.includes("Professional Standing") && profileV5.includes("Risk Level"), "Profile V5 presents identity, standing, risk, and reports");
+assert(profileV5.includes('readWhere("reports", "subjectProfileId", "==", authUser.uid)') && profileV5.includes('readWhere("appeals", "submittedByUid", "==", authUser.uid)'), "Profile V5 loads only the signed-in user’s reports and appeals with single-field queries");
+assert(profileV5.includes('input type="hidden" name="profileId"') && profileV5.includes('select name="reportId"'), "appeals auto-attach the signed-in profile and use a report selector");
+assert(profileV5.includes("#/appeals?report=") && profileV5.includes("Appeal this report"), "Profile report cards deep-link directly into the appeal flow");
+assert(profileCss.includes(".v5-profile-hero") && profileCss.includes("@media (max-width: 760px)"), "Profile V5 has dedicated responsive styling");
+assert(!profileV5.includes("Fire.orderBy("), "Profile V5 introduces no ordered compound queries");
 
 assert(!app.includes("OWNER_BOOTSTRAP") && !app.includes("ownerDiscordId"), "production app contains no client owner-bootstrap credential");
 assert(app.includes('current === "/owner-bootstrap"') && app.includes("Client-side bootstrap has been retired"), "legacy bootstrap route is explicitly non-operational");
@@ -77,8 +88,8 @@ assert(!Object.prototype.hasOwnProperty.call(firebase?.firestore || {}, "indexes
 assert(!fs.existsSync("firestore.indexes.json"), "repository contains no manual/composite Firestore index manifest");
 
 if (process.exitCode) {
-  console.error("\nCognitus stability V4 validation failed.");
+  console.error("\nCognitus Profile V5 validation failed.");
   process.exit(process.exitCode);
 }
 
-console.log("\nCognitus stability V4 validation passed with secure no-index architecture intact.");
+console.log("\nCognitus Profile V5 validation passed with secure no-index architecture intact.");

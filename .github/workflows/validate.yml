@@ -28,6 +28,7 @@ jobs:
           node --check src/navigationEnhancements.js
           node --check src/controlsV4.js
           node --check src/assessmentV4.js
+          node --check src/profileV5.js
 
-      - name: Run stability V4 regression checks
+      - name: Run Profile V5 regression checks
         run: node scripts/validate.mjs

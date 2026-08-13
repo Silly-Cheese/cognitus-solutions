@@ -1,0 +1,1 @@
+Profile V5 introduces account-aware appeals and a user-facing profile workspace. No Firestore rule changes or composite indexes are required for this release.

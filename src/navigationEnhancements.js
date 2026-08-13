@@ -1,5 +1,6 @@
 import "./controlsV4.js";
 import "./assessmentV4.js";
+import "./profileV5.js";
 
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");
@@ -60,6 +61,21 @@ function ensureMobileMenu() {
   document.body.classList.add("v4-mobile-nav-ready");
 }
 
+function ensureProfileTab() {
+  if (!nav || !isAuthenticatedNav()) return;
+  let link = nav.querySelector("[data-profile-tab]");
+  if (!link) {
+    link = document.createElement("a");
+    link.href = "#/profile";
+    link.dataset.profileTab = "true";
+    link.textContent = "Profile";
+    link.title = "Open your Cognitus profile";
+    link.setAttribute("aria-label", "Open your Cognitus profile");
+  }
+  const dashboard = nav.querySelector('a[href="#/dashboard"]');
+  if (dashboard && link.previousElementSibling !== dashboard) dashboard.insertAdjacentElement("afterend", link);
+}
+
 function ensureOrganizationRequestTab() {
   if (!nav || !isAuthenticatedNav()) return;
   let link = nav.querySelector("[data-org-request-tab]");
@@ -79,6 +95,7 @@ function orderAuthenticatedNav() {
   if (!nav || !isAuthenticatedNav()) return;
   const hrefOrder = [
     "#/dashboard",
+    "#/profile",
     "#/search",
     "#/history",
     "#/organizations",
@@ -91,9 +108,11 @@ function orderAuthenticatedNav() {
     "#/settings"
   ];
   for (const href of hrefOrder) {
-    const node = href.includes("?request=1")
-      ? nav.querySelector("[data-org-request-tab]")
-      : nav.querySelector(`a[href="${href}"]`);
+    const node = href === "#/profile"
+      ? nav.querySelector("[data-profile-tab]")
+      : href.includes("?request=1")
+        ? nav.querySelector("[data-org-request-tab]")
+        : nav.querySelector(`a[href="${href}"]`);
     if (node) nav.appendChild(node);
   }
   const logout = nav.querySelector("#logout-button");
@@ -138,9 +157,11 @@ function sync() {
   cleanupV3Artifacts();
   ensureMobileMenu();
   if (isAuthenticatedNav()) {
+    ensureProfileTab();
     ensureOrganizationRequestTab();
     orderAuthenticatedNav();
   } else {
+    nav?.querySelector("[data-profile-tab]")?.remove();
     nav?.querySelector("[data-org-request-tab]")?.remove();
   }
   markActiveRoute();
