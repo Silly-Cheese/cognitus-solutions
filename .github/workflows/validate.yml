@@ -37,6 +37,7 @@ jobs:
           node --check src/profileV5.js
           node --check src/reportAssessmentV7.js
           node --check src/reportAccessV8.js
+          node --check src/ownerReportGrantsV9.js
 
       - name: Run Profile V5 regression checks
         run: node scripts/validate.mjs
@@ -52,6 +53,9 @@ jobs:
 
       - name: Run controlled report access checks
         run: node scripts/validate-report-access-v8.mjs
+
+      - name: Run Owner direct report grant checks
+        run: node scripts/validate-owner-report-grants-v9.mjs
 
       - name: Compile Firestore rules in emulator
         run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus "echo Firestore rules compiled"

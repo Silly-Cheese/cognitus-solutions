@@ -3,6 +3,7 @@ import "./assessmentV4.js";
 import "./profileV5.js";
 import "./reportAssessmentV7.js";
 import "./reportAccessV8.js";
+import "./ownerReportGrantsV9.js";
 
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");
