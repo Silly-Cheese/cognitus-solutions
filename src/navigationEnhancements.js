@@ -2,6 +2,7 @@ import "./controlsV4.js";
 import "./assessmentV4.js";
 import "./profileV5.js";
 import "./reportAssessmentV7.js";
+import "./reportAccessV8.js";
 
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");
@@ -113,6 +114,21 @@ function ensureProfileTab() {
   if (dashboard && link.previousElementSibling !== dashboard) dashboard.insertAdjacentElement("afterend", link);
 }
 
+function ensureReportsTab() {
+  if (!nav || !isAuthenticatedNav()) return;
+  let link = nav.querySelector("[data-reports-tab]");
+  if (!link) {
+    link = document.createElement("a");
+    link.href = "#/reports";
+    link.dataset.reportsTab = "true";
+    link.textContent = "Reports";
+    link.title = "Open reports and access controls";
+    link.setAttribute("aria-label", "Open reports and access controls");
+  }
+  const profile = nav.querySelector("[data-profile-tab]");
+  if (profile && link.previousElementSibling !== profile) profile.insertAdjacentElement("afterend", link);
+}
+
 function ensureOrganizationRequestTab() {
   if (!nav || !isAuthenticatedNav()) return;
   let link = nav.querySelector("[data-org-request-tab]");
@@ -195,6 +211,7 @@ function orderAuthenticatedNav() {
   const primaryOrder = [
     "#/dashboard",
     "#/profile",
+    "#/reports",
     "#/search",
     "#/organizations",
     "#/organizations?request=1"
@@ -204,9 +221,11 @@ function orderAuthenticatedNav() {
   for (const href of primaryOrder) {
     const node = href === "#/profile"
       ? nav.querySelector("[data-profile-tab]")
-      : href.includes("?request=1")
-        ? nav.querySelector("[data-org-request-tab]")
-        : nav.querySelector(`a[href="${href}"]`);
+      : href === "#/reports"
+        ? nav.querySelector("[data-reports-tab]")
+        : href.includes("?request=1")
+          ? nav.querySelector("[data-org-request-tab]")
+          : nav.querySelector(`a[href="${href}"]`);
     if (node) nav.insertBefore(node, anchor);
   }
 
@@ -235,7 +254,9 @@ function markActiveRoute() {
     if (!href.startsWith("#/")) return;
     const active = href.includes("?request=1")
       ? hash.startsWith("#/organizations?request=1")
-      : href.split("?")[0] === base;
+      : href === "#/reports"
+        ? ["#/reports", "#/reports/view"].includes(base)
+        : href.split("?")[0] === base;
     link.classList.toggle("v4-active", active);
     if (active) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
@@ -259,6 +280,7 @@ function openOrganizationRequestForm() {
 
 function removeAuthenticatedEnhancements() {
   nav?.querySelector("[data-profile-tab]")?.remove();
+  nav?.querySelector("[data-reports-tab]")?.remove();
   nav?.querySelector("[data-org-request-tab]")?.remove();
   nav?.querySelector(".nav6-more")?.remove();
   nav?.querySelector(".nav6-divider")?.remove();
@@ -269,6 +291,7 @@ function sync() {
   ensureMobileMenu();
   if (isAuthenticatedNav()) {
     ensureProfileTab();
+    ensureReportsTab();
     ensureOrganizationRequestTab();
     ensureMoreMenu();
     orderAuthenticatedNav();
