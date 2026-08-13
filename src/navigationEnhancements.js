@@ -4,6 +4,7 @@ import "./profileV5.js";
 import "./reportAssessmentV7.js";
 import "./reportAccessV8.js";
 import "./ownerReportGrantsV9.js";
+import "./employerStatusV10.js";
 
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");
@@ -12,6 +13,7 @@ let timers = [];
 
 const SECONDARY_NAV = [
   { href: "#/history", label: "History", note: "Your previous logged checks" },
+  { href: "#/employer-status", label: "Employer Status", note: "Apply for organization-linked employer access" },
   { href: "#/reports/submit", label: "Submit Report", note: "Add information for review" },
   { href: "#/claims", label: "Claims", note: "Identity and record claims" },
   { href: "#/appeals", label: "Appeals", note: "Challenge a report or request correction" }
@@ -143,6 +145,22 @@ function ensureOrganizationRequestTab() {
   }
   const organizations = nav.querySelector('a[href="#/organizations"]');
   if (organizations && link.previousElementSibling !== organizations) organizations.insertAdjacentElement("afterend", link);
+}
+
+function ensureEmployerStatusTab() {
+  if (!nav || !isAuthenticatedNav()) return;
+  let link = nav.querySelector("[data-employer-status-tab]");
+  if (!link) {
+    link = document.createElement("a");
+    link.href = "#/employer-status";
+    link.dataset.employerStatusTab = "true";
+    link.textContent = "Employer Status";
+    link.title = "Request or review employer status";
+    link.setAttribute("aria-label", "Request or review employer status");
+  }
+  const settings = nav.querySelector('a[href="#/settings"]');
+  if (settings) nav.insertBefore(link, settings);
+  else nav.appendChild(link);
 }
 
 function decorateMenuLink(link, label, note) {
@@ -283,6 +301,7 @@ function removeAuthenticatedEnhancements() {
   nav?.querySelector("[data-profile-tab]")?.remove();
   nav?.querySelector("[data-reports-tab]")?.remove();
   nav?.querySelector("[data-org-request-tab]")?.remove();
+  nav?.querySelector("[data-employer-status-tab]")?.remove();
   nav?.querySelector(".nav6-more")?.remove();
   nav?.querySelector(".nav6-divider")?.remove();
 }
@@ -294,6 +313,7 @@ function sync() {
     ensureProfileTab();
     ensureReportsTab();
     ensureOrganizationRequestTab();
+    ensureEmployerStatusTab();
     ensureMoreMenu();
     orderAuthenticatedNav();
   } else {
