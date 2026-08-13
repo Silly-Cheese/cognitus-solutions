@@ -657,6 +657,112 @@ service cloud.firestore {
       allow delete: if isOwner();
     }
 
+    match /employerStatusRequests/{requestId} {
+      allow read: if isAdmin() || (signedIn() && requestId == request.auth.uid);
+
+      allow create: if role() == 'user'
+        && requestId == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'applicantUid', 'applicantCognitusId', 'applicantDisplayName',
+          'organizationId', 'organizationCognitusId', 'organizationName', 'positionTitle', 'reason',
+          'status', 'submittedAt', 'updatedAt', 'reviewedAt', 'reviewedByUid', 'reviewerNotes'
+        ])
+        && request.resource.data.id == requestId
+        && request.resource.data.applicantUid == request.auth.uid
+        && validCognitusId(request.resource.data.cognitusId, 'EMP')
+        && request.resource.data.applicantCognitusId == currentUser().cognitusId
+        && request.resource.data.applicantDisplayName == currentUser().displayName
+        && exists(organizationPath(request.resource.data.organizationId))
+        && get(organizationPath(request.resource.data.organizationId)).data.verificationStatus == 'verified'
+        && request.resource.data.organizationCognitusId == get(organizationPath(request.resource.data.organizationId)).data.cognitusId
+        && request.resource.data.organizationName == get(organizationPath(request.resource.data.organizationId)).data.name
+        && shortString(request.resource.data.positionTitle, 100)
+        && request.resource.data.positionTitle.size() > 0
+        && shortString(request.resource.data.reason, 1200)
+        && request.resource.data.reason.size() >= 30
+        && request.resource.data.status == 'pending'
+        && request.resource.data.submittedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.reviewedAt == null
+        && request.resource.data.reviewedByUid == null
+        && request.resource.data.reviewerNotes == '';
+
+      allow update: if role() == 'user'
+        && requestId == request.auth.uid
+        && resource.data.applicantUid == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.status == 'withdrawn'
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if role() == 'user'
+        && requestId == request.auth.uid
+        && resource.data.applicantUid == request.auth.uid
+        && resource.data.status in ['denied', 'withdrawn']
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'applicantUid', 'applicantCognitusId', 'applicantDisplayName',
+          'organizationId', 'organizationCognitusId', 'organizationName', 'positionTitle', 'reason',
+          'status', 'submittedAt', 'updatedAt', 'reviewedAt', 'reviewedByUid', 'reviewerNotes'
+        ])
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.applicantUid == resource.data.applicantUid
+        && request.resource.data.applicantCognitusId == currentUser().cognitusId
+        && request.resource.data.applicantDisplayName == currentUser().displayName
+        && exists(organizationPath(request.resource.data.organizationId))
+        && get(organizationPath(request.resource.data.organizationId)).data.verificationStatus == 'verified'
+        && request.resource.data.organizationCognitusId == get(organizationPath(request.resource.data.organizationId)).data.cognitusId
+        && request.resource.data.organizationName == get(organizationPath(request.resource.data.organizationId)).data.name
+        && shortString(request.resource.data.positionTitle, 100)
+        && request.resource.data.positionTitle.size() > 0
+        && shortString(request.resource.data.reason, 1200)
+        && request.resource.data.reason.size() >= 30
+        && request.resource.data.status == 'pending'
+        && request.resource.data.submittedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.reviewedAt == null
+        && request.resource.data.reviewedByUid == null
+        && request.resource.data.reviewerNotes == '';
+
+      allow update: if isAdmin()
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'reviewedAt', 'reviewedByUid', 'reviewerNotes', 'updatedAt'
+        ])
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.applicantUid == resource.data.applicantUid
+        && request.resource.data.applicantCognitusId == resource.data.applicantCognitusId
+        && request.resource.data.applicantDisplayName == resource.data.applicantDisplayName
+        && request.resource.data.organizationId == resource.data.organizationId
+        && request.resource.data.organizationCognitusId == resource.data.organizationCognitusId
+        && request.resource.data.organizationName == resource.data.organizationName
+        && request.resource.data.positionTitle == resource.data.positionTitle
+        && request.resource.data.reason == resource.data.reason
+        && request.resource.data.status in ['approved', 'denied']
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.reviewedByUid == request.auth.uid
+        && shortString(request.resource.data.reviewerNotes, 1000)
+        && request.resource.data.updatedAt == request.time
+        && get(userPath(resource.data.applicantUid)).data.status == 'active'
+        && get(userPath(resource.data.applicantUid)).data.role == 'user'
+        && (
+          (
+            request.resource.data.status == 'approved'
+            && getAfter(userPath(resource.data.applicantUid)).data.status == 'active'
+            && getAfter(userPath(resource.data.applicantUid)).data.role == 'verified_employer_member'
+            && getAfter(userPath(resource.data.applicantUid)).data.organizationId == resource.data.organizationId
+          )
+          || (
+            request.resource.data.status == 'denied'
+            && getAfter(userPath(resource.data.applicantUid)).data.role == get(userPath(resource.data.applicantUid)).data.role
+            && getAfter(userPath(resource.data.applicantUid)).data.organizationId == get(userPath(resource.data.applicantUid)).data.organizationId
+          )
+        );
+
+      allow delete: if false;
+    }
+
     match /claims/{claimId} {
       allow read: if isReviewer() || (signedIn() && resource.data.submittedByUid == request.auth.uid);
 
