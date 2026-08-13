@@ -15,6 +15,7 @@ const checks = [
   [grants.includes("Granted directly by Cognitus Owner") && grants.includes("Owner-authorized Access"), "Owner grants are visibly labeled to recipients and subjects"],
   [grants.includes("OWNER_REPORT_ACCESS_GRANTED") && grants.includes("OWNER_REPORT_ACCESS_REVOKED"), "Owner grant and revoke actions are audited"],
   [grants.includes("request?.status !== \"approved\"") && grants.includes("approved.delete(ownerMarker(granteeUid))"), "revoking an Owner grant preserves a separately subject-approved grant"],
+  [grants.includes("restoreOwnerGrantAfterRequestDecision") && grants.includes("preserveOwnerAuthorization") && grants.includes("approved.add(request.requesterUid)"), "subject request decisions do not erase a separate Owner-issued grant"],
   [!grants.includes("orderBy("), "Owner grant workflow introduces no ordered/composite query"],
   [!grants.includes("MutationObserver"), "Owner grant workflow remains observer-free"],
   [rules.includes("function hasReportGrant(reportId)") && rules.includes("request.auth.uid in get(reportGrantPath(reportId)).data.approvedUids"), "existing Firestore read rule enforces approved UID grants"],
