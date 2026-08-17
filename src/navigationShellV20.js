@@ -12,6 +12,7 @@ const escapeHtml = (value) => String(value ?? "")
   .replaceAll('"', "&quot;")
   .replaceAll("'", "&#039;");
 const route = () => location.hash.replace(/^#/, "").split("?")[0] || "/";
+const routeHref = (path) => `./#${path}`;
 
 const ICONS = {
   dashboard: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h6v6H4V4Zm10 0h6v6h-6V4ZM4 14h6v6H4v-6Zm10 0h6v6h-6v-6Z"/></svg>',
@@ -58,8 +59,8 @@ function initials(name) {
   return (words.length > 1 ? `${words[0][0]}${words.at(-1)[0]}` : (words[0] || "C").slice(0, 2)).toUpperCase();
 }
 
-function primaryLink(href, label, iconName, extraClass = "") {
-  return `<a class="nav20-primary-link ${extraClass}" href="${href}" data-nav20-route="${href}">${ICONS[iconName]}<span>${escapeHtml(label)}</span></a>`;
+function primaryLink(path, label, iconName, extraClass = "") {
+  return `<a class="nav20-primary-link ${extraClass}" href="${routeHref(path)}" data-nav20-route="${path}">${ICONS[iconName]}<span>${escapeHtml(label)}</span></a>`;
 }
 
 function operationsForRole(role) {
@@ -71,21 +72,21 @@ function operationsForRole(role) {
       eyebrow: "My work",
       title: "Records & workflows",
       items: [
-        ["#/history", "History", "Previous logged checks"],
-        ["#/reports/submit", "Submit Report", "Add information for Cognitus review"],
-        ["#/claims", "Claims", "Identity and record claims"],
-        ["#/appeals", "Appeals", "Challenge or correct reviewed information"],
-        ["#/privacy-center", "Data & Privacy", "Data snapshot, correction and deletion requests"]
+        ["/history", "History", "Previous logged checks"],
+        ["/reports/submit", "Submit Report", "Add information for Cognitus review"],
+        ["/claims", "Claims", "Identity and record claims"],
+        ["/appeals", "Appeals", "Challenge or correct reviewed information"],
+        ["/privacy-center", "Data & Privacy", "Data snapshot, correction and deletion requests"]
       ]
     },
     {
       eyebrow: "Organizations",
       title: "Employer operations",
       items: [
-        ["#/organizations", "Organizations", "Browse and manage organization records"],
-        ["#/organizations?request=1", "New Organization", "Create or request an organization"],
-        ["#/employer-status", "Employer Status", "Request or review employer access"],
-        ...(employer ? [["#/employer/members", "Organization Members", "Members and granular permissions"]] : [])
+        ["/organizations", "Organizations", "Browse and manage organization records"],
+        ["/organizations?request=1", "New Organization", "Create or request an organization"],
+        ["/employer-status", "Employer Status", "Request or review employer access"],
+        ...(employer ? [["/employer/members", "Organization Members", "Members and granular permissions"]] : [])
       ]
     }
   ];
@@ -94,9 +95,9 @@ function operationsForRole(role) {
       eyebrow: "Cognitus staff",
       title: "Review & administration",
       items: [
-        ["#/review", "Review Queue", "Reports, claims and appeals requiring review"],
-        ...(admin ? [["#/admin", "Administration", "Accounts, organizations and platform records"], ["#/audit", "Audit Center", "Search sensitive operational activity"]] : []),
-        ...(owner ? [["#/people-integrity", "People Integrity", "Duplicate detection and canonical merges"], ["#/system-health", "System Health", "Diagnose and repair data integrity"]] : [])
+        ["/review", "Review Queue", "Reports, claims and appeals requiring review"],
+        ...(admin ? [["/admin", "Administration", "Accounts, organizations and platform records"], ["/audit", "Audit Center", "Search sensitive operational activity"]] : []),
+        ...(owner ? [["/people-integrity", "People Integrity", "Duplicate detection and canonical merges"], ["/system-health", "System Health", "Diagnose and repair data integrity"]] : [])
       ]
     });
   }
@@ -108,7 +109,7 @@ function operationsMarkup(role) {
     <section class="nav20-ops-group">
       <div class="nav20-ops-heading"><span>${escapeHtml(group.eyebrow)}</span><strong>${escapeHtml(group.title)}</strong></div>
       <div class="nav20-ops-links">
-        ${group.items.map(([href, label, note]) => `<a href="${href}" data-nav20-operation><span>${escapeHtml(label)}</span><small>${escapeHtml(note)}</small></a>`).join("")}
+        ${group.items.map(([path, label, note]) => `<a href="${routeHref(path)}" data-nav20-operation data-nav20-operation-path="${path.split("?")[0]}"><span>${escapeHtml(label)}</span><small>${escapeHtml(note)}</small></a>`).join("")}
       </div>
     </section>`).join("");
 }
@@ -132,12 +133,12 @@ function buildShell() {
   shell.dataset.signature = signature;
   shell.innerHTML = `
     <div class="nav20-primary" aria-label="Primary workspace navigation">
-      ${primaryLink("#/dashboard", "Dashboard", "dashboard")}
-      ${primaryLink("#/profile", "Profile", "profile")}
-      ${employer ? primaryLink("#/employer", "Employer Hub", "employer", "is-employer") : ""}
-      ${primaryLink("#/search", "Run Check", "search")}
-      ${primaryLink("#/reports", "Reports", "reports")}
-      <a class="nav20-primary-link is-actions" href="#/actions" data-nav20-route="#/actions">${ICONS.actions}<span>Action Center</span>${count ? `<b class="nav20-count">${escapeHtml(count)}</b>` : ""}</a>
+      ${primaryLink("/dashboard", "Dashboard", "dashboard")}
+      ${primaryLink("/profile", "Profile", "profile")}
+      ${employer ? primaryLink("/employer", "Employer Hub", "employer", "is-employer") : ""}
+      ${primaryLink("/search", "Run Check", "search")}
+      ${primaryLink("/reports", "Reports", "reports")}
+      <a class="nav20-primary-link is-actions" href="${routeHref("/actions")}" data-nav20-route="/actions">${ICONS.actions}<span>Action Center</span>${count ? `<b class="nav20-count">${escapeHtml(count)}</b>` : ""}</a>
     </div>
     <div class="nav20-operations">
       <button type="button" class="nav20-operations-button" data-nav20-operations aria-expanded="false" aria-haspopup="true">${ICONS.operations}<span>Operations</span><i aria-hidden="true"></i></button>
@@ -147,7 +148,7 @@ function buildShell() {
       </div>
     </div>
     <span class="nav20-divider" aria-hidden="true"></span>
-    <a class="nav20-icon-button" href="#/settings" data-nav20-settings title="Settings" aria-label="Settings">${ICONS.settings}</a>
+    <a class="nav20-icon-button" href="${routeHref("/settings")}" data-nav20-settings title="Settings" aria-label="Settings">${ICONS.settings}</a>
     <button class="nav20-icon-button is-logout" type="button" data-nav20-logout title="Logout" aria-label="Logout">${ICONS.logout}</button>
     <div class="nav20-account" title="${escapeHtml(name)} · ${escapeHtml(role)}">
       <span class="nav20-avatar">${escapeHtml(initials(name))}</span>
@@ -160,10 +161,10 @@ function updateActiveState(shell = nav?.querySelector(":scope > .nav20-shell")) 
   if (!shell) return;
   const current = route();
   shell.querySelectorAll("[data-nav20-route]").forEach((link) => {
-    const href = link.getAttribute("href")?.replace(/^#/, "").split("?")[0] || "";
-    let active = href === current;
-    if (href === "/employer") active = current.startsWith("/employer") && current !== "/employer-status" && current !== "/employer/members";
-    if (href === "/reports") active = current === "/reports" || current === "/reports/view" || current === "/reports/quick" || current === "/reports/full";
+    const path = link.dataset.nav20Route || "";
+    let active = path === current;
+    if (path === "/employer") active = current.startsWith("/employer") && current !== "/employer-status" && current !== "/employer/members";
+    if (path === "/reports") active = current === "/reports" || current === "/reports/view" || current === "/reports/quick" || current === "/reports/full";
     link.classList.toggle("is-active", active);
     if (active) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
@@ -172,8 +173,7 @@ function updateActiveState(shell = nav?.querySelector(":scope > .nav20-shell")) 
   shell.querySelector("[data-nav20-operations]")?.classList.toggle("is-active", opsRoutes.has(current));
   shell.querySelector("[data-nav20-settings]")?.classList.toggle("is-active", current === "/settings");
   shell.querySelectorAll("[data-nav20-operation]").forEach((link) => {
-    const href = link.getAttribute("href")?.replace(/^#/, "").split("?")[0] || "";
-    link.classList.toggle("is-current", href === current);
+    link.classList.toggle("is-current", link.dataset.nav20OperationPath === current);
   });
 }
 
@@ -249,9 +249,7 @@ nav?.addEventListener("click", (event) => {
     nav.querySelector(":scope > #logout-button")?.click();
     return;
   }
-  if (event.target.closest?.(".nav20-shell a")) {
-    closeMobile();
-  }
+  if (event.target.closest?.(".nav20-shell a")) closeMobile();
 });
 
 topbar?.addEventListener("click", (event) => {
