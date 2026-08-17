@@ -12,7 +12,7 @@ assert(index.includes("navigationMobileV25.js?v=20260817-v25-dedicated-mobile-sh
 assert(js.includes('document.body.appendChild(drawer)'), "mobile drawer is not physically separated from the legacy .topnav DOM");
 assert(js.includes('drawer.hidden = true'), "drawer does not default to a hard hidden state");
 assert(js.includes('drawer.hidden = !safeOpen'), "drawer visibility is not controlled by one authoritative state function");
-assert(js.includes('data.nav25Toggle'), "dedicated mobile toggle is missing");
+assert(js.includes('dataset.nav25Toggle'), "dedicated mobile toggle is missing");
 assert(js.includes('sourceNav?.classList.remove("v4-mobile-open", "nav20-mobile-open")'), "legacy mobile-open states are not cleared");
 assert(js.includes('document.body.classList.remove("nav20-drawer-open")'), "legacy body scroll-lock state is not cleared");
 assert(css.includes('body.nav25-ready .topbar>.topnav{display:none!important}'), "legacy .topnav is not completely removed from mobile layout");
