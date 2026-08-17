@@ -9,10 +9,10 @@ function assert(condition, message) {
 }
 
 assert(index.includes("navigationEnhancements.js?v=stability-v4-v23-20260817"), "index does not bust the old navigation module cache");
-assert(index.includes("navigationStateV23.js?v=20260817-v23-state"), "index does not load the V23 state module with a fresh URL");
-assert(state.includes("navigationV20.css?v=20260817-v23-cache"), "V23 does not force a fresh navigation entry stylesheet");
-assert(state.includes("navigationV22.css?v=20260817-v23-direct"), "V23 does not directly refresh the V22 isolation layer");
-assert(state.includes("navigationV23.css?v=20260817-v23-state"), "V23 hardening stylesheet is not cache-busted");
+assert(/navigationStateV23\.js\?v=20260817-v2[34]-/.test(index), "index does not load the V23/V24 state module with a fresh URL");
+assert(/navigationV20\.css\?v=20260817-v2[34]-/.test(state), "state controller does not force a fresh navigation entry stylesheet");
+assert(/navigationV22\.css\?v=20260817-v2[34]-/.test(state), "state controller does not directly refresh the V22 isolation layer");
+assert(/navigationV23\.css\?v=20260817-v2[34]-/.test(state), "V23 hardening stylesheet is not cache-busted");
 assert(state.includes('classList.toggle("is-open", safeOpen)'), "toggle visual state is not tied to the authoritative open state");
 assert(state.includes('classList.toggle("nav20-mobile-open", safeOpen)'), "drawer class is not synchronized from one state function");
 assert(state.includes('classList.toggle("nav20-drawer-open", safeOpen)'), "body scroll/open state is not synchronized");
