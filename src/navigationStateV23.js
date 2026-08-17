@@ -5,7 +5,7 @@ let userInteracted = false;
 
 function ensureFreshNavigationStyles() {
   const baseLink = document.querySelector("#cognitus-navigation-v20");
-  if (baseLink) baseLink.href = "./src/navigationV20.css?v=20260817-v24-toggle";
+  if (baseLink) baseLink.href = "./src/navigationV20.css?v=20260817-v25-hard-state";
 
   let isolationLink = document.querySelector("#cognitus-navigation-v22-direct");
   if (!isolationLink) {
@@ -14,7 +14,7 @@ function ensureFreshNavigationStyles() {
     isolationLink.rel = "stylesheet";
     document.head.appendChild(isolationLink);
   }
-  isolationLink.href = "./src/navigationV22.css?v=20260817-v24-toggle";
+  isolationLink.href = "./src/navigationV22.css?v=20260817-v25-hard-state";
 
   let stateLink = document.querySelector("#cognitus-navigation-v23");
   if (!stateLink) {
@@ -23,7 +23,16 @@ function ensureFreshNavigationStyles() {
     stateLink.rel = "stylesheet";
     document.head.appendChild(stateLink);
   }
-  stateLink.href = "./src/navigationV23.css?v=20260817-v24-toggle";
+  stateLink.href = "./src/navigationV23.css?v=20260817-v25-hard-state";
+
+  let hardStateLink = document.querySelector("#cognitus-navigation-v25");
+  if (!hardStateLink) {
+    hardStateLink = document.createElement("link");
+    hardStateLink.id = "cognitus-navigation-v25";
+    hardStateLink.rel = "stylesheet";
+    document.head.appendChild(hardStateLink);
+  }
+  hardStateLink.href = "./src/navigationV25.css?v=20260817-v25-hard-state";
 }
 
 function button() {
@@ -34,8 +43,16 @@ function shell() {
   return nav?.querySelector(":scope > .nav20-shell") || null;
 }
 
+function isAuthoritativelyOpen() {
+  return document.body.dataset.nav25Open === "true";
+}
+
 function setMobileOpen(open) {
   const safeOpen = Boolean(open && nav && shell() && button() && window.innerWidth <= MOBILE_BREAKPOINT);
+
+  // V25 owns the only state used for rendering. Older classes remain synchronized
+  // solely for backwards compatibility and cannot independently open the drawer.
+  document.body.dataset.nav25Open = safeOpen ? "true" : "false";
   nav?.classList.remove("v4-mobile-open");
   nav?.classList.toggle("nav20-mobile-open", safeOpen);
   document.body.classList.toggle("nav20-drawer-open", safeOpen);
@@ -73,8 +90,8 @@ ensureFreshNavigationStyles();
 protectBrandContrast();
 setMobileOpen(false);
 
-// V24 owns the mobile toggle at capture phase so legacy V20/V4 handlers cannot
-// toggle the same control a second time. This is the single source of truth.
+// V25 owns the mobile toggle at capture phase. The next state comes from the
+// authoritative body data attribute, never from a legacy class left behind by V4/V20.
 document.addEventListener("click", (event) => {
   const control = event.target.closest?.("[data-nav20-mobile-toggle]");
   if (!control) return;
@@ -85,15 +102,14 @@ document.addEventListener("click", (event) => {
   event.stopImmediatePropagation();
 
   if (window.innerWidth > MOBILE_BREAKPOINT || !shell()) {
-    setMobileOpen(false);
+    closeMobile();
     return;
   }
 
-  const open = !nav?.classList.contains("nav20-mobile-open");
-  setMobileOpen(open);
+  setMobileOpen(!isAuthoritativelyOpen());
 }, true);
 
-// Navigation selections and the brand always close the drawer.
+// Any real navigation action closes the mobile drawer before the route changes.
 document.addEventListener("click", (event) => {
   if (event.target.closest?.(".nav20-shell a, .brand")) closeMobile();
 });
@@ -120,9 +136,9 @@ document.addEventListener("visibilitychange", () => {
   }
 });
 
-// Late passes only repair styles/availability. They may reset an inherited stale
-// open state before the user interacts, but never close a drawer the user opened.
+// Late passes cover authenticated navigation appearing after Firebase resolves.
+// They may clear inherited stale state before user interaction, never a user-opened drawer.
 [0, 180, 650, 1600].forEach((delay) => setTimeout(() => {
   refreshPassiveState();
-  if (!userInteracted && nav?.classList.contains("nav20-mobile-open")) closeMobile();
+  if (!userInteracted && isAuthoritativelyOpen()) closeMobile();
 }, delay));
