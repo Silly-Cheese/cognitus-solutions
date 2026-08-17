@@ -1,0 +1,171 @@
+/* Navigation V22 — hard isolation from legacy mobile navigation */
+body.nav20-authenticated #v4-mobile-nav-toggle,
+body.nav20-authenticated .workspace-nav-shell,
+body.nav20-authenticated .ux-command-backdrop,
+body.nav20-authenticated .topnav > #logout-button,
+body.nav20-authenticated .topnav > .nav-user,
+body.nav20-authenticated .topnav > .nav6-more,
+body.nav20-authenticated .topnav > .nav6-divider,
+body.nav20-authenticated .topnav > a,
+body.nav20-authenticated .topnav > button:not(.nav20-shell *) {
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+
+/* Win against V6's body.v4-mobile-nav-ready mobile display rules. */
+body.nav20-authenticated.v4-mobile-nav-ready .topnav,
+body.nav20-authenticated.v4-mobile-nav-ready .topnav.v4-mobile-open {
+  display:flex!important;
+  background:transparent!important;
+  border:0!important;
+  box-shadow:none!important;
+  padding:0!important;
+}
+body.nav20-authenticated.v4-mobile-nav-ready .topnav > :not(.nav20-shell) {
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+
+/* The V22 shell owns its colors; legacy nav themes cannot bleed through. */
+body.nav20-authenticated .nav20-shell {
+  color:#171717!important;
+}
+body.nav20-authenticated .nav20-shell .nav20-primary-link,
+body.nav20-authenticated .nav20-shell .nav20-operations-button,
+body.nav20-authenticated .nav20-shell .nav20-icon-button,
+body.nav20-authenticated .nav20-shell .nav20-ops-links a {
+  color:#171717!important;
+}
+body.nav20-authenticated .nav20-shell .nav20-primary-link svg,
+body.nav20-authenticated .nav20-shell .nav20-operations-button svg,
+body.nav20-authenticated .nav20-shell .nav20-icon-button svg {
+  fill:currentColor!important;
+}
+body.nav20-authenticated .nav20-shell .nav20-primary-link.is-employer {
+  color:#553ca0!important;
+}
+body.nav20-authenticated .nav20-shell .nav20-primary-link.is-active {
+  color:#111!important;
+  background:#fff!important;
+}
+body.nav20-authenticated .nav20-shell .nav20-primary-link.is-employer.is-active {
+  color:#4e3a91!important;
+  background:#f7f4ff!important;
+}
+body.nav20-authenticated .nav20-shell .nav20-operations.is-open .nav20-operations-button,
+body.nav20-authenticated .nav20-shell .nav20-operations-button.is-active {
+  color:#fff!important;
+  background:#111!important;
+}
+body.nav20-authenticated .nav20-shell .nav20-icon-button.is-active {
+  color:#fff!important;
+  background:#111!important;
+}
+body.nav20-authenticated .nav20-shell .nav20-icon-button.is-logout {
+  color:#8d2424!important;
+}
+
+@media(max-width:1180px){
+  body.nav20-authenticated .topbar {
+    grid-template-columns:none!important;
+  }
+  body.nav20-authenticated .topnav {
+    display:block!important;
+    flex:0 0 0!important;
+    width:0!important;
+    min-width:0!important;
+    max-width:0!important;
+    padding:0!important;
+    margin:0!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+  }
+  body.nav20-authenticated .nav20-mobile-toggle {
+    display:inline-flex!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+    color:#111!important;
+    background:#fff!important;
+    border:1px solid #d9d9d5!important;
+  }
+  body.nav20-authenticated .nav20-shell {
+    color:#171717!important;
+    background:#f8f8f6!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-primary {
+    background:#ededeb!important;
+    border-color:#deded9!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-primary-link,
+  body.nav20-authenticated .nav20-shell .nav20-operations-button,
+  body.nav20-authenticated .nav20-shell .nav20-icon-button {
+    color:#171717!important;
+    background:#fff!important;
+    border-color:#dfdfda!important;
+    opacity:1!important;
+    visibility:visible!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-primary-link.is-active {
+    color:#111!important;
+    background:#fff!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-primary-link.is-employer {
+    color:#553ca0!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-primary-link.is-employer.is-active {
+    color:#4e3a91!important;
+    background:#f7f4ff!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-operations.is-open .nav20-operations-button,
+  body.nav20-authenticated .nav20-shell .nav20-operations-button.is-active {
+    color:#fff!important;
+    background:#111!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-ops-links a {
+    color:#171717!important;
+    background:transparent!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-ops-links a:hover,
+  body.nav20-authenticated .nav20-shell .nav20-ops-links a.is-current {
+    color:#111!important;
+    background:#fff!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-ops-links a small {
+    color:#6f6f69!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-account {
+    color:#fff!important;
+    background:#111!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-account-copy strong {
+    color:#fff!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-account-copy small {
+    color:rgba(255,255,255,.62)!important;
+  }
+  body.nav20-authenticated.nav20-drawer-open {
+    overflow:hidden!important;
+    touch-action:none;
+  }
+}
+
+@media(max-width:620px){
+  body.nav20-authenticated .nav20-shell {
+    padding:.75rem .7rem max(1rem,env(safe-area-inset-bottom))!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-account {
+    min-height:62px!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-primary {
+    grid-template-columns:1fr!important;
+    gap:.38rem!important;
+  }
+  body.nav20-authenticated .nav20-shell .nav20-primary-link,
+  body.nav20-authenticated .nav20-shell .nav20-primary-link.is-actions {
+    min-height:50px!important;
+    font-size:.88rem!important;
+  }
+}
