@@ -39,6 +39,10 @@ jobs:
           node --check src/reportAccessV8.js
           node --check src/ownerReportGrantsV9.js
           node --check src/employerStatusV10.js
+          node --check src/employerWorkspaceV11.js
+          node --check src/employerHubFixV12.js
+          node --check src/interfacePolishV13.js
+          node --check src/comprehensiveReportV15.js
 
       - name: Run Profile V5 regression checks
         run: node scripts/validate.mjs
@@ -60,6 +64,9 @@ jobs:
 
       - name: Run Employer Status V10 checks
         run: node scripts/validate-employer-status-v10.mjs
+
+      - name: Run comprehensive report V15 checks
+        run: node scripts/validate-comprehensive-report-v15.mjs
 
       - name: Compile Firestore rules in emulator
         run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus "echo Firestore rules compiled"
