@@ -45,8 +45,12 @@ for (const helper of ["canRunChecks", "canManageTalent", "canAddEmploymentRecord
 assert(core.includes("PROFILE_MERGED"), "profile merges must be audited");
 assert(core.includes("mergedIntoProfileId"), "profile merge must preserve source provenance");
 assert(core.includes("profileMergeMap"), "profile merge must create canonical merge mapping");
-assert(!/mergeExecute[\s\S]*?professionalStanding\s*:/.test(core), "merge execution must not overwrite Professional Standing");
-assert(!/mergeExecute[\s\S]*?riskLevel\s*:/.test(core), "merge execution must not overwrite Risk Level");
+const mergeStart = core.indexOf("async function mergeExecute()");
+const mergeEnd = core.indexOf("async function integrityPage()", mergeStart);
+assert(mergeStart >= 0 && mergeEnd > mergeStart, "merge execution function could not be isolated");
+const mergeBody = core.slice(mergeStart, mergeEnd);
+assert(!/professionalStanding\s*:/.test(mergeBody), "merge execution must not overwrite Professional Standing");
+assert(!/riskLevel\s*:/.test(mergeBody), "merge execution must not overwrite Risk Level");
 
 assert(core.includes("Action Center"), "Action Center is missing");
 assert(core.includes("Audit Center"), "Audit Center is missing");
@@ -59,7 +63,7 @@ assert(core.includes("private candidate notes") || core.includes("private employ
 
 assert(core.includes('Fire.where("createdAt",">="'), "Audit date search must remain a simple indexed range query");
 assert(core.includes("Fire.limit(500)"), "Audit Center must bound result volume");
-assert(!core.includes("readAll(\"auditLogs\")"), "Audit Center must not load the entire audit log by default");
+assert(!core.includes('all("auditLogs")'), "Audit Center must not load the entire audit log by default");
 
 assert(css.includes(".f19-ops-menu"), "Foundation operations navigation styling is missing");
 assert(css.includes("@media(max-width:720px)"), "Foundation mobile styling is missing");
