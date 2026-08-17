@@ -40,3 +40,5 @@ for (const [ok, message] of checks) {
 if (syntax.status !== 0 && syntax.stderr) console.error(syntax.stderr);
 if (failed) process.exit(1);
 console.log("\nEmployer Workspace V11 validation passed.");
+
+await import("./validate-employer-hub-v12.mjs");
