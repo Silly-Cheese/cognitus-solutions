@@ -1,0 +1,135 @@
+/* Navigation V25: a dedicated mobile shell outside the legacy .topnav DOM. */
+.nav25-toggle{display:none}
+.nav25-drawer[hidden]{display:none!important}
+
+@media(max-width:1180px){
+  body.nav25-ready .topbar{
+    position:sticky!important;
+    top:0!important;
+    z-index:1200!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    min-height:64px!important;
+    padding:.62rem .85rem!important;
+    gap:.7rem!important;
+    background:#fafaf9!important;
+    color:#111!important;
+    border-bottom:1px solid #e1e1dc!important;
+    box-shadow:0 8px 24px rgba(15,23,42,.05)!important;
+  }
+  body.nav25-ready .topbar .brand{
+    display:flex!important;
+    align-items:center!important;
+    flex:1 1 auto!important;
+    min-width:0!important;
+    margin:0!important;
+    color:#111!important;
+  }
+  body.nav25-ready .topbar .brand strong{color:#111!important;opacity:1!important;text-shadow:none!important}
+  body.nav25-ready .topbar .brand small{color:#70706b!important;opacity:1!important;text-shadow:none!important}
+  body.nav25-ready .topbar .brand .brand-mark{color:#fff!important;flex:0 0 auto!important}
+
+  /* The complete legacy nav is a hidden data source on mobile. */
+  body.nav25-ready .topbar>.topnav{display:none!important}
+  body.nav25-ready #v4-mobile-nav-toggle,
+  body.nav25-ready [data-nav20-mobile-toggle]{display:none!important}
+
+  body.nav25-ready .nav25-toggle{
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    flex:0 0 48px!important;
+    width:48px!important;
+    height:48px!important;
+    min-width:48px!important;
+    padding:0!important;
+    margin:0!important;
+    border:1px solid #d7d7d2!important;
+    border-radius:15px!important;
+    background:#fff!important;
+    color:#111!important;
+    box-shadow:0 5px 16px rgba(15,23,42,.055)!important;
+    position:relative!important;
+    z-index:1220!important;
+  }
+  .nav25-toggle-label{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+  .nav25-bars{display:grid;gap:4px;width:21px}
+  .nav25-bars i{display:block;width:21px;height:2.5px;border-radius:999px;background:currentColor;transform-origin:center;transition:transform .14s ease,opacity .14s ease}
+  .nav25-toggle.is-open .nav25-bars i:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+  .nav25-toggle.is-open .nav25-bars i:nth-child(2){opacity:0}
+  .nav25-toggle.is-open .nav25-bars i:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+
+  body.nav25-open{overflow:hidden!important;overscroll-behavior:none!important}
+  body.nav25-ready .nav25-drawer{
+    position:fixed!important;
+    inset:var(--nav25-header-height,64px) 0 0 0!important;
+    z-index:1150!important;
+    display:block!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain!important;
+    padding:1rem clamp(.75rem,3vw,1.15rem) max(1.2rem,env(safe-area-inset-bottom))!important;
+    background:#f4f4f1!important;
+    color:#111!important;
+    border-top:1px solid #deded9!important;
+    box-shadow:none!important;
+  }
+  .nav25-drawer *{box-sizing:border-box}
+  .nav25-account{
+    display:flex;align-items:center;gap:.75rem;
+    padding:.78rem;border-radius:18px;background:#111;color:#fff;
+    box-shadow:0 12px 30px rgba(15,23,42,.14)
+  }
+  .nav25-avatar{display:grid;place-items:center;width:44px;height:44px;min-width:44px;border-radius:13px;background:#fff;color:#111;font-size:.78rem;font-weight:950}
+  .nav25-account>span:last-child{display:grid;gap:.08rem;min-width:0}
+  .nav25-account strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.92rem;letter-spacing:-.02em}
+  .nav25-account small{color:rgba(255,255,255,.62);font-size:.68rem;font-weight:800;text-transform:capitalize}
+
+  .nav25-primary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;margin-top:.72rem}
+  .nav25-primary-link{
+    display:flex!important;align-items:center!important;gap:.68rem!important;min-width:0!important;min-height:72px!important;
+    padding:.78rem!important;border:1px solid #e0e0db!important;border-radius:16px!important;background:#fff!important;color:#171717!important;
+    box-shadow:0 5px 16px rgba(15,23,42,.035)!important;text-decoration:none!important
+  }
+  .nav25-primary-link.is-active{border-color:#bdbdb8!important;box-shadow:0 8px 20px rgba(15,23,42,.07)!important}
+  .nav25-primary-link.is-employer{background:#f8f5ff!important;color:#4e3a91!important;border-color:#ddd5f3!important}
+  .nav25-primary-icon{display:grid;place-items:center;width:34px;height:34px;min-width:34px;border-radius:10px;background:#f0f0ed;color:#111;font-size:.95rem;font-weight:950}
+  .nav25-primary-link.is-employer .nav25-primary-icon{background:#ede7ff;color:#4e3a91}
+  .nav25-primary-link>span:nth-child(2){display:grid;gap:.12rem;min-width:0}
+  .nav25-primary-link strong{font-size:.84rem;letter-spacing:-.015em}
+  .nav25-primary-link small{color:#777771;font-size:.64rem;line-height:1.35;font-weight:700}
+  .nav25-count{margin-left:auto;display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#111;color:#fff;font-size:.62rem}
+
+  .nav25-directory{margin-top:.75rem;padding:.75rem;border:1px solid #dfdfda;border-radius:20px;background:#fff}
+  .nav25-directory-title{display:grid;gap:.12rem;padding:.18rem .2rem .68rem;border-bottom:1px solid #ecece8}
+  .nav25-directory-title span{color:#85857f;font-size:.62rem;font-weight:950;letter-spacing:.14em;text-transform:uppercase}
+  .nav25-directory-title strong{font-size:1rem;letter-spacing:-.025em}
+  .nav25-group{padding:.72rem 0 0}
+  .nav25-group+.nav25-group{margin-top:.62rem;border-top:1px solid #ecece8}
+  .nav25-group>p{margin:0 0 .45rem;color:#85857f;font-size:.62rem;font-weight:950;letter-spacing:.13em;text-transform:uppercase}
+  .nav25-group-links{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.36rem}
+  .nav25-group-links a{display:grid!important;gap:.08rem!important;padding:.68rem!important;border-radius:13px!important;background:#f7f7f5!important;color:#171717!important;text-decoration:none!important;border:1px solid transparent!important}
+  .nav25-group-links a.is-active{background:#fff!important;border-color:#d0d0cb!important;box-shadow:0 4px 12px rgba(15,23,42,.045)!important}
+  .nav25-group-links strong{font-size:.78rem}
+  .nav25-group-links small{color:#7b7b75;font-size:.63rem;line-height:1.35;font-weight:700}
+
+  .nav25-utilities{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:.72rem}
+  .nav25-utility{display:flex!important;align-items:center!important;justify-content:center!important;min-height:48px!important;padding:.7rem .85rem!important;border:1px solid #dcdcd7!important;border-radius:14px!important;background:#fff!important;color:#111!important;font-size:.82rem!important;font-weight:900!important;text-decoration:none!important}
+  .nav25-utility.is-active{background:#111!important;color:#fff!important;border-color:#111!important}
+  .nav25-utility.is-logout{background:#fff7f7!important;color:#912626!important;border-color:#ead0d0!important}
+}
+
+@media(max-width:620px){
+  body.nav25-ready .topbar{min-height:61px!important;padding:.55rem .65rem!important}
+  body.nav25-ready .topbar .brand{gap:.55rem!important}
+  body.nav25-ready .topbar .brand-mark{width:42px!important;height:42px!important;min-width:42px!important;border-radius:13px!important}
+  body.nav25-ready .topbar .brand strong{font-size:.9rem!important}
+  body.nav25-ready .topbar .brand small{display:none!important}
+  body.nav25-ready .nav25-toggle{width:44px!important;height:44px!important;min-width:44px!important;border-radius:14px!important}
+  body.nav25-ready .nav25-drawer{padding:.72rem .62rem max(1rem,env(safe-area-inset-bottom))!important}
+  .nav25-primary{grid-template-columns:1fr}
+  .nav25-primary-link{min-height:62px!important}
+  .nav25-group-links{grid-template-columns:1fr}
+  .nav25-utilities{grid-template-columns:1fr}
+}
