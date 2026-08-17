@@ -12,6 +12,7 @@ node_modules/
 dist/
 build/
 .cache/
+firestore.v19.rules
 
 # Environment files
 .env

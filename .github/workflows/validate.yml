@@ -44,6 +44,9 @@ jobs:
           node --check src/interfacePolishV13.js
           node --check src/comprehensiveReportV15.js
           node --check src/employerPeopleSearchV18.js
+          node --check src/foundationCoreV19.js
+          node --check scripts/build-firestore-v19.mjs
+          node --check scripts/validate-foundation-v19.mjs
 
       - name: Run Profile V5 regression checks
         run: node scripts/validate.mjs
@@ -78,5 +81,11 @@ jobs:
       - name: Run Employer People Search V18 checks
         run: node scripts/validate-employer-people-search-v18.mjs
 
-      - name: Compile Firestore rules in emulator
-        run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus "echo Firestore rules compiled"
+      - name: Run Foundation V19 checks
+        run: node scripts/validate-foundation-v19.mjs
+
+      - name: Build Foundation V19 Firestore rules
+        run: node scripts/build-firestore-v19.mjs
+
+      - name: Compile Foundation V19 Firestore rules in emulator
+        run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus --config firebase.v19.json "echo Foundation V19 Firestore rules compiled"
