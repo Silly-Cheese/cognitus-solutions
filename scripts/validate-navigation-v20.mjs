@@ -31,12 +31,22 @@ assert(!shell.includes('href="#/settings" data-nav20-settings'), "V20 Settings l
 assert(!shell.includes("MutationObserver"), "Navigation V20 must remain MutationObserver-free");
 assert(!shell.includes("setInterval("), "Navigation V20 must not use persistent polling");
 assert(shell.includes("[0, 180, 620, 1500, 2600]"), "Navigation V20 recovery schedule must stay bounded");
+assert(shell.includes("const MOBILE_BREAKPOINT = 1180"), "responsive shell must use the protected laptop/mobile breakpoint");
+assert(shell.includes('aria-controls", "cognitus-nav20-shell"'), "mobile control must target the actual V20 shell");
+assert(shell.includes("data-nav20-operation-key"), "Operations active state must preserve query-specific routes");
+assert(shell.includes("20260816-v21-responsive"), "responsive hotfix must use a fresh navigation stylesheet cache key");
 assert(css.includes(".nav20-shell"), "V20 shell styling is missing");
 assert(css.includes(".nav20-operations-panel"), "Operations panel styling is missing");
 assert(css.includes(".nav20-account"), "account identity treatment is missing");
 assert(css.includes(".nav20-authenticated .topnav>:not(.nav20-shell)"), "legacy navigation nodes are not visually isolated");
-assert(css.includes("@media(max-width:980px)"), "tablet/mobile navigation layout is missing");
+assert(css.includes("@media(max-width:1540px)"), "desktop compaction must happen before the header can overlap");
+assert(css.includes("@media(max-width:1180px)"), "laptop/tablet app-menu breakpoint is missing");
+assert(css.includes("position:fixed;inset:64px 0 0 0"), "mobile navigation must use a full-width fixed app drawer");
+assert(css.includes("body:has(.topnav.nav20-mobile-open){overflow:hidden}"), "mobile drawer must prevent background page scrolling");
+assert(css.includes("overscroll-behavior:contain"), "mobile and Operations scrolling must stay contained");
+assert(css.includes("@media(max-width:980px)"), "tablet navigation refinement is missing");
 assert(css.includes("@media(max-width:620px)"), "phone navigation layout is missing");
+assert(css.includes("@media(max-width:390px)"), "narrow-phone overflow protection is missing");
 assert(!fs.existsSync("firestore.indexes.json"), "manual/composite Firestore index file must not exist");
 
-console.log("Navigation V20 regression checks passed.");
+console.log("Navigation V20/V21 responsive regression checks passed.");
