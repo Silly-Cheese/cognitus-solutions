@@ -121,6 +121,15 @@ function ownerChooser(organizations) {
   </section>`;
 }
 
+async function selectOwnerOrganization(org) {
+  if (!org) return;
+  const repaired = await repairAssignment(org, "owner_selection");
+  if (!repaired) {
+    location.hash = `#/employer?org=${encodeURIComponent(org.id)}`;
+    location.reload();
+  }
+}
+
 async function showOwnerChooser() {
   if (!root || userDoc?.role !== "owner" || route() !== "/employer") return;
   const existingGate = root.querySelector(".emp11-gate");
@@ -133,12 +142,28 @@ async function showOwnerChooser() {
       if (!org) return;
       button.disabled = true;
       button.textContent = "Opening…";
-      const repaired = await repairAssignment(org, "owner_selection");
-      if (!repaired) {
-        location.hash = `#/employer?org=${encodeURIComponent(org.id)}`;
-        location.reload();
-      }
+      await selectOwnerOrganization(org);
     });
+  });
+}
+
+async function enhanceOwnerSwitcher(currentOrg) {
+  if (!root || userDoc?.role !== "owner" || route() !== "/employer") return;
+  const aside = root.querySelector(".emp11-workspace-hero aside");
+  if (!aside || aside.querySelector("[data-emp12-owner-switcher]")) return;
+  const organizations = (await readAll("organizations").catch(() => []))
+    .filter((org) => org.verificationStatus === "verified")
+    .sort((a, b) => clean(a.name).localeCompare(clean(b.name), undefined, { sensitivity: "base" }));
+  if (!organizations.length) return;
+  const wrap = document.createElement("label");
+  wrap.className = "emp12-owner-switcher";
+  wrap.dataset.emp12OwnerSwitcher = "true";
+  wrap.innerHTML = `<span>Owner workspace</span><select aria-label="Switch Employer Hub organization">${organizations.map((org) => `<option value="${escapeHtml(org.id)}" ${org.id === currentOrg?.id ? "selected" : ""}>${escapeHtml(org.name || org.cognitusId || "Organization")}</option>`).join("")}</select>`;
+  aside.appendChild(wrap);
+  wrap.querySelector("select")?.addEventListener("change", async (event) => {
+    const org = organizations.find((item) => item.id === event.currentTarget.value);
+    event.currentTarget.disabled = true;
+    await selectOwnerOrganization(org);
   });
 }
 
@@ -154,7 +179,10 @@ async function reconcileEmployerHub() {
 
   if (!org && userDoc.role === "owner") {
     await showOwnerChooser();
+    return;
   }
+
+  if (org && userDoc.role === "owner") await enhanceOwnerSwitcher(org);
 }
 
 function mountStyles() {
@@ -162,7 +190,7 @@ function mountStyles() {
   const link = document.createElement("link");
   link.id = "cognitus-employer-hub-fix-v12";
   link.rel = "stylesheet";
-  link.href = "./src/employerHubFixV12.css?v=20260816-1";
+  link.href = "./src/employerHubFixV12.css?v=20260816-2";
   document.head.appendChild(link);
 }
 
