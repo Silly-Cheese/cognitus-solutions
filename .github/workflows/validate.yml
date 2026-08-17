@@ -43,6 +43,7 @@ jobs:
           node --check src/employerHubFixV12.js
           node --check src/interfacePolishV13.js
           node --check src/comprehensiveReportV15.js
+          node --check src/employerPeopleSearchV18.js
 
       - name: Run Profile V5 regression checks
         run: node scripts/validate.mjs
@@ -73,6 +74,9 @@ jobs:
 
       - name: Run Employer Hub Recognition V17 checks
         run: node scripts/validate-employer-recognition-v17.mjs
+
+      - name: Run Employer People Search V18 checks
+        run: node scripts/validate-employer-people-search-v18.mjs
 
       - name: Compile Firestore rules in emulator
         run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus "echo Firestore rules compiled"
