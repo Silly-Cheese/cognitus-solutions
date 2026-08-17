@@ -24,8 +24,10 @@ assert(shell.includes("data-nav20-mobile-toggle"), "mobile menu control is missi
 assert(shell.includes("aria-expanded"), "menu accessibility state is missing");
 assert(shell.includes("routeHref"), "V20 links do not use the isolated route helper");
 assert(shell.includes('`./#${path}`'), "V20 links are not isolated from the legacy #/ link mover");
-assert(!shell.includes('href="#/dashboard"'), "V20 dashboard link can be captured by legacy navigation");
-assert(!shell.includes('href="#/actions"'), "V20 Action Center link can be captured by legacy navigation");
+assert(shell.includes('matches?.(\'a[href="#/dashboard"]\')'), "V20 must retain a source-only compatibility check for authentication");
+assert(!shell.includes('primaryLink("#/'), "V20 primary links can be captured by legacy navigation");
+assert(!shell.includes('href="#/actions" data-nav20-route'), "V20 Action Center link can be captured by legacy navigation");
+assert(!shell.includes('href="#/settings" data-nav20-settings'), "V20 Settings link can be captured by legacy navigation");
 assert(!shell.includes("MutationObserver"), "Navigation V20 must remain MutationObserver-free");
 assert(!shell.includes("setInterval("), "Navigation V20 must not use persistent polling");
 assert(shell.includes("[0, 180, 620, 1500, 2600]"), "Navigation V20 recovery schedule must stay bounded");
