@@ -1,10 +1,11 @@
 const nav = document.querySelector(".topnav");
 const topbar = document.querySelector(".topbar");
 const MOBILE_BREAKPOINT = 1180;
+let userInteracted = false;
 
 function ensureFreshNavigationStyles() {
   const baseLink = document.querySelector("#cognitus-navigation-v20");
-  if (baseLink) baseLink.href = "./src/navigationV20.css?v=20260817-v23-cache";
+  if (baseLink) baseLink.href = "./src/navigationV20.css?v=20260817-v24-toggle";
 
   let isolationLink = document.querySelector("#cognitus-navigation-v22-direct");
   if (!isolationLink) {
@@ -13,7 +14,7 @@ function ensureFreshNavigationStyles() {
     isolationLink.rel = "stylesheet";
     document.head.appendChild(isolationLink);
   }
-  isolationLink.href = "./src/navigationV22.css?v=20260817-v23-direct";
+  isolationLink.href = "./src/navigationV22.css?v=20260817-v24-toggle";
 
   let stateLink = document.querySelector("#cognitus-navigation-v23");
   if (!stateLink) {
@@ -22,7 +23,7 @@ function ensureFreshNavigationStyles() {
     stateLink.rel = "stylesheet";
     document.head.appendChild(stateLink);
   }
-  stateLink.href = "./src/navigationV23.css?v=20260817-v23-state";
+  stateLink.href = "./src/navigationV23.css?v=20260817-v24-toggle";
 }
 
 function button() {
@@ -34,7 +35,8 @@ function shell() {
 }
 
 function setMobileOpen(open) {
-  const safeOpen = Boolean(open && nav && shell() && window.innerWidth <= MOBILE_BREAKPOINT);
+  const safeOpen = Boolean(open && nav && shell() && button() && window.innerWidth <= MOBILE_BREAKPOINT);
+  nav?.classList.remove("v4-mobile-open");
   nav?.classList.toggle("nav20-mobile-open", safeOpen);
   document.body.classList.toggle("nav20-drawer-open", safeOpen);
 
@@ -57,59 +59,70 @@ function protectBrandContrast() {
   brand.querySelector(".brand-mark")?.style.setProperty("color", "#fff", "important");
 }
 
-function normalizeState({ close = false } = {}) {
+function refreshPassiveState() {
   ensureFreshNavigationStyles();
   protectBrandContrast();
+  if (window.innerWidth > MOBILE_BREAKPOINT || !shell() || !button()) setMobileOpen(false);
+}
 
-  if (close || window.innerWidth > MOBILE_BREAKPOINT || !shell() || !button()) {
-    setMobileOpen(false);
-    return;
-  }
-
-  const intendedOpen = nav?.classList.contains("nav20-mobile-open") === true;
-  if (!intendedOpen) {
-    setMobileOpen(false);
-    return;
-  }
-
-  requestAnimationFrame(() => {
-    const currentShell = shell();
-    if (!currentShell) {
-      setMobileOpen(false);
-      return;
-    }
-    const style = getComputedStyle(currentShell);
-    const rendered = style.display !== "none" && style.visibility !== "hidden" && Number.parseFloat(style.opacity || "1") > 0;
-    setMobileOpen(rendered);
-  });
+function closeMobile() {
+  setMobileOpen(false);
 }
 
 ensureFreshNavigationStyles();
 protectBrandContrast();
 setMobileOpen(false);
 
-// V20 owns the actual toggle action. V23 normalizes the resulting state after it runs.
+// V24 owns the mobile toggle at capture phase so legacy V20/V4 handlers cannot
+// toggle the same control a second time. This is the single source of truth.
 document.addEventListener("click", (event) => {
-  if (event.target.closest?.("[data-nav20-mobile-toggle]")) {
-    queueMicrotask(() => normalizeState());
+  const control = event.target.closest?.("[data-nav20-mobile-toggle]");
+  if (!control) return;
+
+  userInteracted = true;
+  event.preventDefault();
+  event.stopPropagation();
+  event.stopImmediatePropagation();
+
+  if (window.innerWidth > MOBILE_BREAKPOINT || !shell()) {
+    setMobileOpen(false);
     return;
   }
-  if (event.target.closest?.(".nav20-shell a, .brand")) setMobileOpen(false);
+
+  const open = !nav?.classList.contains("nav20-mobile-open");
+  setMobileOpen(open);
+}, true);
+
+// Navigation selections and the brand always close the drawer.
+document.addEventListener("click", (event) => {
+  if (event.target.closest?.(".nav20-shell a, .brand")) closeMobile();
 });
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Escape") setMobileOpen(false);
+  if (event.key === "Escape") closeMobile();
 });
 
-window.addEventListener("hashchange", () => normalizeState({ close: true }));
-window.addEventListener("pageshow", () => normalizeState({ close: true }));
+window.addEventListener("hashchange", closeMobile);
+window.addEventListener("pageshow", () => {
+  userInteracted = false;
+  closeMobile();
+  refreshPassiveState();
+});
 window.addEventListener("resize", () => {
-  if (window.innerWidth > MOBILE_BREAKPOINT) setMobileOpen(false);
-  else normalizeState();
+  if (window.innerWidth > MOBILE_BREAKPOINT) closeMobile();
+  else refreshPassiveState();
 });
 document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) normalizeState({ close: true });
+  if (!document.hidden) {
+    userInteracted = false;
+    closeMobile();
+    refreshPassiveState();
+  }
 });
 
-// Late passes cover authenticated navigation being rebuilt after Firebase resolves.
-[0, 180, 650, 1600].forEach((delay) => setTimeout(() => normalizeState({ close: true }), delay));
+// Late passes only repair styles/availability. They may reset an inherited stale
+// open state before the user interacts, but never close a drawer the user opened.
+[0, 180, 650, 1600].forEach((delay) => setTimeout(() => {
+  refreshPassiveState();
+  if (!userInteracted && nav?.classList.contains("nav20-mobile-open")) closeMobile();
+}, delay));
