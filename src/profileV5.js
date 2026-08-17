@@ -10,6 +10,7 @@ let cache = null;
 let cacheAt = 0;
 let cachePromise = null;
 let timers = [];
+let enhanceInFlight = null;
 
 const route = () => location.hash.replace(/^#/, "").split("?")[0] || "/";
 const hashParams = () => new URLSearchParams(location.hash.split("?")[1] || "");
@@ -132,9 +133,10 @@ function appealRow(appeal) {
 
 async function renderProfilePage() {
   if (route() !== "/profile" || !authUser || !root) return;
+  if (root.querySelector("[data-v5-profile-page]")) return;
   const data = await loadOwnProfileData();
   if (!data?.user || !data?.profile) {
-    root.innerHTML = `<section class="hero hero-wide"><p class="eyebrow">Profile</p><h1>Your profile is unavailable.</h1><p>Cognitus could not load the profile record attached to this account.</p></section>`;
+    root.innerHTML = `<section class="hero hero-wide" data-v5-profile-page><p class="eyebrow">Profile</p><h1>Your profile is unavailable.</h1><p>Cognitus could not load the profile record attached to this account.</p></section>`;
     return;
   }
 
@@ -145,7 +147,7 @@ async function renderProfilePage() {
   document.title = `Profile · Cognitus Solutions`;
 
   root.innerHTML = `
-    <section class="v5-profile-hero">
+    <section class="v5-profile-hero" data-v5-profile-page>
       <div class="v5-profile-primary">
         <p class="eyebrow">My Profile</p>
         <div class="v5-profile-title-row">
@@ -283,9 +285,16 @@ async function enhance() {
   }
 }
 
-function schedule() {
+function runEnhance() {
+  if (enhanceInFlight) return enhanceInFlight;
+  enhanceInFlight = Promise.resolve(enhance()).finally(() => { enhanceInFlight = null; });
+  return enhanceInFlight;
+}
+
+function schedule(force = false) {
+  if (force) root?.querySelector("[data-v5-profile-page]")?.removeAttribute("data-v5-profile-page");
   timers.forEach((timer) => clearTimeout(timer));
-  timers = [0, 120, 360, 800, 1400].map((delay) => setTimeout(enhance, delay));
+  timers = [0, 260, 900].map((delay) => setTimeout(runEnhance, delay));
 }
 
 async function initialize() {
@@ -301,13 +310,13 @@ async function initialize() {
   Auth.onAuthStateChanged(auth, (user) => {
     authUser = user;
     clearCache();
-    schedule();
+    schedule(true);
   });
   window.addEventListener("hashchange", schedule);
   window.addEventListener("pageshow", schedule);
   window.addEventListener("cognitus:profile-updated", () => {
     clearCache();
-    schedule();
+    schedule(true);
   });
   schedule();
 }
