@@ -1,4 +1,5 @@
 import "./foundationCoreV19.js";
+import "./navigationShellV20.js";
 import { FIREBASE_CDN_BASE, initializeFirebaseServices } from "./firebase/firebaseApp.js";
 
 let db = null;
