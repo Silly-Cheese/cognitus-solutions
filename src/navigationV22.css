@@ -1,0 +1,49 @@
+/* V22: keep legacy navigation as a hidden data source and prevent its mobile CSS from leaking into the visible shell. */
+body.nav20-authenticated #v4-mobile-nav-toggle,
+body.nav20-authenticated .topnav>#logout-button,
+body.nav20-authenticated .topnav>.nav-user,
+body.nav20-authenticated .topnav>a,
+body.nav20-authenticated .topnav>button,
+body.nav20-authenticated .topnav>.nav6-more,
+body.nav20-authenticated .topnav>.nav6-divider,
+body.nav20-authenticated .topnav>[data-f19-actions],
+body.nav20-authenticated .topnav>[data-f19-ops],
+body.nav20-authenticated .topnav>[data-emp11-nav]{display:none!important}
+body.nav20-authenticated .topnav>.nav20-shell{display:flex!important}
+body.nav20-drawer-open{overflow:hidden!important;overscroll-behavior:none}
+
+@media(max-width:1180px){
+ body.nav20-authenticated .topbar{position:sticky!important;top:0!important;z-index:400!important;display:flex!important;grid-template-columns:none!important;align-items:center!important;min-height:64px!important;gap:.65rem!important;padding:.62rem .85rem!important;background:#fafaf9!important;border-bottom:1px solid #e3e3df!important}
+ body.nav20-authenticated .brand{order:1!important;display:flex!important;align-items:center!important;flex:1 1 auto!important;min-width:0!important;margin:0!important;color:#111!important}
+ body.nav20-authenticated .brand strong{color:#111!important}
+ body.nav20-authenticated .brand small{color:#74746f!important}
+ body.nav20-authenticated .nav20-mobile-toggle{order:2!important;display:inline-flex!important;position:relative!important;z-index:420!important;flex:0 0 auto!important;margin:0!important;color:#111!important;background:#fff!important;border:1px solid #d8d8d3!important}
+ body.nav20-authenticated.v4-mobile-nav-ready .topnav,
+ body.nav20-authenticated .topnav,
+ body.nav20-authenticated .topnav.v4-mobile-open,
+ body.nav20-authenticated .topnav.nav20-mobile-open{order:3!important;position:static!important;display:flex!important;grid-column:auto!important;grid-template-columns:none!important;flex:0 0 0!important;width:0!important;min-width:0!important;max-width:0!important;height:0!important;margin:0!important;padding:0!important;gap:0!important;overflow:visible!important;border:0!important;background:transparent!important}
+ body.nav20-authenticated .topnav>.nav20-shell{position:fixed!important;inset:64px 0 0!important;z-index:390!important;width:auto!important;max-width:none!important;height:auto!important;max-height:none!important;margin:0!important;padding:1rem!important;gap:.72rem!important;flex-direction:column!important;align-items:stretch!important;justify-content:flex-start!important;overflow-x:hidden!important;overflow-y:auto!important;overscroll-behavior:contain!important;border:0!important;border-top:1px solid #deded9!important;border-radius:0!important;background:#f8f8f6!important;color:#111!important;box-shadow:none!important}
+ body.nav20-authenticated .topnav:not(.nav20-mobile-open)>.nav20-shell{opacity:0!important;visibility:hidden!important;pointer-events:none!important;transform:translateY(-6px)!important}
+ body.nav20-authenticated .topnav.nav20-mobile-open>.nav20-shell{opacity:1!important;visibility:visible!important;pointer-events:auto!important;transform:none!important}
+ body.nav20-authenticated.v4-mobile-nav-ready .topnav .nav20-shell a,
+ body.nav20-authenticated.v4-mobile-nav-ready .topnav .nav20-shell button,
+ body.nav20-authenticated .topnav .nav20-shell a,
+ body.nav20-authenticated .topnav .nav20-shell button{max-width:none!important;white-space:normal!important;text-align:left!important;color:#111!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-primary{width:100%!important;background:#efefec!important;border:1px solid #dfdfda!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-primary-link{display:flex!important;align-items:center!important;justify-content:flex-start!important;color:#171717!important;background:#fff!important;border:1px solid #e2e2de!important;box-shadow:none!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-primary-link.is-active{color:#111!important;background:#fff!important;border-color:#bdbdb8!important;box-shadow:0 5px 16px rgba(15,23,42,.07)!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-primary-link.is-employer{color:#4e3a91!important;background:#f8f5ff!important;border-color:#dfd7f7!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-operations-button{display:flex!important;width:100%!important;justify-content:flex-start!important;color:#111!important;background:#fff!important;border:1px solid #dfdfda!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-operations.is-open .nav20-operations-button,
+ body.nav20-authenticated .topnav .nav20-shell .nav20-operations-button.is-active{color:#fff!important;background:#111!important;border-color:#111!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-operations-panel{color:#111!important;background:#efefec!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-ops-group{color:#111!important;background:#fafaf8!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-ops-links a{display:grid!important;width:auto!important;min-height:0!important;color:#171717!important;background:transparent!important;border:0!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-ops-links a small{color:#74746f!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-icon-button{display:flex!important;width:100%!important;justify-content:flex-start!important;color:#111!important;background:#fff!important;border:1px solid #dfdfda!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-icon-button.is-logout{color:#8f2525!important;background:#fff8f8!important;border-color:#ead2d2!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-account{color:#fff!important;background:#111!important;border-color:#111!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-account-copy strong{color:#fff!important}
+ body.nav20-authenticated .topnav .nav20-shell .nav20-account-copy small{color:rgba(255,255,255,.62)!important}
+}
+@media(max-width:620px){body.nav20-authenticated .topbar{min-height:61px!important;padding:.55rem .65rem!important}body.nav20-authenticated .topnav>.nav20-shell{inset:61px 0 0!important;padding:.72rem .65rem 1rem!important}body.nav20-authenticated .topnav .nav20-shell .nav20-primary{grid-template-columns:1fr!important}}

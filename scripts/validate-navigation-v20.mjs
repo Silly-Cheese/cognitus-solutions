@@ -1,7 +1,8 @@
 import fs from "node:fs";
 
 const shell = fs.readFileSync("src/navigationShellV20.js", "utf8");
-const css = fs.readFileSync("src/navigationV20.css", "utf8");
+const cssEntry = fs.readFileSync("src/navigationV20.css", "utf8");
+const css = fs.existsSync("src/navigationV20Base.css") ? fs.readFileSync("src/navigationV20Base.css", "utf8") : cssEntry;
 const entry = fs.readFileSync("src/employerPeopleSearchV18.js", "utf8");
 
 function assert(condition, message) {
@@ -35,6 +36,7 @@ assert(shell.includes("const MOBILE_BREAKPOINT = 1180"), "responsive shell must 
 assert(shell.includes('aria-controls", "cognitus-nav20-shell"'), "mobile control must target the actual V20 shell");
 assert(shell.includes("data-nav20-operation-key"), "Operations active state must preserve query-specific routes");
 assert(shell.includes("20260816-v21-responsive"), "responsive hotfix must use a fresh navigation stylesheet cache key");
+assert(cssEntry.includes("navigationV20Base.css") || css.includes(".nav20-shell"), "V20 stylesheet entry does not preserve base styling");
 assert(css.includes(".nav20-shell"), "V20 shell styling is missing");
 assert(css.includes(".nav20-operations-panel"), "Operations panel styling is missing");
 assert(css.includes(".nav20-account"), "account identity treatment is missing");
