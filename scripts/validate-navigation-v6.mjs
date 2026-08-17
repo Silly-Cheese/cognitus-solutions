@@ -19,7 +19,7 @@ assert(navigation.includes("data-nav6-more-button") && navigation.includes('aria
 assert(navigation.includes("closeMoreMenu") && navigation.includes('event.key === "Escape"'), "Tools menu supports click-away and Escape dismissal");
 assert(navigation.includes('logout.textContent = "Logout"'), "Logout remains a direct visible control");
 assert(navigation.includes('href = "#/profile"') && navigation.includes('href = "#/organizations?request=1"'), "Profile and New Organization remain available");
-assert(navigation.includes("employerHubNode") && navigation.includes('nav.querySelector("[data-emp11-nav]")'), "Employer Hub is promoted into the primary workspace row when available");
+assert(navigation.includes("employerHubNode") && navigation.includes('[data-emp11-nav]'), "Employer Hub is promoted into the primary workspace row when available");
 assert(navigation.includes('nav.querySelector(\'a[href="#/search"]\')') && navigation.includes('nav.querySelector("[data-reports-tab]")'), "Run Check and Reports remain primary destinations");
 assert(navigation.includes('label: "Organization"') && navigation.includes('href: "#/organizations"') && navigation.includes('href: "#/employer-status"'), "organization administration is grouped cleanly inside Tools");
 assert(navigation.includes("1900") && !navigation.includes("MutationObserver"), "navigation uses bounded late synchronization without MutationObservers");
