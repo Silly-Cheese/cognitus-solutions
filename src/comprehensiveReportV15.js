@@ -6,8 +6,12 @@ let db = null;
 let Auth = null;
 let Fire = null;
 let authUser = null;
+let userDoc = null;
 let timers = [];
 let renderKey = "";
+let enhanceInFlight = null;
+const dossierCache = new Map();
+const REVIEWER_ROLES = new Set(["reviewer", "admin", "owner"]);
 
 const route = () => location.hash.replace(/^#/, "").split("?")[0] || "/";
 const params = () => new URLSearchParams(location.hash.split("?")[1] || "");
@@ -85,10 +89,10 @@ async function loadEmployment(profileId) {
   }
 }
 
-async function loadScreeningRecords(profileId) {
+async function loadScreeningRecords(profile) {
   let summaries = [];
   try {
-    summaries = await readWhere("screeningReportSummaries", "subjectProfileId", "==", profileId);
+    summaries = await readWhere("screeningReportSummaries", "subjectProfileId", "==", profile.id);
   } catch (error) {
     console.warn("Comprehensive report summaries unavailable", error);
   }
@@ -96,6 +100,17 @@ async function loadScreeningRecords(profileId) {
     .filter((item) => ["approved", "published", "disputed"].includes(clean(item.status).toLowerCase()))
     .sort((a, b) => timestampMs(b.reportCreatedAt || b.createdAt) - timestampMs(a.reportCreatedAt || a.createdAt))
     .slice(0, 50);
+
+  const ownsProfile = profile.id === authUser?.uid || profile.linkedUserId === authUser?.uid || profile.claimedByUid === authUser?.uid;
+  const canReadProfileReportSet = ownsProfile || REVIEWER_ROLES.has(userDoc?.role);
+  if (canReadProfileReportSet) {
+    const fullRows = await readWhere("reports", "subjectProfileId", "==", profile.id).catch(() => []);
+    const fullMap = new Map(fullRows.map((report) => [report.id, report]));
+    return summaries.map((summary) => {
+      const report = fullMap.get(summary.reportId || summary.id) || null;
+      return { summary, report, fullAccess: Boolean(report) };
+    });
+  }
 
   const fullResults = await Promise.all(summaries.map(async (summary) => {
     try {
@@ -106,6 +121,20 @@ async function loadScreeningRecords(profileId) {
     }
   }));
   return fullResults;
+}
+
+function loadDossier(profile) {
+  const key = profile.id;
+  if (dossierCache.has(key)) return dossierCache.get(key);
+  const promise = Promise.all([
+    loadEmployment(profile.id),
+    loadScreeningRecords(profile)
+  ]).then(([employment, reports]) => ({ employment, reports })).catch((error) => {
+    dossierCache.delete(key);
+    throw error;
+  });
+  dossierCache.set(key, promise);
+  return promise;
 }
 
 function employmentSummary(records) {
@@ -241,10 +270,7 @@ async function enhanceFullScreeningReport() {
 
   const profile = await readDoc("profiles", check.targetProfileId).catch(() => null);
   if (!profile) return false;
-  const [employment, reports] = await Promise.all([
-    loadEmployment(profile.id),
-    loadScreeningRecords(profile.id)
-  ]);
+  const { employment, reports } = await loadDossier(profile);
 
   documentNode.classList.add("v15-comprehensive-report");
   const header = documentNode.querySelector(".report-header");
@@ -277,10 +303,7 @@ async function enhanceIndividualFullReport() {
   if (!report?.subjectProfileId) return false;
   const profile = await readDoc("profiles", report.subjectProfileId).catch(() => null);
   if (!profile) return false;
-  const [employment, reports] = await Promise.all([
-    loadEmployment(profile.id),
-    loadScreeningRecords(profile.id)
-  ]);
+  const { employment, reports } = await loadDossier(profile);
   const context = document.createElement("div");
   context.dataset.v15IndividualContext = "true";
   context.className = "v15-individual-context";
@@ -300,9 +323,15 @@ async function runEnhancement() {
   return false;
 }
 
+function runSingleFlight() {
+  if (enhanceInFlight) return enhanceInFlight;
+  enhanceInFlight = Promise.resolve(runEnhancement()).finally(() => { enhanceInFlight = null; });
+  return enhanceInFlight;
+}
+
 function schedule() {
   timers.forEach(clearTimeout);
-  timers = [40, 160, 420, 900, 1600].map((delay) => setTimeout(() => runEnhancement().catch((error) => console.warn("Comprehensive Report V15 enhancement failed", error)), delay));
+  timers = [80, 420, 1200].map((delay) => setTimeout(() => runSingleFlight().catch((error) => console.warn("Comprehensive Report V15 enhancement failed", error)), delay));
 }
 
 async function initialize() {
@@ -315,11 +344,16 @@ async function initialize() {
     import(`${FIREBASE_CDN_BASE}/firebase-auth.js`),
     import(`${FIREBASE_CDN_BASE}/firebase-firestore.js`)
   ]);
-  Auth.onAuthStateChanged(auth, (user) => {
+  Auth.onAuthStateChanged(auth, async (user) => {
     authUser = user;
+    userDoc = user ? await readDoc("users", user.uid).catch(() => null) : null;
+    dossierCache.clear();
     schedule();
   });
-  window.addEventListener("hashchange", schedule);
+  window.addEventListener("hashchange", () => {
+    dossierCache.clear();
+    schedule();
+  });
   window.addEventListener("pageshow", schedule);
   window.addEventListener("DOMContentLoaded", schedule);
   schedule();
