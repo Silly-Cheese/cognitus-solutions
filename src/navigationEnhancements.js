@@ -6,18 +6,31 @@ import "./reportAccessV8.js";
 import "./ownerReportGrantsV9.js";
 import "./employerStatusV10.js";
 import "./employerWorkspaceV11.js";
+import "./employerHubFixV12.js";
 
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");
 const topbar = document.querySelector(".topbar");
 let timers = [];
 
-const SECONDARY_NAV = [
-  { href: "#/history", label: "History", note: "Your previous logged checks" },
-  { href: "#/employer-status", label: "Employer Status", note: "Apply for organization-linked employer access" },
-  { href: "#/reports/submit", label: "Submit Report", note: "Add information for review" },
-  { href: "#/claims", label: "Claims", note: "Identity and record claims" },
-  { href: "#/appeals", label: "Appeals", note: "Challenge a report or request correction" }
+const MENU_SECTIONS = [
+  {
+    label: "Organization",
+    items: [
+      { href: "#/organizations", label: "Organizations", note: "Browse and manage Cognitus organizations" },
+      { href: "#/organizations?request=1", label: "New Organization", note: "Create or request an organization record" },
+      { href: "#/employer-status", label: "Employer Status", note: "Request or review employer access" }
+    ]
+  },
+  {
+    label: "Records & workflows",
+    items: [
+      { href: "#/history", label: "History", note: "Your previous logged checks" },
+      { href: "#/reports/submit", label: "Submit Report", note: "Add information for Cognitus review" },
+      { href: "#/claims", label: "Claims", note: "Identity and record claims" },
+      { href: "#/appeals", label: "Appeals", note: "Challenge a report or request correction" }
+    ]
+  }
 ];
 const STAFF_NAV = [
   { href: "#/review", label: "Review", note: "Review pending reports, claims, and appeals" },
@@ -38,6 +51,13 @@ function mountV4Styles() {
     link.id = "cognitus-nav-v6";
     link.rel = "stylesheet";
     link.href = "./src/navigationV6.css?v=20260812-1";
+    document.head.appendChild(link);
+  }
+  if (!document.querySelector("#cognitus-nav-v12")) {
+    const link = document.createElement("link");
+    link.id = "cognitus-nav-v12";
+    link.rel = "stylesheet";
+    link.href = "./src/navigationV12.css?v=20260816-1";
     document.head.appendChild(link);
   }
   if (!document.querySelector("#cognitus-report-assessment-v7")) {
@@ -145,7 +165,7 @@ function ensureOrganizationRequestTab() {
     link.setAttribute("aria-label", "Create or request an organization record");
   }
   const organizations = nav.querySelector('a[href="#/organizations"]');
-  if (organizations && link.previousElementSibling !== organizations) organizations.insertAdjacentElement("afterend", link);
+  if (organizations && !organizations.closest(".nav6-menu")) organizations.insertAdjacentElement("afterend", link);
 }
 
 function ensureEmployerStatusTab() {
@@ -160,14 +180,24 @@ function ensureEmployerStatusTab() {
     link.setAttribute("aria-label", "Request or review employer status");
   }
   const settings = nav.querySelector('a[href="#/settings"]');
-  if (settings) nav.insertBefore(link, settings);
-  else nav.appendChild(link);
+  if (settings && !link.closest(".nav6-menu")) nav.insertBefore(link, settings);
+  else if (!link.isConnected) nav.appendChild(link);
 }
 
 function decorateMenuLink(link, label, note) {
   if (!link) return null;
   link.innerHTML = `<span class="nav6-menu-label">${label}</span><span class="nav6-menu-note">${note}</span>`;
   return link;
+}
+
+function addMenuSection(menu, label, items, pool) {
+  const available = items.map((item) => ({ ...item, link: decorateMenuLink(pool.get(item.href), item.label, item.note) })).filter((item) => item.link);
+  if (!available.length) return;
+  const section = document.createElement("div");
+  section.className = "nav6-menu-section";
+  section.textContent = label;
+  menu.appendChild(section);
+  for (const item of available) menu.appendChild(item.link);
 }
 
 function ensureMoreMenu() {
@@ -177,8 +207,8 @@ function ensureMoreMenu() {
     more = document.createElement("div");
     more.className = "nav6-more";
     more.innerHTML = `
-      <button type="button" data-nav6-more-button aria-expanded="false" aria-haspopup="true">
-        <span>More</span><span class="nav6-chevron" aria-hidden="true"></span>
+      <button type="button" data-nav6-more-button aria-expanded="false" aria-haspopup="true" aria-label="Open tools menu">
+        <span>Tools</span><span class="nav6-chevron" aria-hidden="true"></span>
       </button>
       <div class="nav6-menu" data-nav6-menu></div>`;
     const button = more.querySelector("[data-nav6-more-button]");
@@ -195,22 +225,8 @@ function ensureMoreMenu() {
   nav.querySelectorAll('a[href^="#/"]').forEach((link) => pool.set(link.getAttribute("href"), link));
   menu.replaceChildren();
 
-  for (const item of SECONDARY_NAV) {
-    const link = decorateMenuLink(pool.get(item.href), item.label, item.note);
-    if (link) menu.appendChild(link);
-  }
-
-  const staffLinks = STAFF_NAV.map((item) => ({
-    ...item,
-    link: decorateMenuLink(pool.get(item.href), item.label, item.note)
-  })).filter((item) => item.link);
-  if (staffLinks.length) {
-    const section = document.createElement("div");
-    section.className = "nav6-menu-section";
-    section.textContent = "Staff tools";
-    menu.appendChild(section);
-    for (const item of staffLinks) menu.appendChild(item.link);
-  }
+  for (const section of MENU_SECTIONS) addMenuSection(menu, section.label, section.items, pool);
+  addMenuSection(menu, "Staff tools", STAFF_NAV, pool);
 
   const settings = nav.querySelector('a[href="#/settings"]');
   const logout = nav.querySelector("#logout-button");
@@ -226,28 +242,23 @@ function ensureMoreMenu() {
   else if (!settings && logout && divider.nextElementSibling !== logout) nav.insertBefore(divider, logout);
 }
 
+function employerHubNode() {
+  return nav?.querySelector("[data-emp11-nav]") || null;
+}
+
 function orderAuthenticatedNav() {
   if (!nav || !isAuthenticatedNav()) return;
-  const primaryOrder = [
-    "#/dashboard",
-    "#/profile",
-    "#/reports",
-    "#/search",
-    "#/organizations",
-    "#/organizations?request=1"
-  ];
   const more = nav.querySelector(".nav6-more");
   const anchor = more || nav.querySelector('a[href="#/settings"]') || null;
-  for (const href of primaryOrder) {
-    const node = href === "#/profile"
-      ? nav.querySelector("[data-profile-tab]")
-      : href === "#/reports"
-        ? nav.querySelector("[data-reports-tab]")
-        : href.includes("?request=1")
-          ? nav.querySelector("[data-org-request-tab]")
-          : nav.querySelector(`a[href="${href}"]`);
-    if (node) nav.insertBefore(node, anchor);
-  }
+  const primaryNodes = [
+    nav.querySelector('a[href="#/dashboard"]'),
+    nav.querySelector("[data-profile-tab]"),
+    employerHubNode(),
+    nav.querySelector('a[href="#/search"]'),
+    nav.querySelector("[data-reports-tab]")
+  ].filter(Boolean);
+
+  for (const node of primaryNodes) nav.insertBefore(node, anchor);
 
   const settings = nav.querySelector('a[href="#/settings"]');
   if (settings) nav.appendChild(settings);
@@ -272,11 +283,11 @@ function markActiveRoute() {
   nav.querySelectorAll("a").forEach((link) => {
     const href = link.getAttribute("href") || "";
     if (!href.startsWith("#/")) return;
-    const active = href.includes("?request=1")
-      ? hash.startsWith("#/organizations?request=1")
-      : href === "#/reports"
-        ? ["#/reports", "#/reports/view"].includes(base)
-        : href.split("?")[0] === base;
+    let active = false;
+    if (link.matches("[data-emp11-nav]")) active = base.startsWith("#/employer") && base !== "#/employer-status";
+    else if (href.includes("?request=1")) active = hash.startsWith("#/organizations?request=1");
+    else if (href === "#/reports") active = ["#/reports", "#/reports/view"].includes(base);
+    else active = href.split("?")[0] === base;
     link.classList.toggle("v4-active", active);
     if (active) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
@@ -326,7 +337,7 @@ function sync() {
 
 function scheduleSync() {
   timers.forEach((timer) => clearTimeout(timer));
-  timers = [0, 120, 420, 1000].map((delay) => setTimeout(sync, delay));
+  timers = [0, 120, 420, 1000, 1900].map((delay) => setTimeout(sync, delay));
 }
 
 mountV4Styles();
