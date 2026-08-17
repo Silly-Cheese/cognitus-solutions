@@ -32,3 +32,4 @@ for (const [ok, message] of checks) {
 }
 if (failed) process.exit(1);
 console.log("\nEmployer Status V10 validation passed.");
+await import("./validate-employer-workspace-v11.mjs");
