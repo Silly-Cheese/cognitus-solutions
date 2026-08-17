@@ -1,0 +1,74 @@
+/* Navigation V23 — cache-safe mobile state and contrast hardening. */
+body.nav20-authenticated .topbar .brand,
+body.nav20-authenticated .topbar .brand > span:not(.brand-mark),
+body.nav20-authenticated .topbar .brand strong {
+  color:#111!important;
+  opacity:1!important;
+  text-shadow:none!important;
+}
+body.nav20-authenticated .topbar .brand small {
+  color:#686863!important;
+  opacity:1!important;
+}
+body.nav20-authenticated .topbar .brand .brand-mark {
+  color:#fff!important;
+}
+
+/* The button class is the authoritative visual state. Do not infer X state from legacy nav classes. */
+body.nav20-authenticated .nav20-mobile-toggle .nav20-mobile-bars i:nth-child(1),
+body.nav20-authenticated .nav20-mobile-toggle .nav20-mobile-bars i:nth-child(2),
+body.nav20-authenticated .nav20-mobile-toggle .nav20-mobile-bars i:nth-child(3) {
+  opacity:1!important;
+  transform:none!important;
+}
+body.nav20-authenticated .nav20-mobile-toggle.is-open .nav20-mobile-bars i:nth-child(1) {
+  transform:translateY(5px) rotate(45deg)!important;
+}
+body.nav20-authenticated .nav20-mobile-toggle.is-open .nav20-mobile-bars i:nth-child(2) {
+  opacity:0!important;
+}
+body.nav20-authenticated .nav20-mobile-toggle.is-open .nav20-mobile-bars i:nth-child(3) {
+  transform:translateY(-5px) rotate(-45deg)!important;
+}
+
+@media(max-width:1180px){
+  body.nav20-authenticated .topbar {
+    background:#fafaf9!important;
+    color:#111!important;
+  }
+  body.nav20-authenticated .nav20-mobile-toggle {
+    color:#111!important;
+    background:#fff!important;
+    border-color:#d8d8d3!important;
+  }
+  body.nav20-authenticated .topnav>.nav20-shell {
+    opacity:0!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+    transform:translateY(-6px)!important;
+  }
+  body.nav20-authenticated .topnav.nav20-mobile-open>.nav20-shell,
+  body.nav20-authenticated.nav20-drawer-open .topnav>.nav20-shell {
+    opacity:1!important;
+    visibility:visible!important;
+    pointer-events:auto!important;
+    transform:none!important;
+  }
+  body.nav20-authenticated .topnav .nav20-shell,
+  body.nav20-authenticated .topnav .nav20-shell a,
+  body.nav20-authenticated .topnav .nav20-shell button,
+  body.nav20-authenticated .topnav .nav20-shell strong,
+  body.nav20-authenticated .topnav .nav20-shell span {
+    text-shadow:none!important;
+  }
+  body.nav20-authenticated .topnav .nav20-shell .nav20-primary-link,
+  body.nav20-authenticated .topnav .nav20-shell .nav20-operations-button,
+  body.nav20-authenticated .topnav .nav20-shell .nav20-icon-button {
+    color:#171717!important;
+    opacity:1!important;
+  }
+  body.nav20-authenticated .topnav .nav20-shell .nav20-account,
+  body.nav20-authenticated .topnav .nav20-shell .nav20-account strong {
+    color:#fff!important;
+  }
+}
