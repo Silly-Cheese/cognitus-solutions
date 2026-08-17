@@ -1,12 +1,15 @@
 import fs from "node:fs";
+import { spawnSync } from "node:child_process";
 
 const nav = fs.readFileSync("src/navigationEnhancements.js", "utf8");
 const workspace = fs.readFileSync("src/employerWorkspaceV11.js", "utf8");
 const css = fs.readFileSync("src/employerWorkspaceV11.css", "utf8");
 const rules = fs.readFileSync("firestore.rules", "utf8");
 const firebase = JSON.parse(fs.readFileSync("firebase.json", "utf8"));
+const syntax = spawnSync(process.execPath, ["--check", "src/employerWorkspaceV11.js"], { encoding: "utf8" });
 
 const checks = [
+  [syntax.status === 0, "Employer Workspace V11 JavaScript syntax is valid"],
   [nav.includes('import "./employerWorkspaceV11.js"'), "production navigation loads Employer Workspace V11"],
   [workspace.includes('route() !== "/employer"') && workspace.includes('route() !== "/employer/candidate"'), "Employer Hub and Candidate File routes exist"],
   [workspace.includes('"employerCandidates"') && workspace.includes("pipelineStatus") && workspace.includes("privateNotes"), "organization-private talent bookmarks and notes are implemented"],
@@ -34,5 +37,6 @@ for (const [ok, message] of checks) {
   console.log(`${ok ? "PASS" : "FAIL"}: ${message}`);
   if (!ok) failed = true;
 }
+if (syntax.status !== 0 && syntax.stderr) console.error(syntax.stderr);
 if (failed) process.exit(1);
 console.log("\nEmployer Workspace V11 validation passed.");
