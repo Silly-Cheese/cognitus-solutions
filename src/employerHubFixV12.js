@@ -12,6 +12,8 @@ let userDoc = null;
 let timers = [];
 let repairing = false;
 let reconcileInFlight = null;
+let reconcileQueued = false;
+let userLoadPromise = null;
 let contextCache = null;
 let contextCacheKey = "";
 let contextCacheAt = 0;
@@ -19,6 +21,7 @@ let organizationsCache = null;
 let organizationsCacheAt = 0;
 
 const EMPLOYER_ROLES = new Set(["verified_employer_member", "org_admin", "reviewer", "admin", "owner"]);
+const RECOVERY_KEY = "cognitus:employer-context-recovery-v17";
 const route = () => location.hash.replace(/^#/, "").split("?")[0] || "/";
 const params = () => new URLSearchParams(location.hash.split("?")[1] || "");
 const clean = (value) => String(value ?? "").trim();
@@ -28,6 +31,7 @@ const escapeHtml = (value) => String(value ?? "")
   .replaceAll(">", "&gt;")
   .replaceAll('"', "&quot;")
   .replaceAll("'", "&#039;");
+const wait = (ms) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 function activeEmployer() {
   return userDoc?.status === "active" && EMPLOYER_ROLES.has(userDoc?.role);
@@ -56,6 +60,36 @@ async function readAll(collectionName) {
   const snap = await Fire.getDocs(Fire.collection(db, collectionName));
   return snap.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
 }
+
+async function loadUserDocument(uid) {
+  if (!uid) return null;
+  if (userLoadPromise) return userLoadPromise;
+  userLoadPromise = (async () => {
+    const delays = [0, 180, 520];
+    for (const delay of delays) {
+      if (delay) await wait(delay);
+      try {
+        const record = await readDoc("users", uid);
+        if (record) return record;
+      } catch (error) {
+        console.warn("Employer Hub user context read failed", error);
+      }
+    }
+    return null;
+  })().finally(() => { userLoadPromise = null; });
+  return userLoadPromise;
+}
+
+async function ensureUserContext() {
+  if (!authUser) {
+    userDoc = null;
+    return null;
+  }
+  if (userDoc?.id === authUser.uid) return userDoc;
+  userDoc = await loadUserDocument(authUser.uid);
+  return userDoc;
+}
+
 async function loadOrganizations() {
   if (organizationsCache && Date.now() - organizationsCacheAt < 15000) return organizationsCache;
   organizationsCache = await readAll("organizations").catch(() => []);
@@ -132,8 +166,10 @@ async function repairAssignment(org, source) {
       organizationId: org.id,
       updatedAt: Fire.serverTimestamp()
     });
+    userDoc = { ...userDoc, organizationId: org.id };
     clearCaches();
     sessionStorage.setItem("cognitus:employer-org-repaired", org.id);
+    sessionStorage.removeItem(RECOVERY_KEY);
     window.setTimeout(() => location.reload(), 220);
     return true;
   } catch (error) {
@@ -203,8 +239,35 @@ async function enhanceOwnerSwitcher(currentOrg) {
   });
 }
 
+function staleWorkspaceGate() {
+  if (!root || route() !== "/employer") return null;
+  const gate = root.querySelector(".emp11-gate");
+  if (!gate) return null;
+  const text = clean(gate.textContent).toLowerCase();
+  return text.includes("employer access is required") || text.includes("no organization is attached") ? gate : null;
+}
+
+function markHealthyWorkspace() {
+  if (root?.querySelector(".emp11-shell")) sessionStorage.removeItem(RECOVERY_KEY);
+}
+
+function recoverStaleWorkspace(org) {
+  if (!org || !authUser || !staleWorkspaceGate()) return false;
+  let previous = null;
+  try { previous = JSON.parse(sessionStorage.getItem(RECOVERY_KEY) || "null"); } catch { previous = null; }
+  const now = Date.now();
+  const sameContext = previous?.uid === authUser.uid && previous?.organizationId === org.id;
+  if (sameContext && now - Number(previous?.at || 0) < 30000) return false;
+  sessionStorage.setItem(RECOVERY_KEY, JSON.stringify({ uid: authUser.uid, organizationId: org.id, at: now }));
+  repairScreen(org, "account_assignment");
+  window.setTimeout(() => location.reload(), 120);
+  return true;
+}
+
 async function reconcileEmployerHub() {
-  if (!authUser || !userDoc || !activeEmployer()) return;
+  if (!authUser) return;
+  if (!userDoc) await ensureUserContext();
+  if (!userDoc || !activeEmployer()) return;
   if (!route().startsWith("/employer") || route() === "/employer-status") return;
 
   const { org, source } = await resolveOrganizationContext();
@@ -218,14 +281,25 @@ async function reconcileEmployerHub() {
     return;
   }
 
+  if (org && recoverStaleWorkspace(org)) return;
   if (org && userDoc.role === "owner") await enhanceOwnerSwitcher(org);
+  markHealthyWorkspace();
 }
 
 function runReconcile() {
-  if (reconcileInFlight) return reconcileInFlight;
+  if (reconcileInFlight) {
+    reconcileQueued = true;
+    return reconcileInFlight;
+  }
   reconcileInFlight = Promise.resolve(reconcileEmployerHub())
     .catch((error) => console.warn("Employer Hub V12 reconciliation failed", error))
-    .finally(() => { reconcileInFlight = null; });
+    .finally(() => {
+      reconcileInFlight = null;
+      if (reconcileQueued) {
+        reconcileQueued = false;
+        queueMicrotask(runReconcile);
+      }
+    });
   return reconcileInFlight;
 }
 
@@ -255,7 +329,7 @@ async function initialize() {
   ]);
   Auth.onAuthStateChanged(auth, async (user) => {
     authUser = user;
-    userDoc = user ? await readDoc("users", user.uid).catch(() => null) : null;
+    userDoc = user ? await loadUserDocument(user.uid) : null;
     clearCaches();
     schedule();
   });
