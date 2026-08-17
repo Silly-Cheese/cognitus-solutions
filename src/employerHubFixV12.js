@@ -1,4 +1,5 @@
 import "./interfacePolishV13.js";
+import "./comprehensiveReportV15.js";
 import { FIREBASE_CDN_BASE, initializeFirebaseServices } from "./firebase/firebaseApp.js";
 
 const root = document.querySelector("#page-root");
