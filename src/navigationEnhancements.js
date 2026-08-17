@@ -5,6 +5,7 @@ import "./reportAssessmentV7.js";
 import "./reportAccessV8.js";
 import "./ownerReportGrantsV9.js";
 import "./employerStatusV10.js";
+import "./employerWorkspaceV11.js";
 
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");

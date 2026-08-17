@@ -26,6 +26,18 @@ service cloud.firestore {
       return /databases/$(database)/documents/reportAccessGrants/$(reportId);
     }
 
+    function employmentRecordPath(recordId) {
+      return /databases/$(database)/documents/employmentRecords/$(recordId);
+    }
+
+    function externalProfileClaimId(profileId, uid) {
+      return profileId + '__' + uid;
+    }
+
+    function externalProfileClaimPath(profileId, uid) {
+      return /databases/$(database)/documents/externalProfileClaims/$(externalProfileClaimId(profileId, uid));
+    }
+
     function ownerGrantId(reportId, uid) {
       return reportId + '__' + uid;
     }
@@ -114,6 +126,18 @@ service cloud.firestore {
         'Hiring Review', 'Promotion Review', 'Partnership Review', 'Internal Investigation',
         'Safety Concern', 'Appeal/Correction Review', 'Other'
       ];
+    }
+
+    function validPipelineStatus(value) {
+      return value in ['considering', 'interview', 'shortlist', 'offer', 'hired', 'passed', 'do_not_reconsider', 'archived'];
+    }
+
+    function validEmploymentType(value) {
+      return value in ['Staff', 'Leadership', 'Management', 'Contract', 'Volunteer', 'Internship', 'Other'];
+    }
+
+    function validRehire(value) {
+      return value in ['yes', 'no', 'unknown'];
     }
 
     function ownsProfile(profileId) {
@@ -276,6 +300,54 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
+      allow create: if isEmployerMember()
+        && currentUser().organizationId != null
+        && profileId != request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'linkedUserId', 'type', 'displayName', 'robloxUsernames',
+          'robloxUsernamesNormalized', 'discordUsernames', 'discordUsernamesNormalized', 'discordIds',
+          'knownAliases', 'claimedByUid', 'identityStatus', 'identityConfidence', 'professionalStanding',
+          'riskLevel', 'reportCount', 'appealCount', 'recordOrigin', 'createdByOrganizationId',
+          'createdByUid', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == profileId
+        && validCognitusId(request.resource.data.cognitusId, 'PRF')
+        && request.resource.data.linkedUserId == null
+        && request.resource.data.type == 'person'
+        && shortString(request.resource.data.displayName, 64)
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.robloxUsernames is list
+        && request.resource.data.robloxUsernames.size() <= 10
+        && request.resource.data.robloxUsernamesNormalized is list
+        && request.resource.data.robloxUsernamesNormalized.size() <= 10
+        && request.resource.data.discordUsernames is list
+        && request.resource.data.discordUsernames.size() <= 10
+        && request.resource.data.discordUsernamesNormalized is list
+        && request.resource.data.discordUsernamesNormalized.size() <= 10
+        && request.resource.data.discordIds is list
+        && request.resource.data.discordIds.size() <= 3
+        && request.resource.data.knownAliases is list
+        && request.resource.data.knownAliases.size() <= 10
+        && (
+          request.resource.data.discordIds.size() > 0
+          || request.resource.data.discordUsernamesNormalized.size() > 0
+          || request.resource.data.robloxUsernamesNormalized.size() > 0
+        )
+        && request.resource.data.claimedByUid == null
+        && request.resource.data.identityStatus == 'employer_supplied'
+        && request.resource.data.identityConfidence == 0
+        && request.resource.data.professionalStanding == 'unreviewed'
+        && request.resource.data.riskLevel == 'unreviewed'
+        && request.resource.data.reportCount == 0
+        && request.resource.data.appealCount == 0
+        && request.resource.data.recordOrigin == 'employer_created'
+        && request.resource.data.createdByOrganizationId == currentUser().organizationId
+        && request.resource.data.createdByUid == request.auth.uid
+        && exists(organizationPath(currentUser().organizationId))
+        && get(organizationPath(currentUser().organizationId)).data.verificationStatus == 'verified'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
       allow update: if activeAccount()
         && profileId == request.auth.uid
         && resource.data.linkedUserId == request.auth.uid
@@ -306,6 +378,23 @@ service cloud.firestore {
         && request.resource.data.cognitusId == resource.data.cognitusId
         && request.resource.data.linkedUserId == resource.data.linkedUserId
         && request.resource.data.discordIds == resource.data.discordIds
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isReviewer()
+        && resource.data.recordOrigin == 'employer_created'
+        && resource.data.linkedUserId == null
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'linkedUserId', 'claimedByUid', 'identityStatus', 'updatedAt'
+        ])
+        && request.resource.data.linkedUserId != null
+        && request.resource.data.claimedByUid == request.resource.data.linkedUserId
+        && request.resource.data.identityStatus == 'claimed'
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.discordIds == resource.data.discordIds
+        && existsAfter(externalProfileClaimPath(profileId, request.resource.data.linkedUserId))
+        && getAfter(externalProfileClaimPath(profileId, request.resource.data.linkedUserId)).data.status == 'approved'
+        && getAfter(externalProfileClaimPath(profileId, request.resource.data.linkedUserId)).data.profileId == profileId
+        && getAfter(externalProfileClaimPath(profileId, request.resource.data.linkedUserId)).data.applicantUid == request.resource.data.linkedUserId
         && request.resource.data.updatedAt == request.time;
 
       allow delete: if (signedIn()
@@ -757,6 +846,288 @@ service cloud.firestore {
             request.resource.data.status == 'denied'
             && getAfter(userPath(resource.data.applicantUid)).data.role == get(userPath(resource.data.applicantUid)).data.role
             && getAfter(userPath(resource.data.applicantUid)).data.organizationId == get(userPath(resource.data.applicantUid)).data.organizationId
+          )
+        );
+
+      allow delete: if false;
+    }
+
+    match /employerCandidates/{candidateId} {
+      allow read: if isOwner()
+        || (isEmployerMember() && sameOrg(resource.data.organizationId));
+
+      allow create: if isEmployerMember()
+        && sameOrg(request.resource.data.organizationId)
+        && request.resource.data.keys().hasOnly([
+          'id', 'organizationId', 'organizationCognitusId', 'profileId', 'profileCognitusId',
+          'profileDisplayName', 'pipelineStatus', 'privateNotes', 'addedByUid', 'addedByCognitusId',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == candidateId
+        && candidateId == request.resource.data.organizationId + '__' + request.resource.data.profileId
+        && exists(profilePath(request.resource.data.profileId))
+        && exists(organizationPath(request.resource.data.organizationId))
+        && get(organizationPath(request.resource.data.organizationId)).data.verificationStatus == 'verified'
+        && request.resource.data.organizationCognitusId == get(organizationPath(request.resource.data.organizationId)).data.cognitusId
+        && request.resource.data.profileCognitusId == get(profilePath(request.resource.data.profileId)).data.cognitusId
+        && request.resource.data.profileDisplayName == get(profilePath(request.resource.data.profileId)).data.displayName
+        && validPipelineStatus(request.resource.data.pipelineStatus)
+        && shortString(request.resource.data.privateNotes, 3000)
+        && request.resource.data.addedByUid == request.auth.uid
+        && request.resource.data.addedByCognitusId == currentUser().cognitusId
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isEmployerMember()
+        && sameOrg(resource.data.organizationId)
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'pipelineStatus', 'privateNotes', 'updatedAt'
+        ])
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.organizationId == resource.data.organizationId
+        && request.resource.data.organizationCognitusId == resource.data.organizationCognitusId
+        && request.resource.data.profileId == resource.data.profileId
+        && request.resource.data.profileCognitusId == resource.data.profileCognitusId
+        && request.resource.data.profileDisplayName == resource.data.profileDisplayName
+        && request.resource.data.addedByUid == resource.data.addedByUid
+        && request.resource.data.addedByCognitusId == resource.data.addedByCognitusId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && validPipelineStatus(request.resource.data.pipelineStatus)
+        && shortString(request.resource.data.privateNotes, 3000)
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isOwner()
+        || (isEmployerMember() && sameOrg(resource.data.organizationId));
+    }
+
+    match /employmentRecords/{recordId} {
+      allow read: if isReviewer()
+        || isEmployerMember()
+        || ownsProfile(resource.data.profileId);
+
+      allow create: if isEmployerMember()
+        && sameOrg(request.resource.data.organizationId)
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'profileId', 'profileCognitusId', 'organizationId',
+          'organizationCognitusId', 'organizationName', 'positionTitle', 'department',
+          'employmentType', 'startedOn', 'endedOn', 'endReason', 'eligibleForRehire',
+          'recordStatus', 'visibility', 'sourceType', 'disputeStatus', 'disputeNote',
+          'createdByUid', 'createdByCognitusId', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == recordId
+        && validCognitusId(request.resource.data.cognitusId, 'EMR')
+        && exists(profilePath(request.resource.data.profileId))
+        && exists(organizationPath(request.resource.data.organizationId))
+        && get(organizationPath(request.resource.data.organizationId)).data.verificationStatus == 'verified'
+        && request.resource.data.profileCognitusId == get(profilePath(request.resource.data.profileId)).data.cognitusId
+        && request.resource.data.organizationCognitusId == get(organizationPath(request.resource.data.organizationId)).data.cognitusId
+        && request.resource.data.organizationName == get(organizationPath(request.resource.data.organizationId)).data.name
+        && shortString(request.resource.data.positionTitle, 120)
+        && request.resource.data.positionTitle.size() > 0
+        && shortString(request.resource.data.department, 100)
+        && validEmploymentType(request.resource.data.employmentType)
+        && shortString(request.resource.data.startedOn, 10)
+        && request.resource.data.startedOn.size() == 10
+        && (request.resource.data.endedOn == null || shortString(request.resource.data.endedOn, 10))
+        && shortString(request.resource.data.endReason, 300)
+        && validRehire(request.resource.data.eligibleForRehire)
+        && request.resource.data.recordStatus in ['active', 'ended']
+        && request.resource.data.visibility == 'shared_profile'
+        && request.resource.data.sourceType == 'verified_employer'
+        && request.resource.data.disputeStatus == 'none'
+        && request.resource.data.disputeNote == ''
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.createdByCognitusId == currentUser().cognitusId
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isEmployerMember()
+        && sameOrg(resource.data.organizationId)
+        && (resource.data.createdByUid == request.auth.uid || role() == 'org_admin' || isAdmin())
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'positionTitle', 'department', 'employmentType', 'startedOn', 'endedOn',
+          'endReason', 'eligibleForRehire', 'recordStatus', 'updatedAt'
+        ])
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.profileId == resource.data.profileId
+        && request.resource.data.profileCognitusId == resource.data.profileCognitusId
+        && request.resource.data.organizationId == resource.data.organizationId
+        && request.resource.data.organizationCognitusId == resource.data.organizationCognitusId
+        && request.resource.data.organizationName == resource.data.organizationName
+        && request.resource.data.visibility == resource.data.visibility
+        && request.resource.data.sourceType == resource.data.sourceType
+        && request.resource.data.disputeStatus == resource.data.disputeStatus
+        && request.resource.data.disputeNote == resource.data.disputeNote
+        && request.resource.data.createdByUid == resource.data.createdByUid
+        && request.resource.data.createdByCognitusId == resource.data.createdByCognitusId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && shortString(request.resource.data.positionTitle, 120)
+        && request.resource.data.positionTitle.size() > 0
+        && shortString(request.resource.data.department, 100)
+        && validEmploymentType(request.resource.data.employmentType)
+        && shortString(request.resource.data.startedOn, 10)
+        && request.resource.data.startedOn.size() == 10
+        && (request.resource.data.endedOn == null || shortString(request.resource.data.endedOn, 10))
+        && shortString(request.resource.data.endReason, 300)
+        && validRehire(request.resource.data.eligibleForRehire)
+        && request.resource.data.recordStatus in ['active', 'ended']
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isReviewer()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'disputeStatus', 'disputeNote', 'updatedAt'
+        ])
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.profileId == resource.data.profileId
+        && request.resource.data.organizationId == resource.data.organizationId
+        && request.resource.data.disputeStatus in ['accepted', 'denied', 'none']
+        && shortString(request.resource.data.disputeNote, 1000)
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isOwner()
+        || (role() == 'org_admin' && sameOrg(resource.data.organizationId));
+    }
+
+    match /employmentRecordDisputes/{disputeId} {
+      allow read: if isReviewer()
+        || (signedIn() && resource.data.applicantUid == request.auth.uid);
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'recordId', 'recordCognitusId', 'profileId', 'organizationId',
+          'applicantUid', 'applicantCognitusId', 'applicantDisplayName', 'statement', 'status',
+          'reviewedByUid', 'reviewerNotes', 'reviewedAt', 'submittedAt', 'updatedAt'
+        ])
+        && request.resource.data.id == disputeId
+        && disputeId == request.resource.data.recordId + '__' + request.auth.uid
+        && validCognitusId(request.resource.data.cognitusId, 'EDP')
+        && exists(employmentRecordPath(request.resource.data.recordId))
+        && request.resource.data.recordCognitusId == get(employmentRecordPath(request.resource.data.recordId)).data.cognitusId
+        && request.resource.data.profileId == get(employmentRecordPath(request.resource.data.recordId)).data.profileId
+        && request.resource.data.organizationId == get(employmentRecordPath(request.resource.data.recordId)).data.organizationId
+        && ownsProfile(request.resource.data.profileId)
+        && request.resource.data.applicantUid == request.auth.uid
+        && request.resource.data.applicantCognitusId == currentUser().cognitusId
+        && request.resource.data.applicantDisplayName == currentUser().displayName
+        && shortString(request.resource.data.statement, 2000)
+        && request.resource.data.statement.size() > 0
+        && request.resource.data.status == 'pending'
+        && request.resource.data.reviewedByUid == null
+        && request.resource.data.reviewerNotes == ''
+        && request.resource.data.reviewedAt == null
+        && request.resource.data.submittedAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if activeAccount()
+        && resource.data.applicantUid == request.auth.uid
+        && resource.data.status == 'denied'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'statement', 'status', 'reviewedByUid', 'reviewerNotes', 'reviewedAt', 'submittedAt', 'updatedAt'
+        ])
+        && request.resource.data.recordId == resource.data.recordId
+        && request.resource.data.profileId == resource.data.profileId
+        && ownsProfile(resource.data.profileId)
+        && shortString(request.resource.data.statement, 2000)
+        && request.resource.data.statement.size() > 0
+        && request.resource.data.status == 'pending'
+        && request.resource.data.reviewedByUid == null
+        && request.resource.data.reviewerNotes == ''
+        && request.resource.data.reviewedAt == null
+        && request.resource.data.submittedAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isReviewer()
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'reviewedByUid', 'reviewerNotes', 'reviewedAt', 'updatedAt'
+        ])
+        && request.resource.data.status in ['accepted', 'denied']
+        && request.resource.data.reviewedByUid == request.auth.uid
+        && shortString(request.resource.data.reviewerNotes, 1000)
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && existsAfter(employmentRecordPath(resource.data.recordId))
+        && getAfter(employmentRecordPath(resource.data.recordId)).data.disputeStatus == request.resource.data.status
+        && getAfter(employmentRecordPath(resource.data.recordId)).data.disputeNote == request.resource.data.reviewerNotes;
+
+      allow delete: if false;
+    }
+
+    match /externalProfileClaims/{claimId} {
+      allow read: if isReviewer()
+        || (signedIn() && resource.data.applicantUid == request.auth.uid);
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'profileId', 'profileCognitusId', 'applicantUid',
+          'applicantCognitusId', 'applicantDisplayName', 'claimReason', 'verificationMethod',
+          'status', 'reviewedByUid', 'reviewerNotes', 'reviewedAt', 'submittedAt', 'updatedAt'
+        ])
+        && request.resource.data.id == claimId
+        && claimId == request.resource.data.profileId + '__' + request.auth.uid
+        && validCognitusId(request.resource.data.cognitusId, 'PCL')
+        && exists(profilePath(request.resource.data.profileId))
+        && get(profilePath(request.resource.data.profileId)).data.recordOrigin == 'employer_created'
+        && get(profilePath(request.resource.data.profileId)).data.linkedUserId == null
+        && request.resource.data.profileCognitusId == get(profilePath(request.resource.data.profileId)).data.cognitusId
+        && request.resource.data.applicantUid == request.auth.uid
+        && request.resource.data.applicantCognitusId == currentUser().cognitusId
+        && request.resource.data.applicantDisplayName == currentUser().displayName
+        && shortString(request.resource.data.claimReason, 1200)
+        && request.resource.data.claimReason.size() > 0
+        && request.resource.data.verificationMethod in ['discord_id_match', 'manual_review']
+        && (
+          request.resource.data.verificationMethod == 'manual_review'
+          || currentUser().discordId in get(profilePath(request.resource.data.profileId)).data.discordIds
+        )
+        && request.resource.data.status == 'pending'
+        && request.resource.data.reviewedByUid == null
+        && request.resource.data.reviewerNotes == ''
+        && request.resource.data.reviewedAt == null
+        && request.resource.data.submittedAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if activeAccount()
+        && resource.data.applicantUid == request.auth.uid
+        && resource.data.status == 'denied'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'claimReason', 'verificationMethod', 'status', 'reviewedByUid', 'reviewerNotes',
+          'reviewedAt', 'submittedAt', 'updatedAt'
+        ])
+        && request.resource.data.profileId == resource.data.profileId
+        && shortString(request.resource.data.claimReason, 1200)
+        && request.resource.data.claimReason.size() > 0
+        && request.resource.data.verificationMethod in ['discord_id_match', 'manual_review']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.reviewedByUid == null
+        && request.resource.data.reviewerNotes == ''
+        && request.resource.data.reviewedAt == null
+        && request.resource.data.submittedAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isReviewer()
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'reviewedByUid', 'reviewerNotes', 'reviewedAt', 'updatedAt'
+        ])
+        && request.resource.data.status in ['approved', 'denied']
+        && request.resource.data.reviewedByUid == request.auth.uid
+        && shortString(request.resource.data.reviewerNotes, 1000)
+        && request.resource.data.reviewedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && (
+          (
+            request.resource.data.status == 'approved'
+            && existsAfter(profilePath(resource.data.profileId))
+            && getAfter(profilePath(resource.data.profileId)).data.linkedUserId == resource.data.applicantUid
+            && getAfter(profilePath(resource.data.profileId)).data.claimedByUid == resource.data.applicantUid
+            && getAfter(profilePath(resource.data.profileId)).data.identityStatus == 'claimed'
+          )
+          || (
+            request.resource.data.status == 'denied'
+            && getAfter(profilePath(resource.data.profileId)).data.linkedUserId == get(profilePath(resource.data.profileId)).data.linkedUserId
           )
         );
 
