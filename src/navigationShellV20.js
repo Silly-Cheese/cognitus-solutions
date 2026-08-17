@@ -2,6 +2,7 @@ const nav = document.querySelector(".topnav");
 const topbar = document.querySelector(".topbar");
 const EMPLOYER_ROLES = new Set(["verified_employer_member", "org_admin", "reviewer", "admin", "owner"]);
 const ADMIN_ROLES = new Set(["admin", "owner"]);
+const MOBILE_BREAKPOINT = 1180;
 let timers = [];
 
 const clean = (value) => String(value ?? "").trim();
@@ -12,6 +13,7 @@ const escapeHtml = (value) => String(value ?? "")
   .replaceAll('"', "&quot;")
   .replaceAll("'", "&#039;");
 const route = () => location.hash.replace(/^#/, "").split("?")[0] || "/";
+const routeKey = () => location.hash.replace(/^#/, "") || "/";
 const routeHref = (path) => `./#${path}`;
 
 const ICONS = {
@@ -27,12 +29,14 @@ const ICONS = {
 };
 
 function mountStyles() {
-  if (document.querySelector("#cognitus-navigation-v20")) return;
-  const link = document.createElement("link");
-  link.id = "cognitus-navigation-v20";
-  link.rel = "stylesheet";
-  link.href = "./src/navigationV20.css?v=20260816-1";
-  document.head.appendChild(link);
+  let link = document.querySelector("#cognitus-navigation-v20");
+  if (!link) {
+    link = document.createElement("link");
+    link.id = "cognitus-navigation-v20";
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+  }
+  link.href = "./src/navigationV20.css?v=20260816-v21-responsive";
 }
 
 function sourceAuthenticated() {
@@ -60,7 +64,7 @@ function initials(name) {
 }
 
 function primaryLink(path, label, iconName, extraClass = "") {
-  return `<a class="nav20-primary-link ${extraClass}" href="${routeHref(path)}" data-nav20-route="${path}">${ICONS[iconName]}<span>${escapeHtml(label)}</span></a>`;
+  return `<a class="nav20-primary-link ${extraClass}" href="${routeHref(path)}" data-nav20-route="${path}" title="${escapeHtml(label)}" aria-label="${escapeHtml(label)}">${ICONS[iconName]}<span>${escapeHtml(label)}</span></a>`;
 }
 
 function operationsForRole(role) {
@@ -109,7 +113,7 @@ function operationsMarkup(role) {
     <section class="nav20-ops-group">
       <div class="nav20-ops-heading"><span>${escapeHtml(group.eyebrow)}</span><strong>${escapeHtml(group.title)}</strong></div>
       <div class="nav20-ops-links">
-        ${group.items.map(([path, label, note]) => `<a href="${routeHref(path)}" data-nav20-operation data-nav20-operation-path="${path.split("?")[0]}"><span>${escapeHtml(label)}</span><small>${escapeHtml(note)}</small></a>`).join("")}
+        ${group.items.map(([path, label, note]) => `<a href="${routeHref(path)}" data-nav20-operation data-nav20-operation-key="${path}"><span>${escapeHtml(label)}</span><small>${escapeHtml(note)}</small></a>`).join("")}
       </div>
     </section>`).join("");
 }
@@ -128,6 +132,7 @@ function buildShell() {
   if (!shell) {
     shell = document.createElement("div");
     shell.className = "nav20-shell";
+    shell.id = "cognitus-nav20-shell";
     nav.appendChild(shell);
   }
   shell.dataset.signature = signature;
@@ -138,10 +143,10 @@ function buildShell() {
       ${employer ? primaryLink("/employer", "Employer Hub", "employer", "is-employer") : ""}
       ${primaryLink("/search", "Run Check", "search")}
       ${primaryLink("/reports", "Reports", "reports")}
-      <a class="nav20-primary-link is-actions" href="${routeHref("/actions")}" data-nav20-route="/actions">${ICONS.actions}<span>Action Center</span>${count ? `<b class="nav20-count">${escapeHtml(count)}</b>` : ""}</a>
+      <a class="nav20-primary-link is-actions" href="${routeHref("/actions")}" data-nav20-route="/actions" title="Action Center" aria-label="Action Center">${ICONS.actions}<span>Action Center</span>${count ? `<b class="nav20-count">${escapeHtml(count)}</b>` : ""}</a>
     </div>
     <div class="nav20-operations">
-      <button type="button" class="nav20-operations-button" data-nav20-operations aria-expanded="false" aria-haspopup="true">${ICONS.operations}<span>Operations</span><i aria-hidden="true"></i></button>
+      <button type="button" class="nav20-operations-button" data-nav20-operations aria-expanded="false" aria-haspopup="true" title="Operations">${ICONS.operations}<span>Operations</span><i aria-hidden="true"></i></button>
       <div class="nav20-operations-panel" data-nav20-operations-panel>
         <div class="nav20-ops-intro"><span>Workspace directory</span><strong>Everything else, organized.</strong><p>Records, organizations, privacy, review and administration live here without crowding your daily workspace.</p></div>
         <div class="nav20-ops-grid">${operationsMarkup(role)}</div>
@@ -160,6 +165,7 @@ function buildShell() {
 function updateActiveState(shell = nav?.querySelector(":scope > .nav20-shell")) {
   if (!shell) return;
   const current = route();
+  const currentKey = routeKey();
   shell.querySelectorAll("[data-nav20-route]").forEach((link) => {
     const path = link.dataset.nav20Route || "";
     let active = path === current;
@@ -173,7 +179,11 @@ function updateActiveState(shell = nav?.querySelector(":scope > .nav20-shell")) 
   shell.querySelector("[data-nav20-operations]")?.classList.toggle("is-active", opsRoutes.has(current));
   shell.querySelector("[data-nav20-settings]")?.classList.toggle("is-active", current === "/settings");
   shell.querySelectorAll("[data-nav20-operation]").forEach((link) => {
-    link.classList.toggle("is-current", link.dataset.nav20OperationPath === current);
+    const key = link.dataset.nav20OperationKey || "";
+    const active = key.includes("?") ? currentKey === key : current === key;
+    link.classList.toggle("is-current", active);
+    if (active) link.setAttribute("aria-current", "page");
+    else link.removeAttribute("aria-current");
   });
 }
 
@@ -185,8 +195,9 @@ function ensureMobileToggle() {
     button.type = "button";
     button.className = "nav20-mobile-toggle";
     button.dataset.nav20MobileToggle = "true";
-    button.setAttribute("aria-controls", "cognitus-primary-nav");
+    button.setAttribute("aria-controls", "cognitus-nav20-shell");
     button.setAttribute("aria-expanded", "false");
+    button.setAttribute("aria-label", "Open navigation menu");
     button.innerHTML = '<span class="nav20-mobile-bars" aria-hidden="true"><i></i><i></i><i></i></span><span>Menu</span>';
     const brand = topbar.querySelector(".brand");
     if (brand) brand.insertAdjacentElement("afterend", button);
@@ -205,7 +216,9 @@ function closeOperations() {
 function closeMobile() {
   nav?.classList.remove("nav20-mobile-open");
   const button = topbar?.querySelector("[data-nav20-mobile-toggle]");
+  button?.classList.remove("is-open");
   button?.setAttribute("aria-expanded", "false");
+  button?.setAttribute("aria-label", "Open navigation menu");
   if (button) button.querySelector("span:last-child").textContent = "Menu";
   closeOperations();
 }
@@ -215,6 +228,7 @@ function sync() {
   if (!nav) return;
   if (!sourceAuthenticated()) {
     document.body.classList.remove("nav20-authenticated");
+    closeMobile();
     nav.querySelector(":scope > .nav20-shell")?.remove();
     topbar?.querySelector("[data-nav20-mobile-toggle]")?.remove();
     return;
@@ -254,12 +268,17 @@ nav?.addEventListener("click", (event) => {
 
 topbar?.addEventListener("click", (event) => {
   const button = event.target.closest?.("[data-nav20-mobile-toggle]");
-  if (!button) return;
-  const open = !nav?.classList.contains("nav20-mobile-open");
-  nav?.classList.toggle("nav20-mobile-open", open);
-  button.setAttribute("aria-expanded", String(open));
-  button.querySelector("span:last-child").textContent = open ? "Close" : "Menu";
-  if (!open) closeOperations();
+  if (button) {
+    const open = !nav?.classList.contains("nav20-mobile-open");
+    nav?.classList.toggle("nav20-mobile-open", open);
+    button.classList.toggle("is-open", open);
+    button.setAttribute("aria-expanded", String(open));
+    button.setAttribute("aria-label", open ? "Close navigation menu" : "Open navigation menu");
+    button.querySelector("span:last-child").textContent = open ? "Close" : "Menu";
+    if (!open) closeOperations();
+    return;
+  }
+  if (event.target.closest?.(".brand") && nav?.classList.contains("nav20-mobile-open")) closeMobile();
 });
 
 document.addEventListener("click", (event) => {
@@ -281,5 +300,5 @@ document.addEventListener("visibilitychange", () => {
   if (!document.hidden) setTimeout(sync, 0);
 });
 window.addEventListener("resize", () => {
-  if (window.innerWidth > 980) closeMobile();
+  if (window.innerWidth > MOBILE_BREAKPOINT) closeMobile();
 });
