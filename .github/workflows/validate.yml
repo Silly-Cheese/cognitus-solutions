@@ -32,6 +32,7 @@ jobs:
         run: |
           node --check src/app.js
           node --check src/navigationEnhancements.js
+          node --check src/navigationShellV20.js
           node --check src/controlsV4.js
           node --check src/assessmentV4.js
           node --check src/profileV5.js
@@ -47,6 +48,7 @@ jobs:
           node --check src/foundationCoreV19.js
           node --check scripts/build-firestore-v19.mjs
           node --check scripts/validate-foundation-v19.mjs
+          node --check scripts/validate-navigation-v20.mjs
 
       - name: Run Profile V5 regression checks
         run: node scripts/validate.mjs
@@ -83,6 +85,9 @@ jobs:
 
       - name: Run Foundation V19 checks
         run: node scripts/validate-foundation-v19.mjs
+
+      - name: Run Navigation V20 checks
+        run: node scripts/validate-navigation-v20.mjs
 
       - name: Build Foundation V19 Firestore rules
         run: node scripts/build-firestore-v19.mjs
