@@ -9,6 +9,9 @@ let Fire = null;
 let authUser = null;
 let userDoc = null;
 let timers = [];
+let enhanceInFlight = null;
+let organizationCache = null;
+let organizationCacheAt = 0;
 let peopleSearchResults = [];
 let currentEmploymentRecords = new Map();
 
@@ -185,7 +188,13 @@ function profileMiniCard(profile, bookmark = null) {
 
 async function loadOrganizationContext() {
   if (!userDoc?.organizationId) return null;
-  return readDoc("organizations", userDoc.organizationId).catch(() => null);
+  if (organizationCache && Date.now() - organizationCacheAt < 12000 && organizationCache.id === userDoc.organizationId) return organizationCache;
+  const organization = await readDoc("organizations", userDoc.organizationId).catch(() => null);
+  if (organization) {
+    organizationCache = organization;
+    organizationCacheAt = Date.now();
+  }
+  return organization;
 }
 
 async function overviewPanel(org) {
@@ -795,10 +804,21 @@ async function enhance() {
   await renderCandidateRoute();
   await enhanceOwnProfile();
 }
+
+function runEnhance() {
+  if (enhanceInFlight) return enhanceInFlight;
+  enhanceInFlight = Promise.resolve(enhance()).catch((error) => console.warn("Employer Workspace V11 enhancement failed", error)).finally(() => { enhanceInFlight = null; });
+  return enhanceInFlight;
+}
+
 function schedule(force = false) {
-  if (force) root?.querySelectorAll("[data-emp11-page]").forEach((node) => node.removeAttribute("data-emp11-key"));
+  if (force) {
+    root?.querySelectorAll("[data-emp11-page]").forEach((node) => node.removeAttribute("data-emp11-key"));
+    organizationCache = null;
+    organizationCacheAt = 0;
+  }
   timers.forEach(clearTimeout);
-  timers = [0, 140, 420, 900, 1600].map((delay) => setTimeout(() => enhance().catch((error) => console.warn("Employer Workspace V11 enhancement failed", error)), delay));
+  timers = [0, 280, 1000].map((delay) => setTimeout(runEnhance, delay));
 }
 
 async function initialize() {
@@ -812,6 +832,8 @@ async function initialize() {
     authUser = user;
     userDoc = user ? await readDoc("users", user.uid).catch(() => null) : null;
     peopleSearchResults = [];
+    organizationCache = null;
+    organizationCacheAt = 0;
     schedule(true);
   });
   window.addEventListener("hashchange", () => { peopleSearchResults = []; schedule(true); });

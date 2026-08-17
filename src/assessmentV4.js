@@ -8,6 +8,8 @@ let authUser = null;
 let userDoc = null;
 let profileDoc = null;
 let timers = [];
+let enhanceInFlight = null;
+let adminProfilesPromise = null;
 
 const STANDING = Object.freeze([
   ["unreviewed", "Unreviewed"],
@@ -145,7 +147,6 @@ async function updateAssessment(profileId, professionalStanding, riskLevel) {
     updatedAt: Fire.serverTimestamp()
   });
 
-  // Re-read the record so the UI only reports success after Firestore confirms persistence.
   const persisted = await readDoc("profiles", profileId);
   if (!persisted || persisted.professionalStanding !== professionalStanding || persisted.riskLevel !== riskLevel) {
     throw new Error("The assessment write was not confirmed by Firestore. Please try again.");
@@ -288,12 +289,14 @@ async function mountAdminAssessments() {
   if (route() !== "/admin" || !canAssess()) return;
   const panel = root()?.querySelector("#admin-users");
   const table = panel?.querySelector("table");
-  if (!table) return;
+  if (!table || table.dataset.v4AssessmentMounted === "true") return;
 
   const rows = [...table.querySelectorAll("tbody tr")];
   if (!rows.length || !rows.some((row) => row.querySelector("[data-user-role]"))) return;
 
-  const profiles = await readAll("profiles");
+  if (!adminProfilesPromise) adminProfilesPromise = readAll("profiles").finally(() => { adminProfilesPromise = null; });
+  const profiles = await adminProfilesPromise;
+  if (table.dataset.v4AssessmentMounted === "true") return;
   const byId = new Map(profiles.map((profile) => [profile.id, profile]));
   insertHeader(table, "standing", "Standing");
   insertHeader(table, "risk", "Risk");
@@ -333,7 +336,6 @@ async function mountAdminAssessments() {
     mountedRows += 1;
   }
 
-  // Mark complete only after every profile row has its own independent Save control.
   if (mountedRows > 0) table.dataset.v4AssessmentMounted = "true";
 }
 
@@ -348,9 +350,15 @@ async function enhance() {
   }
 }
 
+function runEnhance() {
+  if (enhanceInFlight) return enhanceInFlight;
+  enhanceInFlight = Promise.resolve(enhance()).finally(() => { enhanceInFlight = null; });
+  return enhanceInFlight;
+}
+
 function schedule() {
   timers.forEach(clearTimeout);
-  timers = [0, 120, 320, 650, 1100, 1800].map((delay) => setTimeout(enhance, delay));
+  timers = [0, 260, 900].map((delay) => setTimeout(runEnhance, delay));
 }
 
 async function initialize() {
@@ -364,10 +372,14 @@ async function initialize() {
   ]);
   Auth.onAuthStateChanged(auth, async (user) => {
     authUser = user;
+    adminProfilesPromise = null;
     await refreshSelf();
     schedule();
   });
-  window.addEventListener("hashchange", schedule);
+  window.addEventListener("hashchange", () => {
+    adminProfilesPromise = null;
+    schedule();
+  });
   window.addEventListener("DOMContentLoaded", schedule);
   schedule();
 }
