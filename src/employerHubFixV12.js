@@ -11,6 +11,12 @@ let authUser = null;
 let userDoc = null;
 let timers = [];
 let repairing = false;
+let reconcileInFlight = null;
+let contextCache = null;
+let contextCacheKey = "";
+let contextCacheAt = 0;
+let organizationsCache = null;
+let organizationsCacheAt = 0;
 
 const EMPLOYER_ROLES = new Set(["verified_employer_member", "org_admin", "reviewer", "admin", "owner"]);
 const route = () => location.hash.replace(/^#/, "").split("?")[0] || "/";
@@ -29,6 +35,13 @@ function activeEmployer() {
 function canRepairAccount() {
   return userDoc?.status === "active" && ["admin", "owner"].includes(userDoc?.role);
 }
+function clearCaches() {
+  contextCache = null;
+  contextCacheKey = "";
+  contextCacheAt = 0;
+  organizationsCache = null;
+  organizationsCacheAt = 0;
+}
 
 async function readDoc(collectionName, id) {
   if (!id) return null;
@@ -42,6 +55,12 @@ async function readWhere(collectionName, field, op, value) {
 async function readAll(collectionName) {
   const snap = await Fire.getDocs(Fire.collection(db, collectionName));
   return snap.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+}
+async function loadOrganizations() {
+  if (organizationsCache && Date.now() - organizationsCacheAt < 15000) return organizationsCache;
+  organizationsCache = await readAll("organizations").catch(() => []);
+  organizationsCacheAt = Date.now();
+  return organizationsCache;
 }
 
 async function resolveOrganizationReference(reference) {
@@ -63,20 +82,33 @@ async function resolveApprovedRequestOrganization() {
 
 async function resolveOrganizationContext() {
   const requested = params().get("org");
+  const key = `${authUser?.uid || "anon"}:${userDoc?.role || ""}:${userDoc?.organizationId || ""}:${requested || ""}`;
+  if (contextCache && contextCacheKey === key && Date.now() - contextCacheAt < 12000) return contextCache;
+
+  let result = null;
   if (userDoc?.role === "owner" && requested) {
     const selected = await resolveOrganizationReference(requested);
-    if (selected) return { org: selected, source: "owner_selection" };
+    if (selected) result = { org: selected, source: "owner_selection" };
   }
 
-  const assigned = await resolveOrganizationReference(userDoc?.organizationId);
-  if (assigned) return {
-    org: assigned,
-    source: assigned.id === userDoc?.organizationId ? "account_assignment" : "legacy_cognitus_id"
-  };
+  if (!result) {
+    const assigned = await resolveOrganizationReference(userDoc?.organizationId);
+    if (assigned) result = {
+      org: assigned,
+      source: assigned.id === userDoc?.organizationId ? "account_assignment" : "legacy_cognitus_id"
+    };
+  }
 
-  const approved = await resolveApprovedRequestOrganization();
-  if (approved) return { org: approved, source: "approved_employer_status" };
-  return { org: null, source: "none" };
+  if (!result) {
+    const approved = await resolveApprovedRequestOrganization();
+    if (approved) result = { org: approved, source: "approved_employer_status" };
+  }
+
+  if (!result) result = { org: null, source: "none" };
+  contextCache = result;
+  contextCacheKey = key;
+  contextCacheAt = Date.now();
+  return result;
 }
 
 function repairScreen(org, source) {
@@ -100,6 +132,7 @@ async function repairAssignment(org, source) {
       organizationId: org.id,
       updatedAt: Fire.serverTimestamp()
     });
+    clearCaches();
     sessionStorage.setItem("cognitus:employer-org-repaired", org.id);
     window.setTimeout(() => location.reload(), 220);
     return true;
@@ -125,6 +158,7 @@ function ownerChooser(organizations) {
 
 async function selectOwnerOrganization(org) {
   if (!org) return;
+  clearCaches();
   const repaired = await repairAssignment(org, "owner_selection");
   if (!repaired) {
     location.hash = `#/employer?org=${encodeURIComponent(org.id)}`;
@@ -136,7 +170,7 @@ async function showOwnerChooser() {
   if (!root || userDoc?.role !== "owner" || route() !== "/employer") return;
   const existingGate = root.querySelector(".emp11-gate");
   if (!existingGate || root.querySelector("[data-emp12-owner-chooser]")) return;
-  const organizations = await readAll("organizations").catch(() => []);
+  const organizations = await loadOrganizations();
   root.innerHTML = ownerChooser(organizations);
   root.querySelectorAll("[data-emp12-select-org]").forEach((button) => {
     button.addEventListener("click", async () => {
@@ -153,7 +187,7 @@ async function enhanceOwnerSwitcher(currentOrg) {
   if (!root || userDoc?.role !== "owner" || route() !== "/employer") return;
   const aside = root.querySelector(".emp11-workspace-hero aside");
   if (!aside || aside.querySelector("[data-emp12-owner-switcher]")) return;
-  const organizations = (await readAll("organizations").catch(() => []))
+  const organizations = (await loadOrganizations())
     .filter((org) => org.verificationStatus === "verified")
     .sort((a, b) => clean(a.name).localeCompare(clean(b.name), undefined, { sensitivity: "base" }));
   if (!organizations.length) return;
@@ -187,6 +221,14 @@ async function reconcileEmployerHub() {
   if (org && userDoc.role === "owner") await enhanceOwnerSwitcher(org);
 }
 
+function runReconcile() {
+  if (reconcileInFlight) return reconcileInFlight;
+  reconcileInFlight = Promise.resolve(reconcileEmployerHub())
+    .catch((error) => console.warn("Employer Hub V12 reconciliation failed", error))
+    .finally(() => { reconcileInFlight = null; });
+  return reconcileInFlight;
+}
+
 function mountStyles() {
   if (document.querySelector("#cognitus-employer-hub-fix-v12")) return;
   const link = document.createElement("link");
@@ -198,7 +240,7 @@ function mountStyles() {
 
 function schedule() {
   timers.forEach(clearTimeout);
-  timers = [80, 260, 700, 1250, 1900].map((delay) => setTimeout(() => reconcileEmployerHub().catch((error) => console.warn("Employer Hub V12 reconciliation failed", error)), delay));
+  timers = [100, 480, 1300].map((delay) => setTimeout(runReconcile, delay));
 }
 
 async function initialize() {
@@ -214,9 +256,15 @@ async function initialize() {
   Auth.onAuthStateChanged(auth, async (user) => {
     authUser = user;
     userDoc = user ? await readDoc("users", user.uid).catch(() => null) : null;
+    clearCaches();
     schedule();
   });
-  window.addEventListener("hashchange", schedule);
+  window.addEventListener("hashchange", () => {
+    contextCache = null;
+    contextCacheKey = "";
+    contextCacheAt = 0;
+    schedule();
+  });
   window.addEventListener("pageshow", schedule);
   window.addEventListener("DOMContentLoaded", schedule);
   schedule();
