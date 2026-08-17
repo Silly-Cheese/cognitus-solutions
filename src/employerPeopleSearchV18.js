@@ -1,3 +1,4 @@
+import "./foundationCoreV19.js";
 import { FIREBASE_CDN_BASE, initializeFirebaseServices } from "./firebase/firebaseApp.js";
 
 let db = null;
@@ -95,8 +96,10 @@ async function compatibleProfileSearch(field, rawValue) {
 }
 
 function profileCard(profile) {
+  const merged = Boolean(profile.mergedIntoProfileId || lower(profile.identityStatus) === "merged");
+  const canonicalId = profile.mergedIntoProfileId || profile.id;
   const linked = Boolean(profile.linkedUserId || profile.claimedByUid || lower(profile.identityStatus) === "claimed");
-  const identityLabel = linked ? "Account Linked" : (profile.recordOrigin === "employer_created" ? "Employer Supplied" : (profile.identityStatus || "Unclaimed"));
+  const identityLabel = merged ? "Merged Record" : linked ? "Account Linked" : (profile.recordOrigin === "employer_created" ? "Employer Supplied" : (profile.identityStatus || "Unclaimed"));
   return `<article class="emp11-person-card" data-emp18-result="${escapeHtml(profile.id)}">
     <div class="emp11-person-head">
       <div><span>${escapeHtml(profile.cognitusId || profile.id)}</span><h3>${escapeHtml(profile.displayName || "Unnamed Person")}</h3></div>
@@ -104,7 +107,7 @@ function profileCard(profile) {
     </div>
     <p>${escapeHtml(identityLine(profile))}</p>
     <div class="emp11-chip-row">${badge(profile.professionalStanding || "unreviewed")}${badge(profile.riskLevel || "unreviewed")}</div>
-    <div class="emp11-actions"><a class="button button-dark" href="#/employer/candidate?profile=${encodeURIComponent(profile.id)}">Open Candidate File</a></div>
+    <div class="emp11-actions"><a class="button button-dark" href="#/employer/candidate?profile=${encodeURIComponent(canonicalId)}">Open Candidate File</a><a class="button button-light" href="#/people/master?profile=${encodeURIComponent(canonicalId)}">Master Record</a></div>
   </article>`;
 }
 
