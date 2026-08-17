@@ -1,0 +1,26 @@
+name: Validate Navigation V23
+
+on:
+  push:
+    branches:
+      - main
+      - "agent/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  navigation-v23:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check V23 JavaScript syntax
+        run: node --check src/navigationStateV23.js
+      - name: Run Navigation V23 regression checks
+        run: node scripts/validate-navigation-v23.mjs
