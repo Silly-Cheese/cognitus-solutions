@@ -77,7 +77,9 @@ function decoratePersonResult(card) {
   const risk = clean(riskNode.textContent.replace(/^risk:\s*/i, "")) || "unreviewed";
   const standingTone = toneFor(standing);
   const riskTone = toneFor(risk);
-  const overallTone = severityRank(riskTone) >= severityRank(standingTone) ? riskTone : standingTone;
+  const overallTone = standingTone === "neutral" || riskTone === "neutral"
+    ? "neutral"
+    : (severityRank(riskTone) >= severityRank(standingTone) ? riskTone : standingTone);
 
   card.classList.add("ui13-person-result");
   card.dataset.assessmentTone = overallTone;
