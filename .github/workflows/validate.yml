@@ -71,5 +71,8 @@ jobs:
       - name: Run Performance V16 checks
         run: node scripts/validate-performance-v16.mjs
 
+      - name: Run Employer Hub Recognition V17 checks
+        run: node scripts/validate-employer-recognition-v17.mjs
+
       - name: Compile Firestore rules in emulator
         run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus "echo Firestore rules compiled"
