@@ -19,6 +19,12 @@ assert(css.includes('body.nav25-ready .topbar>.topnav{display:none!important}'),
 assert(css.includes('body.nav25-ready #v4-mobile-nav-toggle'), "legacy V4 toggle is not hidden");
 assert(css.includes('[data-nav20-mobile-toggle]{display:none!important}'), "legacy V20 toggle is not hidden");
 assert(css.includes('.nav25-drawer[hidden]{display:none!important}'), "closed V25 drawer is not guaranteed out of layout/hit-testing");
+assert(css.includes('body.nav25-ready:not(.nav25-open) .nav25-drawer'), "closed body state does not independently suppress the drawer");
+const visibleRule = css.indexOf('body.nav25-ready .nav25-drawer{');
+const closedRule = css.lastIndexOf('body.nav25-ready .nav25-drawer[hidden]');
+assert(visibleRule >= 0 && closedRule > visibleRule, "closed/hidden drawer rule must come after the visible drawer rule so it wins the cascade");
+assert(css.includes('visibility:hidden!important'), "closed drawer is not removed from visibility");
+assert(css.includes('pointer-events:none!important'), "closed drawer can still intercept taps");
 assert(css.includes('position:fixed!important'), "V25 drawer is not viewport-contained");
 assert(css.includes('overflow-y:auto!important'), "V25 drawer does not scroll independently");
 assert(!js.includes("MutationObserver"), "V25 must remain MutationObserver-free");
