@@ -133,3 +133,13 @@
   .nav25-group-links{grid-template-columns:1fr}
   .nav25-utilities{grid-template-columns:1fr}
 }
+
+/* V26: hidden/closed state must outrank the visible drawer rule above. */
+@media(max-width:1180px){
+  body.nav25-ready .nav25-drawer[hidden],
+  body.nav25-ready:not(.nav25-open) .nav25-drawer{
+    display:none!important;
+    visibility:hidden!important;
+    pointer-events:none!important;
+  }
+}
