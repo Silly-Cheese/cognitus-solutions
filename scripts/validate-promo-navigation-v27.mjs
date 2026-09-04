@@ -12,9 +12,10 @@ must(nav, '/admin/promotions', 'admin promotions route');
 must(nav, '/promotional-access', 'promotional access route');
 must(nav, 'Promotion Management', 'admin promotion management link');
 must(nav, 'Promo Access', 'user promotional access primary link');
-must(nav, 'MutationObserver', 'shell rebuild recovery');
+must(nav, 'runBoundedSync', 'bounded shell rebuild recovery');
 must(nav, 'data-promo27-ops-group', 'operations directory group');
 must(nav, 'Intelligence Center', 'intelligence discovery link');
 must(nav, 'Cognitus Labs', 'labs discovery link');
+if (nav.includes('MutationObserver')) throw new Error('Promo Navigation V27 validation failed: navigation must remain observer-free');
 
 console.log("Promo Navigation V27 regression checks passed.");
