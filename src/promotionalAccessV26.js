@@ -4,6 +4,7 @@ import { renderAccessHub, renderPromoAdmin } from "./promo/promotionalAdminV26.j
 import { startPromotionalNavigationV27 } from "./promo/promotionalNavigationV27.js";
 import { startPromotionalEnhancementsV28 } from "./promo/promotionalEnhancementsV28.js";
 import { startPromotionalMobileV29 } from "./promo/promotionalMobileV29.js";
+import { startPromotionalWorkspacesV30 } from "./promo/promotionalWorkspacesV30.js";
 
 startPromotionalAccessV26({
   renderFeature: renderFeaturePage,
@@ -13,3 +14,4 @@ startPromotionalAccessV26({
 startPromotionalNavigationV27();
 startPromotionalEnhancementsV28();
 startPromotionalMobileV29();
+startPromotionalWorkspacesV30();
