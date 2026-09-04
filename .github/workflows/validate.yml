@@ -46,7 +46,13 @@ jobs:
           node --check src/comprehensiveReportV15.js
           node --check src/employerPeopleSearchV18.js
           node --check src/foundationCoreV19.js
+          node --check src/promotionalAccessV26.js
+          node --check src/promo/promotionalCoreV26.js
+          node --check src/promo/promotionalFeaturesV26.js
+          node --check src/promo/promotionalAdminV26.js
           node --check scripts/build-firestore-v19.mjs
+          node --check scripts/build-promotional-rules-v26.mjs
+          node --check scripts/validate-promotional-access-v26.mjs
           node --check scripts/validate-foundation-v19.mjs
           node --check scripts/validate-navigation-v20.mjs
 
@@ -89,8 +95,14 @@ jobs:
       - name: Run Navigation V20 checks
         run: node scripts/validate-navigation-v20.mjs
 
+      - name: Run Promotional Access V26 checks
+        run: node scripts/validate-promotional-access-v26.mjs
+
       - name: Build Foundation V19 Firestore rules
         run: node scripts/build-firestore-v19.mjs
 
-      - name: Compile Foundation V19 Firestore rules in emulator
-        run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus --config firebase.v19.json "echo Foundation V19 Firestore rules compiled"
+      - name: Add Promotional Access V26 Firestore rules
+        run: node scripts/build-promotional-rules-v26.mjs
+
+      - name: Compile Firestore rules in emulator
+        run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus --config firebase.v19.json "echo Foundation V19 + Promotional Access V26 Firestore rules compiled"
