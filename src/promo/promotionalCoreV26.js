@@ -22,6 +22,7 @@ export const FEATURE_BY_ID = new Map(FEATURES.map((feature)=>[feature.id,feature
 export const FEATURE_BY_ROUTE = new Map(FEATURES.map((feature)=>[feature.route,feature]));
 export const PROMO_ROUTES = new Set(["/promotional-access","/admin/promotions",...FEATURES.map((feature)=>feature.route)]);
 export const USER_DATA_TYPES = Object.freeze(["watchlist","investigation","intelligence_report","snapshot","profile_customization","collection","search_event"]);
+export const PROMO_RENDER_EVENT = "cognitus:promo-rendered";
 
 export const root = document.querySelector("#page-root");
 export const nav = document.querySelector(".topnav");
@@ -35,7 +36,9 @@ export let profileRecord = null;
 let sessionReady = false;
 let accessCache = null;
 let accessCacheAt = 0;
-let syncTimers = [];
+let renderTimer = null;
+let navTimers = [];
+let renderGeneration = 0;
 let handlers = null;
 
 export const clean = (value)=>String(value ?? "").trim();
@@ -247,22 +250,48 @@ async function syncNav(){
   nodes.forEach((node)=>anchor?nav.insertBefore(node,anchor):nav.appendChild(node));
 }
 
-async function renderPromoRoute(){
-  if(!root || !PROMO_ROUTES.has(currentRoute()))return;
+async function renderPromoRoute(expectedRoute){
+  if(!root || !PROMO_ROUTES.has(expectedRoute) || currentRoute()!==expectedRoute)return false;
   await refreshSession();
-  if(!authUser || !userRecord)return loginRequired();
-  const route=currentRoute();
-  if(route==="/promotional-access")return handlers.renderAccessHub();
-  if(route==="/admin/promotions")return handlers.renderAdmin();
-  const feature=FEATURE_BY_ROUTE.get(route); if(!feature)return;
-  if(!(await hasFeature(feature.id)))return renderLockedFeature(feature);
-  return handlers.renderFeature(feature);
+  if(currentRoute()!==expectedRoute)return false;
+  if(!authUser || !userRecord){ loginRequired(); return true; }
+  if(expectedRoute==="/promotional-access"){ await handlers.renderAccessHub(); return currentRoute()===expectedRoute; }
+  if(expectedRoute==="/admin/promotions"){ await handlers.renderAdmin(); return currentRoute()===expectedRoute; }
+  const feature=FEATURE_BY_ROUTE.get(expectedRoute); if(!feature)return false;
+  if(!(await hasFeature(feature.id))){ if(currentRoute()===expectedRoute)renderLockedFeature(feature); return currentRoute()===expectedRoute; }
+  if(currentRoute()!==expectedRoute)return false;
+  await handlers.renderFeature(feature);
+  return currentRoute()===expectedRoute;
+}
+
+function scheduleNavSync(){
+  navTimers.forEach(clearTimeout);
+  navTimers=[0,180,700].map((delay)=>setTimeout(()=>syncNav().catch(()=>null),delay));
+}
+
+function announceRendered(route,generation){
+  document.dispatchEvent(new CustomEvent(PROMO_RENDER_EVENT,{detail:{route,generation}}));
 }
 
 export function scheduleSync(force=false){
-  syncTimers.forEach(clearTimeout);
   if(force){sessionReady=false;invalidateAccess();}
-  syncTimers=[0,100,280,650,1200,1900].map((delay)=>setTimeout(async()=>{ await renderPromoRoute().catch((error)=>{console.error("Promotional Access V26",error); if(PROMO_ROUTES.has(currentRoute()))root.innerHTML=`<section class="hero" data-promo-v26-page><p class="eyebrow">Promotional Access</p><h1>This page could not load.</h1>${notice(error?.message||"Unknown error","error")}</section>`;}); await syncNav().catch(()=>null); },delay));
+  const expectedRoute=currentRoute();
+  const generation=++renderGeneration;
+  clearTimeout(renderTimer);
+  renderTimer=setTimeout(async()=>{
+    if(generation!==renderGeneration)return;
+    try{
+      const rendered=await renderPromoRoute(expectedRoute);
+      if(rendered && generation===renderGeneration && currentRoute()===expectedRoute)announceRendered(expectedRoute,generation);
+    }catch(error){
+      console.error("Promotional Access V26",error);
+      if(generation===renderGeneration && PROMO_ROUTES.has(currentRoute()) && currentRoute()===expectedRoute){
+        root.innerHTML=`<section class="hero" data-promo-v26-page><p class="eyebrow">Promotional Access</p><h1>This page could not load.</h1>${notice(error?.message||"Unknown error","error")}</section>`;
+        announceRendered(expectedRoute,generation);
+      }
+    }
+  },0);
+  scheduleNavSync();
 }
 
 export async function startPromotionalAccessV26(routeHandlers){
