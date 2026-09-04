@@ -1,0 +1,178 @@
+/* Cognitus Solutions · Promotional Access V29 mobile */
+@media(max-width:1180px){
+  body.promo29-mobile-route{overflow-x:hidden}
+  body.promo29-mobile-route .page-root.promo28-active{width:100%;max-width:none;padding:clamp(.72rem,2.4vw,1.2rem)!important;overflow-x:hidden}
+  body.promo29-mobile-route .page-root.promo28-active>*{max-width:100%}
+
+  .nav29-promo-primary{background:linear-gradient(145deg,#11151b,#20252d)!important;color:#fff!important;border-color:#222831!important}
+  .nav29-promo-primary small{color:rgba(255,255,255,.65)!important}
+  .nav29-promo-primary .nav29-promo-icon{background:#fff!important;color:#111!important}
+  .nav29-promo-primary.is-active{box-shadow:0 10px 28px rgba(17,21,27,.18)!important;border-color:#111!important}
+  .nav29-promo-group{margin-top:.65rem;padding-top:.72rem!important;border-top:1px solid #ecece8}
+  .nav29-promo-group>p{color:#3d4147!important}
+  .nav29-promo-group .nav25-group-links a:first-child{background:#111!important;color:#fff!important}
+  .nav29-promo-group .nav25-group-links a:first-child small{color:rgba(255,255,255,.65)!important}
+
+  body.promo29-mobile-route .promo26-access-hero,
+  body.promo29-mobile-route .promo26-admin-hero,
+  body.promo29-mobile-route .promo26-feature-hero{
+    min-height:310px!important;
+    border-radius:24px!important;
+    padding:clamp(1.25rem,4vw,2rem)!important;
+  }
+  body.promo29-mobile-route .promo26-access-hero h1,
+  body.promo29-mobile-route .promo26-admin-hero h1,
+  body.promo29-mobile-route .promo26-feature-hero h1{
+    max-width:13ch!important;
+    font-size:clamp(2.45rem,8vw,4.6rem)!important;
+    line-height:.92!important;
+  }
+  body.promo29-mobile-route .promo28-feature-topline{
+    left:1.25rem!important;right:1.25rem!important;top:1.05rem!important;
+  }
+  body.promo29-mobile-route .promo28-feature-mark{margin-top:3.3rem!important}
+
+  body.promo29-mobile-route .promo26-active-access,
+  body.promo29-mobile-route .promo26-feature-section,
+  body.promo29-mobile-route .promo26-intel-report{
+    border-radius:22px!important;
+    padding:clamp(1rem,3.6vw,1.5rem)!important;
+    margin-top:.75rem!important;
+  }
+
+  body.promo29-mobile-route .promo26-feature-grid,
+  body.promo29-mobile-route .promo26-record-grid,
+  body.promo29-mobile-route .promo26-preview-grid,
+  body.promo29-mobile-route .promo26-metric-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:.72rem!important;
+  }
+  body.promo29-mobile-route .promo26-feature-card{min-height:285px!important;border-radius:20px!important}
+  body.promo29-mobile-route .promo26-two-col{grid-template-columns:1fr!important;gap:.75rem!important}
+  body.promo29-mobile-route .promo26-filter-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.65rem!important}
+  body.promo29-mobile-route .promo26-check-grid,
+  body.promo29-mobile-route .promo26-check-grid.roles{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+
+  body.promo29-mobile-route .promo26-searchbar,
+  body.promo29-mobile-route .promo26-redeem-inline,
+  body.promo29-mobile-route .promo26-lock-form{
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:.65rem!important;
+  }
+  body.promo29-mobile-route input,
+  body.promo29-mobile-route select,
+  body.promo29-mobile-route textarea,
+  body.promo29-mobile-route button,
+  body.promo29-mobile-route .button{font-size:16px!important}
+  body.promo29-mobile-route input,
+  body.promo29-mobile-route select,
+  body.promo29-mobile-route .button,
+  body.promo29-mobile-route button[type="submit"]{min-height:48px!important}
+
+  body.promo29-mobile-route .promo26-admin-tabs{
+    position:sticky;top:calc(var(--nav25-header-height,64px) + .35rem);z-index:40;
+    display:flex;flex-wrap:nowrap;gap:.45rem;overflow-x:auto;padding:.5rem;
+    margin:.7rem 0;border:1px solid rgba(20,24,30,.08);border-radius:18px;background:rgba(248,248,247,.95);backdrop-filter:blur(18px);scrollbar-width:none
+  }
+  body.promo29-mobile-route .promo26-admin-tabs::-webkit-scrollbar{display:none}
+  body.promo29-mobile-route .promo26-admin-tabs .button{flex:0 0 auto;white-space:nowrap}
+  body.promo29-mobile-route .promo26-admin-card .hero-actions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:.5rem!important}
+  body.promo29-mobile-route .promo26-admin-card .hero-actions .button{width:100%!important}
+  body.promo29-mobile-route .promo26-admin-stats{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:.5rem!important}
+  body.promo29-mobile-route .promo26-admin-stats span{padding:.7rem;border:1px solid #e4e6e9;border-radius:14px;background:#f8f9fa}
+  body.promo29-mobile-route .form-row{grid-template-columns:1fr!important;gap:.7rem!important}
+  body.promo29-mobile-route .promo28-account-preview{grid-template-columns:1fr!important;gap:.55rem!important}
+  body.promo29-mobile-route .promo28-account-select{max-width:100%!important}
+
+  body.promo29-mobile-route .promo26-compare-table{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:.35rem}
+  body.promo29-mobile-route .promo26-compare-table>div{min-width:690px}
+  body.promo29-mobile-route .promo26-network-map{min-height:430px!important;border-radius:20px!important;overflow:hidden!important}
+  body.promo29-mobile-route .promo26-network-ring{width:270px!important;height:270px!important}
+  body.promo29-mobile-route .promo26-network-center{width:118px!important;height:118px!important;font-size:.85rem!important}
+  body.promo29-mobile-route .promo26-network-node{width:102px!important;min-height:62px!important;font-size:.72rem!important;padding:.45rem!important}
+
+  body.promo29-mobile-route .promo26-lock-backdrop{
+    align-items:end!important;
+    padding:0!important;
+    background:rgba(10,12,15,.48)!important;
+    backdrop-filter:blur(10px)!important;
+  }
+  body.promo29-mobile-route .promo26-lock-modal{
+    width:100%!important;max-width:none!important;max-height:calc(100dvh - var(--nav25-header-height,64px))!important;
+    margin:0!important;padding:1.3rem 1rem max(1.15rem,env(safe-area-inset-bottom))!important;
+    border-radius:26px 26px 0 0!important;border-bottom:0!important;overflow-y:auto!important;
+  }
+  body.promo29-mobile-route .promo26-lock-icon{width:68px!important;height:68px!important;font-size:1.65rem!important}
+  body.promo29-mobile-route .promo26-lock-actions{display:grid!important;grid-template-columns:1fr 1fr!important}
+  body.promo29-mobile-route .promo26-lock-actions>*{width:100%!important}
+
+  body.promo29-mobile-route .promo26-workspace-list>article,
+  body.promo29-mobile-route .promo26-entitlement,
+  body.promo29-mobile-route .promo26-record-card{border-radius:17px!important}
+  body.promo29-mobile-route .promo26-entitlement{grid-template-columns:1fr!important}
+  body.promo29-mobile-route .promo26-section-heading{align-items:flex-start!important;gap:.65rem!important}
+  body.promo29-mobile-route .promo26-section-heading>span{white-space:nowrap}
+  body.promo29-mobile-route .promo26-report-toolbar{flex-wrap:wrap!important}
+}
+
+@media(max-width:720px){
+  body.promo29-mobile-route .page-root.promo28-active{padding:.62rem!important}
+  body.promo29-mobile-route .promo26-access-hero,
+  body.promo29-mobile-route .promo26-admin-hero,
+  body.promo29-mobile-route .promo26-feature-hero{min-height:280px!important;border-radius:21px!important;padding:1.1rem!important}
+  body.promo29-mobile-route .promo26-access-hero h1,
+  body.promo29-mobile-route .promo26-admin-hero h1,
+  body.promo29-mobile-route .promo26-feature-hero h1{font-size:clamp(2.25rem,12vw,3.65rem)!important;max-width:11ch!important}
+  body.promo29-mobile-route .promo26-access-hero>p:not(.eyebrow),
+  body.promo29-mobile-route .promo26-admin-hero>p:not(.eyebrow),
+  body.promo29-mobile-route .promo26-feature-hero>p:not(.eyebrow){font-size:.92rem!important;line-height:1.58!important}
+
+  body.promo29-mobile-route .promo26-feature-grid,
+  body.promo29-mobile-route .promo26-record-grid,
+  body.promo29-mobile-route .promo26-preview-grid,
+  body.promo29-mobile-route .promo26-metric-grid,
+  body.promo29-mobile-route .promo26-filter-grid,
+  body.promo29-mobile-route .promo26-check-grid,
+  body.promo29-mobile-route .promo26-check-grid.roles{grid-template-columns:1fr!important}
+
+  body.promo29-mobile-route .promo26-feature-card{min-height:260px!important;padding:1rem!important}
+  body.promo29-mobile-route .promo26-feature-top{top:1rem!important;right:1rem!important;left:74px!important}
+  body.promo29-mobile-route .promo28-card-icon{width:46px!important;height:46px!important;border-radius:14px!important}
+
+  body.promo29-mobile-route .promo26-searchbar,
+  body.promo29-mobile-route .promo26-redeem-inline,
+  body.promo29-mobile-route .promo26-lock-form{grid-template-columns:1fr!important;padding:.75rem!important}
+  body.promo29-mobile-route .promo26-searchbar .button,
+  body.promo29-mobile-route .promo26-redeem-inline .button,
+  body.promo29-mobile-route .promo26-lock-form .button{width:100%!important}
+
+  body.promo29-mobile-route .promo26-admin-card .hero-actions{grid-template-columns:1fr!important}
+  body.promo29-mobile-route .promo26-admin-stats{grid-template-columns:1fr!important}
+  body.promo29-mobile-route .promo26-section-heading{display:grid!important;grid-template-columns:1fr!important}
+  body.promo29-mobile-route .promo26-section-heading>span{width:max-content;max-width:100%}
+
+  body.promo29-mobile-route .promo26-metric-grid article{min-height:122px!important}
+  body.promo29-mobile-route .promo26-metric-grid article strong{font-size:2.6rem!important}
+  body.promo29-mobile-route .promo26-detail-list div{grid-template-columns:1fr!important;gap:.22rem!important}
+
+  body.promo29-mobile-route .promo26-network-map{min-height:500px!important}
+  body.promo29-mobile-route .promo26-network-ring{width:225px!important;height:225px!important}
+  body.promo29-mobile-route .promo26-network-node{width:88px!important;font-size:.65rem!important}
+  body.promo29-mobile-route .promo26-network-map .promo26-network-node:nth-of-type(1){left:3%!important;top:9%!important}
+  body.promo29-mobile-route .promo26-network-map .promo26-network-node:nth-of-type(2){right:3%!important;top:9%!important}
+  body.promo29-mobile-route .promo26-network-map .promo26-network-node:nth-of-type(3){left:3%!important;bottom:9%!important}
+  body.promo29-mobile-route .promo26-network-map .promo26-network-node:nth-of-type(4){right:3%!important;bottom:9%!important}
+
+  body.promo29-mobile-route .promo26-lock-actions{grid-template-columns:1fr!important}
+  body.promo29-mobile-route .promo26-lock-modal h2{font-size:clamp(1.55rem,8vw,2.15rem)!important}
+}
+
+@media(max-width:390px){
+  .nav29-promo-primary{min-height:64px!important}
+  body.promo29-mobile-route .page-root.promo28-active{padding:.45rem!important}
+  body.promo29-mobile-route .promo26-access-hero,
+  body.promo29-mobile-route .promo26-admin-hero,
+  body.promo29-mobile-route .promo26-feature-hero{border-radius:18px!important;padding:1rem!important}
+  body.promo29-mobile-route .promo26-active-access,
+  body.promo29-mobile-route .promo26-feature-section{border-radius:18px!important;padding:.9rem!important}
+}
