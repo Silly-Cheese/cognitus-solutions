@@ -36,26 +36,38 @@ function operationLink(path, label, note) {
 function ensurePrimary(shell, role) {
   const primary = shell.querySelector(".nav20-primary");
   if (!primary) return;
-  primary.querySelectorAll("[data-promo27-primary]").forEach((node) => node.remove());
 
   const admin = ADMIN_ROLES.has(role);
+  const id = admin ? "admin" : "access";
   const path = admin ? "/admin/promotions" : "/promotional-access";
   const label = admin ? "Promotions" : "Promo Access";
-  const markup = primaryMarkup(path, label, admin ? "admin" : "access");
+  let link = primary.querySelector("[data-promo27-primary]");
+
+  if (link && link.dataset.promo27Primary !== id) {
+    link.remove();
+    link = null;
+  }
+  if (link) return;
+
   const actions = primary.querySelector(".is-actions");
-  if (actions) actions.insertAdjacentHTML("beforebegin", markup);
-  else primary.insertAdjacentHTML("beforeend", markup);
+  if (actions) actions.insertAdjacentHTML("beforebegin", primaryMarkup(path, label, id));
+  else primary.insertAdjacentHTML("beforeend", primaryMarkup(path, label, id));
 }
 
 function ensureOperations(shell, role) {
   const grid = shell.querySelector(".nav20-ops-grid");
   if (!grid) return;
-  grid.querySelector("[data-promo27-ops-group]")?.remove();
-
   const admin = ADMIN_ROLES.has(role);
-  const section = document.createElement("section");
+  const signature = admin ? "admin" : "user";
+  let section = grid.querySelector("[data-promo27-ops-group]");
+
+  if (section?.dataset.promo27Role === signature) return;
+  section?.remove();
+
+  section = document.createElement("section");
   section.className = "nav20-ops-group promo27-ops-group";
   section.dataset.promo27OpsGroup = "true";
+  section.dataset.promo27Role = signature;
   section.innerHTML = `
     <div class="nav20-ops-heading"><span>Promotional Access</span><strong>Codes & restricted tools</strong></div>
     <div class="nav20-ops-links">
