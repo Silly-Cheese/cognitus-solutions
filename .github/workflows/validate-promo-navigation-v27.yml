@@ -1,0 +1,27 @@
+name: Validate Promo Navigation V27
+
+on:
+  push:
+    branches:
+      - main
+      - "agent/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check Promotional Access navigation syntax
+        run: |
+          node --check src/promotionalAccessV26.js
+          node --check src/promo/promotionalNavigationV27.js
+          node --check scripts/validate-promo-navigation-v27.mjs
+      - name: Run Promotional Access navigation regression checks
+        run: node scripts/validate-promo-navigation-v27.mjs
