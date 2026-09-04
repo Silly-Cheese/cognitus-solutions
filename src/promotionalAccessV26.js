@@ -5,6 +5,7 @@ import { startPromotionalNavigationV27 } from "./promo/promotionalNavigationV27.
 import { startPromotionalEnhancementsV28 } from "./promo/promotionalEnhancementsV28.js";
 import { startPromotionalMobileV29 } from "./promo/promotionalMobileV29.js";
 import { startPromotionalWorkspacesV30 } from "./promo/promotionalWorkspacesV30.js";
+import { startPromotionalInvestigationsV32 } from "./promo/promotionalInvestigationV32.js";
 
 startPromotionalAccessV26({
   renderFeature: renderFeaturePage,
@@ -15,3 +16,4 @@ startPromotionalNavigationV27();
 startPromotionalEnhancementsV28();
 startPromotionalMobileV29();
 startPromotionalWorkspacesV30();
+startPromotionalInvestigationsV32();
