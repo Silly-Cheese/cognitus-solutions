@@ -1,7 +1,8 @@
 import * as C from "./promotionalCoreV26.js";
 
 const STYLE_ID = "cognitus-promotional-workspaces-v30";
-let timers = [];
+let frame = 0;
+let observer = null;
 
 const WORKSPACES = {
   intelligence_center: {
@@ -219,7 +220,10 @@ function decorateResults(feature, meta) {
       let summary = results.previousElementSibling;
       if (!summary?.matches("[data-promo30-results-summary]")) {
         results.insertAdjacentHTML("beforebegin", `<div class="promo30-results-summary" data-promo30-results-summary><span>Discovery results</span><strong>${count} profile${count === 1 ? "" : "s"}</strong></div>`);
-      } else summary.querySelector("strong").textContent = `${count} profile${count === 1 ? "" : "s"}`;
+      } else {
+        const text = `${count} profile${count === 1 ? "" : "s"}`;
+        if (summary.querySelector("strong")?.textContent !== text) summary.querySelector("strong").textContent = text;
+      }
     }
   }
 
@@ -284,11 +288,11 @@ function decorateSpecial(feature, meta) {
 function decorateCards(feature) {
   C.root?.querySelectorAll(".promo26-record-card").forEach((card, index) => {
     card.classList.add("promo30-record-card");
-    card.style.setProperty("--promo30-order", String(index));
+    if(card.style.getPropertyValue("--promo30-order") !== String(index)) card.style.setProperty("--promo30-order", String(index));
   });
   C.root?.querySelectorAll(".promo26-workspace-list > article").forEach((card, index) => {
     card.classList.add("promo30-vault-card");
-    card.style.setProperty("--promo30-order", String(index));
+    if(card.style.getPropertyValue("--promo30-order") !== String(index)) card.style.setProperty("--promo30-order", String(index));
   });
   if (feature.id === "cognitus_labs") C.root?.querySelectorAll(".promo26-record-card").forEach((card) => card.classList.add("promo30-lab-card"));
 }
@@ -312,20 +316,24 @@ function sync() {
 }
 
 function scheduleSync() {
-  timers.forEach(clearTimeout);
-  timers = [0, 80, 180, 360, 700, 1200, 1900].map((delay) => setTimeout(sync, delay));
+  if(frame) cancelAnimationFrame(frame);
+  frame=requestAnimationFrame(()=>{frame=0;sync();});
+}
+
+function observeWorkspace(){
+  if(observer || !C.root)return;
+  observer=new MutationObserver((mutations)=>{
+    if(!C.PROMO_ROUTES.has(C.currentRoute()))return;
+    if(mutations.some((mutation)=>mutation.type==="childList" && (mutation.addedNodes.length || mutation.removedNodes.length))) scheduleSync();
+  });
+  observer.observe(C.root,{childList:true,subtree:true});
 }
 
 export function startPromotionalWorkspacesV30() {
   mountStyles();
-  scheduleSync();
+  observeWorkspace();
+  document.addEventListener(C.PROMO_RENDER_EVENT, scheduleSync);
   window.addEventListener("hashchange", scheduleSync);
   window.addEventListener("pageshow", scheduleSync);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) scheduleSync(); });
-  document.addEventListener("submit", (event) => {
-    if (event.target.closest?.(".promo30-workspace, [data-promo-v26-page]")) setTimeout(scheduleSync, 40);
-  }, true);
-  document.addEventListener("click", (event) => {
-    if (event.target.closest?.(".promo30-workspace button, .promo30-workspace a")) setTimeout(scheduleSync, 80);
-  }, true);
+  scheduleSync();
 }
