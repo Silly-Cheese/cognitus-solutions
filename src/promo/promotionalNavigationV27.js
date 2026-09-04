@@ -6,7 +6,6 @@ const PROMO_FEATURE_ROUTES = new Set([
   "/labs", "/enhanced-profile", "/collections", "/analytics", "/early-access"
 ]);
 let timer = null;
-let observer = null;
 
 const clean = (value) => String(value ?? "").trim();
 const currentRoute = () => location.hash.replace(/^#/, "").split("?")[0] || "/";
@@ -96,9 +95,6 @@ function updateActiveState(shell) {
     if (active) link.setAttribute("aria-current", "page");
     else link.removeAttribute("aria-current");
   });
-  if (route === "/promotional-access" || route === "/admin/promotions" || PROMO_FEATURE_ROUTES.has(route)) {
-    shell.querySelector("[data-nav20-operations]")?.classList.add("is-active");
-  }
 }
 
 function sync() {
@@ -116,15 +112,17 @@ function scheduleSync() {
   timer = setTimeout(sync, 0);
 }
 
+function runBoundedSync() {
+  scheduleSync();
+  [80, 180, 360, 700, 1200, 2200, 4000].forEach((delay) => setTimeout(sync, delay));
+}
+
 export function startPromotionalNavigationV27() {
   if (!nav) return;
-  scheduleSync();
-  [120, 420, 900, 1800, 3000].forEach((delay) => setTimeout(sync, delay));
-  window.addEventListener("hashchange", scheduleSync);
-  window.addEventListener("pageshow", scheduleSync);
-  window.addEventListener("focus", scheduleSync);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) scheduleSync(); });
-
-  observer = new MutationObserver(() => scheduleSync());
-  observer.observe(nav, { childList: true, subtree: true });
+  runBoundedSync();
+  window.addEventListener("hashchange", runBoundedSync);
+  window.addEventListener("pageshow", runBoundedSync);
+  window.addEventListener("focus", runBoundedSync);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) runBoundedSync(); });
+  nav.addEventListener("click", () => setTimeout(sync, 120));
 }
