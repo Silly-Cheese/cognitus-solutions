@@ -1,0 +1,30 @@
+name: Validate Promotional Access V28
+
+on:
+  pull_request:
+    paths:
+      - "src/promo/promotionalEnhancementsV28.js"
+      - "src/promotionalAccessV28.css"
+      - "src/promotionalAccessV26.js"
+      - "scripts/validate-promotional-access-v28.mjs"
+      - ".github/workflows/validate-promotional-access-v28.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/promo/promotionalEnhancementsV28.js"
+      - "src/promotionalAccessV28.css"
+      - "src/promotionalAccessV26.js"
+      - "scripts/validate-promotional-access-v28.mjs"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check V28 JavaScript syntax
+        run: node --check src/promo/promotionalEnhancementsV28.js
+      - name: Run V28 regression checks
+        run: node scripts/validate-promotional-access-v28.mjs
