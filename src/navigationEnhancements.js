@@ -8,6 +8,7 @@ import "./employerStatusV10.js";
 import "./employerWorkspaceV11.js";
 import "./employerHubFixV12.js";
 import "./employerPeopleSearchV18.js";
+import "./promotionalAccessV26.js";
 
 const nav = document.querySelector(".topnav");
 const root = document.querySelector("#page-root");
