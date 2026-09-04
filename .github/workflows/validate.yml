@@ -50,9 +50,11 @@ jobs:
           node --check src/promo/promotionalCoreV26.js
           node --check src/promo/promotionalFeaturesV26.js
           node --check src/promo/promotionalAdminV26.js
+          node --check src/promo/promotionalMobileV29.js
           node --check scripts/build-firestore-v19.mjs
           node --check scripts/build-promotional-rules-v26.mjs
           node --check scripts/validate-promotional-access-v26.mjs
+          node --check scripts/validate-promotional-mobile-v29.mjs
           node --check scripts/validate-foundation-v19.mjs
           node --check scripts/validate-navigation-v20.mjs
 
@@ -97,6 +99,9 @@ jobs:
 
       - name: Run Promotional Access V26 checks
         run: node scripts/validate-promotional-access-v26.mjs
+
+      - name: Run Promotional Access V29 mobile checks
+        run: node scripts/validate-promotional-mobile-v29.mjs
 
       - name: Build Foundation V19 Firestore rules
         run: node scripts/build-firestore-v19.mjs
