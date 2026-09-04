@@ -8,6 +8,15 @@ function fail(message) {
   throw new Error(`Foundation V19 rules build failed: ${message}`);
 }
 
+// firestore.rules is now allowed to be the canonical, already-materialized
+// production ruleset. Preserve compatibility with the historical pre-V19
+// source layout while making repeated builds/deploys safe.
+if (rules.includes("Foundation V19: canonical identities, organization membership, privacy, and repair tooling.")) {
+  fs.writeFileSync(outputPath, rules);
+  console.log("Foundation V19 rules already present; copied canonical firestore.rules to firestore.v19.rules.");
+  process.exit(0);
+}
+
 function replaceOnce(needle, replacement, label) {
   const index = rules.indexOf(needle);
   if (index < 0) fail(`missing ${label}`);
