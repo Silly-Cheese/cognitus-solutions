@@ -85,6 +85,112 @@ service cloud.firestore {
         && currentUser().organizationId == orgId;
     }
 
+    function organizationMemberPath(orgId, uid) {
+      return /databases/$(database)/documents/organizationMembers/$(orgId + '__' + uid);
+    }
+
+    function hasOrganizationMember(orgId) {
+      return activeAccount()
+        && orgId != null
+        && exists(organizationMemberPath(orgId, request.auth.uid));
+    }
+
+    function activeOrganizationMember(orgId) {
+      return hasOrganizationMember(orgId)
+        && get(organizationMemberPath(orgId, request.auth.uid)).data.memberStatus == 'active';
+    }
+
+    function canRunChecks(orgId) {
+      return isAdmin()
+        || (sameOrg(orgId) && (
+          role() in ['org_admin', 'reviewer']
+          || !hasOrganizationMember(orgId)
+          || (activeOrganizationMember(orgId)
+            && get(organizationMemberPath(orgId, request.auth.uid)).data.permissions.runChecks == true)
+        ));
+    }
+
+    function canManageTalent(orgId) {
+      return isAdmin()
+        || (sameOrg(orgId) && (
+          role() in ['org_admin', 'reviewer']
+          || !hasOrganizationMember(orgId)
+          || (activeOrganizationMember(orgId)
+            && get(organizationMemberPath(orgId, request.auth.uid)).data.permissions.manageTalent == true)
+        ));
+    }
+
+    function canAddEmploymentRecords(orgId) {
+      return isAdmin()
+        || (sameOrg(orgId) && (
+          role() in ['org_admin', 'reviewer']
+          || !hasOrganizationMember(orgId)
+          || (activeOrganizationMember(orgId)
+            && get(organizationMemberPath(orgId, request.auth.uid)).data.permissions.addEmploymentRecords == true)
+        ));
+    }
+
+    function canRequestReports(orgId) {
+      return isAdmin()
+        || (sameOrg(orgId) && (
+          role() in ['org_admin', 'reviewer']
+          || !hasOrganizationMember(orgId)
+          || (activeOrganizationMember(orgId)
+            && get(organizationMemberPath(orgId, request.auth.uid)).data.permissions.requestReports == true)
+        ));
+    }
+
+    function canManageMembers(orgId) {
+      return isAdmin()
+        || (sameOrg(orgId) && (
+          role() == 'org_admin'
+          || (activeOrganizationMember(orgId)
+            && get(organizationMemberPath(orgId, request.auth.uid)).data.permissions.manageMembers == true)
+        ));
+    }
+
+    // Promotional Access V26 helpers.
+    function promotionalCodePath(code) {
+      return /databases/$(database)/documents/promotionalCodes/$(code);
+    }
+
+    function promoRedemptionPath(code, uid) {
+      return /databases/$(database)/documents/promoRedemptions/$(code + '__' + uid);
+    }
+
+    function promoCampaignOpen(code) {
+      return activeAccount()
+        && exists(promotionalCodePath(code))
+        && get(promotionalCodePath(code)).data.status == 'active'
+        && (get(promotionalCodePath(code)).data.startsAt == null || get(promotionalCodePath(code)).data.startsAt <= request.time)
+        && (get(promotionalCodePath(code)).data.redeemUntil == null || get(promotionalCodePath(code)).data.redeemUntil >= request.time)
+        && (get(promotionalCodePath(code)).data.maxTotalRedemptions == 0
+          || get(promotionalCodePath(code)).data.redeemedCount < get(promotionalCodePath(code)).data.maxTotalRedemptions);
+    }
+
+    function promoEligible(code) {
+      return promoCampaignOpen(code)
+        && role() in get(promotionalCodePath(code)).data.eligibleRoles
+        && (get(promotionalCodePath(code)).data.eligibleOrganizationId == null
+          || currentUser().organizationId == get(promotionalCodePath(code)).data.eligibleOrganizationId);
+    }
+
+    function validPromoExpiry(code, expiry) {
+      return (
+          get(promotionalCodePath(code)).data.accessMode == 'permanent'
+          && expiry == null
+        ) || (
+          get(promotionalCodePath(code)).data.accessMode == 'fixed_end'
+          && expiry == get(promotionalCodePath(code)).data.accessEndsAt
+          && expiry > request.time
+        ) || (
+          get(promotionalCodePath(code)).data.accessMode == 'duration'
+          && expiry is timestamp
+          && expiry > request.time
+          && expiry <= request.time + duration.value(get(promotionalCodePath(code)).data.accessDurationSeconds + 600, 's')
+        );
+    }
+
     function validDiscordId(value) {
       return value is string && value.matches('^[0-9]{15,25}$');
     }
@@ -456,6 +562,7 @@ service cloud.firestore {
         || (isEmployerMember() && sameOrg(resource.data.organizationId));
 
       allow create: if activeAccount()
+        && (request.resource.data.organizationId == null || canRunChecks(request.resource.data.organizationId))
         && request.resource.data.keys().hasOnly([
           'id', 'cognitusId', 'checkedByUid', 'checkedByCognitusId', 'organizationId',
           'searchType', 'searchField', 'searchQuery', 'reason', 'additionalNotes',
@@ -597,7 +704,7 @@ service cloud.firestore {
         || (signedIn() && resource.data.requesterUid == request.auth.uid)
         || ownsProfile(resource.data.subjectProfileId);
 
-      allow create: if isEmployerMember()
+      allow create: if canRequestReports(currentUser().organizationId)
         && request.resource.data.keys().hasOnly([
           'id', 'reportId', 'reportCognitusId', 'subjectProfileId', 'requesterUid',
           'requesterCognitusId', 'requesterDisplayName', 'requesterOrganizationId',
@@ -853,11 +960,9 @@ service cloud.firestore {
     }
 
     match /employerCandidates/{candidateId} {
-      allow read: if isOwner()
-        || (isEmployerMember() && sameOrg(resource.data.organizationId));
+      allow read: if isOwner() || canManageTalent(resource.data.organizationId);
 
-      allow create: if isEmployerMember()
-        && sameOrg(request.resource.data.organizationId)
+      allow create: if canManageTalent(request.resource.data.organizationId)
         && request.resource.data.keys().hasOnly([
           'id', 'organizationId', 'organizationCognitusId', 'profileId', 'profileCognitusId',
           'profileDisplayName', 'pipelineStatus', 'privateNotes', 'addedByUid', 'addedByCognitusId',
@@ -878,8 +983,7 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
-      allow update: if isEmployerMember()
-        && sameOrg(resource.data.organizationId)
+      allow update: if canManageTalent(resource.data.organizationId)
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'pipelineStatus', 'privateNotes', 'updatedAt'
         ])
@@ -896,8 +1000,7 @@ service cloud.firestore {
         && shortString(request.resource.data.privateNotes, 3000)
         && request.resource.data.updatedAt == request.time;
 
-      allow delete: if isOwner()
-        || (isEmployerMember() && sameOrg(resource.data.organizationId));
+      allow delete: if isOwner() || canManageTalent(resource.data.organizationId);
     }
 
     match /employmentRecords/{recordId} {
@@ -905,8 +1008,7 @@ service cloud.firestore {
         || isEmployerMember()
         || ownsProfile(resource.data.profileId);
 
-      allow create: if isEmployerMember()
-        && sameOrg(request.resource.data.organizationId)
+      allow create: if canAddEmploymentRecords(request.resource.data.organizationId)
         && request.resource.data.keys().hasOnly([
           'id', 'cognitusId', 'profileId', 'profileCognitusId', 'organizationId',
           'organizationCognitusId', 'organizationName', 'positionTitle', 'department',
@@ -941,8 +1043,7 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
-      allow update: if isEmployerMember()
-        && sameOrg(resource.data.organizationId)
+      allow update: if canAddEmploymentRecords(resource.data.organizationId)
         && (resource.data.createdByUid == request.auth.uid || role() == 'org_admin' || isAdmin())
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'positionTitle', 'department', 'employmentType', 'startedOn', 'endedOn',
@@ -1263,6 +1364,486 @@ service cloud.firestore {
 
     match /passwordResetRequests/{requestId} {
       allow read, write: if false;
+    }
+
+
+    // Foundation V19: canonical identities, organization membership, privacy, and repair tooling.
+    match /organizationMembers/{memberId} {
+      allow read: if isAdmin()
+        || (activeAccount() && sameOrg(resource.data.organizationId));
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'organizationId', 'organizationCognitusId', 'userUid', 'userCognitusId',
+          'displayName', 'positionTitle', 'memberStatus', 'permissions', 'grantedByUid',
+          'removalRequestedByUid', 'removalRequestedAt', 'removedByUid', 'removedAt',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == memberId
+        && memberId == request.resource.data.organizationId + '__' + request.resource.data.userUid
+        && exists(organizationPath(request.resource.data.organizationId))
+        && exists(userPath(request.resource.data.userUid))
+        && get(userPath(request.resource.data.userUid)).data.organizationId == request.resource.data.organizationId
+        && request.resource.data.organizationCognitusId == get(organizationPath(request.resource.data.organizationId)).data.cognitusId
+        && request.resource.data.userCognitusId == get(userPath(request.resource.data.userUid)).data.cognitusId
+        && request.resource.data.permissions is map
+        && request.resource.data.permissions.keys().hasOnly([
+          'runChecks', 'manageTalent', 'addEmploymentRecords', 'requestReports', 'manageMembers'
+        ])
+        && request.resource.data.permissions.runChecks is bool
+        && request.resource.data.permissions.manageTalent is bool
+        && request.resource.data.permissions.addEmploymentRecords is bool
+        && request.resource.data.permissions.requestReports is bool
+        && request.resource.data.permissions.manageMembers is bool
+        && request.resource.data.memberStatus in ['active', 'pending', 'suspended', 'removal_requested', 'removed']
+        && (
+          (
+            request.resource.data.userUid == request.auth.uid
+            && sameOrg(request.resource.data.organizationId)
+            && isEmployerMember()
+            && request.resource.data.memberStatus == 'active'
+            && request.resource.data.permissions.runChecks == true
+            && request.resource.data.permissions.manageTalent == true
+            && request.resource.data.permissions.addEmploymentRecords == true
+            && request.resource.data.permissions.requestReports == true
+            && request.resource.data.permissions.manageMembers == false
+            && request.resource.data.grantedByUid == request.auth.uid
+          )
+          || canManageMembers(request.resource.data.organizationId)
+        )
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isAdmin()
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.organizationId == resource.data.organizationId
+        && request.resource.data.userUid == resource.data.userUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.permissions is map
+        && request.resource.data.permissions.keys().hasOnly([
+          'runChecks', 'manageTalent', 'addEmploymentRecords', 'requestReports', 'manageMembers'
+        ])
+        && request.resource.data.memberStatus in ['active', 'pending', 'suspended', 'removal_requested', 'removed']
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if canManageMembers(resource.data.organizationId)
+        && sameOrg(resource.data.organizationId)
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'displayName', 'positionTitle', 'memberStatus', 'permissions',
+          'removalRequestedByUid', 'removalRequestedAt', 'updatedAt'
+        ])
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.organizationId == resource.data.organizationId
+        && request.resource.data.userUid == resource.data.userUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.permissions is map
+        && request.resource.data.permissions.manageMembers == resource.data.permissions.manageMembers
+        && request.resource.data.memberStatus in ['active', 'suspended', 'removal_requested']
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isOwner();
+    }
+
+    match /privacyRequests/{privacyId} {
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.requesterUid == request.auth.uid);
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'cognitusId', 'requesterUid', 'requesterCognitusId', 'requestType',
+          'statement', 'status', 'reviewedByUid', 'reviewerNotes', 'decidedAt',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == privacyId
+        && validCognitusId(request.resource.data.cognitusId, 'PVR')
+        && request.resource.data.requesterUid == request.auth.uid
+        && request.resource.data.requesterCognitusId == currentUser().cognitusId
+        && request.resource.data.requestType in ['correction', 'deletion', 'data_review']
+        && shortString(request.resource.data.statement, 3000)
+        && request.resource.data.statement.size() >= 10
+        && request.resource.data.status == 'pending'
+        && request.resource.data.reviewedByUid == null
+        && request.resource.data.reviewerNotes == ''
+        && request.resource.data.decidedAt == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'reviewedByUid', 'reviewerNotes', 'decidedAt', 'updatedAt'
+        ])
+        && request.resource.data.status in ['pending', 'accepted', 'denied', 'completed']
+        && request.resource.data.reviewedByUid == request.auth.uid
+        && shortString(request.resource.data.reviewerNotes, 1500)
+        && request.resource.data.decidedAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isOwner() && resource.data.status == 'completed';
+    }
+
+    match /profileMergeMap/{sourceProfileId} {
+      allow read: if activeAccount();
+      allow create: if isOwner()
+        && request.resource.data.keys().hasOnly([
+          'sourceProfileId', 'targetProfileId', 'sourceCognitusId', 'targetCognitusId',
+          'reason', 'mergedByUid', 'mergedAt'
+        ])
+        && request.resource.data.sourceProfileId == sourceProfileId
+        && request.resource.data.sourceProfileId != request.resource.data.targetProfileId
+        && exists(profilePath(request.resource.data.sourceProfileId))
+        && exists(profilePath(request.resource.data.targetProfileId))
+        && request.resource.data.sourceCognitusId == get(profilePath(request.resource.data.sourceProfileId)).data.cognitusId
+        && request.resource.data.targetCognitusId == get(profilePath(request.resource.data.targetProfileId)).data.cognitusId
+        && request.resource.data.mergedByUid == request.auth.uid
+        && shortString(request.resource.data.reason, 1000)
+        && request.resource.data.mergedAt == request.time;
+      allow update, delete: if false;
+    }
+
+    // Owner-only canonical profile creation/repair and merge metadata.
+    match /profiles/{profileId} {
+      allow create: if isOwner()
+        && exists(userPath(profileId))
+        && request.resource.data.id == profileId
+        && request.resource.data.linkedUserId == profileId
+        && request.resource.data.claimedByUid == profileId
+        && request.resource.data.discordIds == [get(userPath(profileId)).data.discordId]
+        && request.resource.data.type == 'person'
+        && validCognitusId(request.resource.data.cognitusId, 'PRF')
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'displayName', 'discordUsernames', 'discordUsernamesNormalized', 'discordIds',
+          'robloxUsernames', 'robloxUsernamesNormalized', 'knownAliases', 'canonicalProfileId',
+          'mergedIntoProfileId', 'mergedAt', 'mergedByUid', 'identityStatus', 'updatedAt'
+        ])
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    // Owner-only profile-reference rewrites used by the merge tool.
+    match /reports/{reportId} {
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['subjectProfileId', 'updatedAt'])
+        && request.resource.data.subjectOrganizationId == resource.data.subjectOrganizationId
+        && request.resource.data.subjectProfileId != null
+        && exists(profilePath(request.resource.data.subjectProfileId))
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /screeningReportSummaries/{summaryId} {
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['subjectProfileId', 'updatedAt'])
+        && request.resource.data.subjectProfileId != null
+        && exists(profilePath(request.resource.data.subjectProfileId))
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /employmentRecords/{recordId} {
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['profileId', 'profileCognitusId', 'updatedAt'])
+        && exists(profilePath(request.resource.data.profileId))
+        && request.resource.data.profileCognitusId == get(profilePath(request.resource.data.profileId)).data.cognitusId
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /employmentRecordDisputes/{disputeId} {
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['profileId', 'updatedAt'])
+        && exists(profilePath(request.resource.data.profileId))
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /reportAccessRequests/{requestId} {
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['subjectProfileId', 'updatedAt'])
+        && exists(profilePath(request.resource.data.subjectProfileId))
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /reportAccessGrants/{reportId} {
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['subjectProfileId', 'updatedAt'])
+        && exists(profilePath(request.resource.data.subjectProfileId))
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /claims/{claimId} {
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['profileId', 'updatedAt'])
+        && exists(profilePath(request.resource.data.profileId))
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /appeals/{appealId} {
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['profileId', 'updatedAt'])
+        && exists(profilePath(request.resource.data.profileId))
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /checkLogs/{checkId} {
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['targetProfileId', 'updatedAt'])
+        && request.resource.data.targetProfileId != null
+        && exists(profilePath(request.resource.data.targetProfileId))
+        && request.resource.data.updatedAt == request.time;
+    }
+
+    match /employerCandidates/{candidateId} {
+      allow create: if isOwner()
+        && request.resource.data.id == candidateId
+        && candidateId == request.resource.data.organizationId + '__' + request.resource.data.profileId
+        && exists(profilePath(request.resource.data.profileId))
+        && exists(organizationPath(request.resource.data.organizationId))
+        && request.resource.data.profileCognitusId == get(profilePath(request.resource.data.profileId)).data.cognitusId
+        && request.resource.data.profileDisplayName == get(profilePath(request.resource.data.profileId)).data.displayName
+        && validPipelineStatus(request.resource.data.pipelineStatus)
+        && shortString(request.resource.data.privateNotes, 3000)
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['pipelineStatus', 'privateNotes', 'updatedAt'])
+        && validPipelineStatus(request.resource.data.pipelineStatus)
+        && shortString(request.resource.data.privateNotes, 3000)
+        && request.resource.data.updatedAt == request.time;
+    }
+
+
+    // Promotional Access V26: codes, entitlements, redemptions, and private feature workspaces.
+    match /promotionalCodes/{code} {
+      allow get: if activeAccount();
+      allow list: if isAdmin();
+
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+          'id', 'code', 'campaignName', 'description', 'status', 'startsAt', 'redeemUntil',
+          'maxTotalRedemptions', 'maxPerAccount', 'redeemedCount', 'accessMode',
+          'accessDurationSeconds', 'accessEndsAt', 'campaignExpiryBehavior', 'featureIds',
+          'eligibleRoles', 'eligibleOrganizationId', 'distribution', 'createdByUid',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == code
+        && request.resource.data.code == code
+        && code.matches('^[A-Z0-9_-]{4,40}$')
+        && shortString(request.resource.data.campaignName, 100)
+        && request.resource.data.campaignName.size() > 0
+        && shortString(request.resource.data.description, 1000)
+        && request.resource.data.status in ['active', 'paused', 'revoked']
+        && (request.resource.data.startsAt == null || request.resource.data.startsAt is timestamp)
+        && (request.resource.data.redeemUntil == null || request.resource.data.redeemUntil is timestamp)
+        && request.resource.data.maxTotalRedemptions is int
+        && request.resource.data.maxTotalRedemptions >= 0
+        && request.resource.data.maxTotalRedemptions <= 100000
+        && request.resource.data.maxPerAccount is int
+        && request.resource.data.maxPerAccount >= 1
+        && request.resource.data.maxPerAccount <= 100
+        && request.resource.data.redeemedCount == 0
+        && request.resource.data.accessMode in ['permanent', 'duration', 'fixed_end']
+        && request.resource.data.accessDurationSeconds is int
+        && request.resource.data.accessDurationSeconds >= 3600
+        && request.resource.data.accessDurationSeconds <= 157680000
+        && (request.resource.data.accessEndsAt == null || request.resource.data.accessEndsAt is timestamp)
+        && request.resource.data.campaignExpiryBehavior in ['preserve_access', 'revoke_on_campaign_end']
+        && request.resource.data.featureIds is list
+        && request.resource.data.featureIds.size() >= 1
+        && request.resource.data.featureIds.size() <= 15
+        && request.resource.data.eligibleRoles is list
+        && request.resource.data.eligibleRoles.size() >= 1
+        && request.resource.data.eligibleRoles.size() <= 6
+        && (request.resource.data.eligibleOrganizationId == null || shortString(request.resource.data.eligibleOrganizationId, 128))
+        && request.resource.data.distribution in ['secret', 'campaign']
+        && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isAdmin()
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.code == resource.data.code
+        && request.resource.data.redeemedCount == resource.data.redeemedCount
+        && request.resource.data.createdByUid == resource.data.createdByUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status in ['active', 'paused', 'revoked']
+        && shortString(request.resource.data.campaignName, 100)
+        && shortString(request.resource.data.description, 1000)
+        && request.resource.data.maxTotalRedemptions is int
+        && request.resource.data.maxTotalRedemptions >= 0
+        && request.resource.data.maxTotalRedemptions <= 100000
+        && request.resource.data.maxPerAccount is int
+        && request.resource.data.maxPerAccount >= 1
+        && request.resource.data.maxPerAccount <= 100
+        && request.resource.data.accessMode in ['permanent', 'duration', 'fixed_end']
+        && request.resource.data.accessDurationSeconds is int
+        && request.resource.data.accessDurationSeconds >= 3600
+        && request.resource.data.accessDurationSeconds <= 157680000
+        && (request.resource.data.startsAt == null || request.resource.data.startsAt is timestamp)
+        && (request.resource.data.redeemUntil == null || request.resource.data.redeemUntil is timestamp)
+        && (request.resource.data.accessEndsAt == null || request.resource.data.accessEndsAt is timestamp)
+        && request.resource.data.campaignExpiryBehavior in ['preserve_access', 'revoke_on_campaign_end']
+        && request.resource.data.featureIds is list
+        && request.resource.data.featureIds.size() >= 1
+        && request.resource.data.featureIds.size() <= 15
+        && request.resource.data.eligibleRoles is list
+        && request.resource.data.eligibleRoles.size() >= 1
+        && request.resource.data.eligibleRoles.size() <= 6
+        && (request.resource.data.eligibleOrganizationId == null || shortString(request.resource.data.eligibleOrganizationId, 128))
+        && request.resource.data.distribution in ['secret', 'campaign']
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if promoEligible(code)
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['redeemedCount', 'updatedAt'])
+        && request.resource.data.redeemedCount == resource.data.redeemedCount + 1
+        && (resource.data.maxTotalRedemptions == 0 || request.resource.data.redeemedCount <= resource.data.maxTotalRedemptions)
+        && request.resource.data.updatedAt == request.time
+        && existsAfter(promoRedemptionPath(code, request.auth.uid))
+        && getAfter(promoRedemptionPath(code, request.auth.uid)).data.promoId == code
+        && getAfter(promoRedemptionPath(code, request.auth.uid)).data.uid == request.auth.uid
+        && getAfter(promoRedemptionPath(code, request.auth.uid)).data.lastRedeemedAt == request.time;
+
+      allow delete: if isOwner() && resource.data.redeemedCount == 0;
+    }
+
+    match /promoRedemptions/{redemptionId} {
+      allow read: if isAdmin() || (activeAccount() && resource.data.uid == request.auth.uid);
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'promoId', 'code', 'uid', 'userCognitusId', 'redemptionCount', 'featureIds',
+          'status', 'source', 'grantedAt', 'expiresAt', 'campaignEndsAt',
+          'campaignExpiryBehavior', 'lastRedeemedAt', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == redemptionId
+        && redemptionId == request.resource.data.promoId + '__' + request.auth.uid
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.code == request.resource.data.promoId
+        && promoEligible(request.resource.data.promoId)
+        && request.resource.data.userCognitusId == currentUser().cognitusId
+        && request.resource.data.redemptionCount == 1
+        && request.resource.data.redemptionCount <= get(promotionalCodePath(request.resource.data.promoId)).data.maxPerAccount
+        && request.resource.data.featureIds == get(promotionalCodePath(request.resource.data.promoId)).data.featureIds
+        && request.resource.data.status == 'active'
+        && request.resource.data.source == 'promotional_code'
+        && validPromoExpiry(request.resource.data.promoId, request.resource.data.expiresAt)
+        && request.resource.data.campaignEndsAt == get(promotionalCodePath(request.resource.data.promoId)).data.redeemUntil
+        && request.resource.data.campaignExpiryBehavior == get(promotionalCodePath(request.resource.data.promoId)).data.campaignExpiryBehavior
+        && request.resource.data.grantedAt == request.time
+        && request.resource.data.lastRedeemedAt == request.time
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && getAfter(promotionalCodePath(request.resource.data.promoId)).data.redeemedCount == get(promotionalCodePath(request.resource.data.promoId)).data.redeemedCount + 1;
+
+      allow update: if activeAccount()
+        && resource.data.uid == request.auth.uid
+        && promoEligible(resource.data.promoId)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.promoId == resource.data.promoId
+        && request.resource.data.code == resource.data.code
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.userCognitusId == resource.data.userCognitusId
+        && request.resource.data.source == resource.data.source
+        && request.resource.data.grantedAt == resource.data.grantedAt
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.redemptionCount == resource.data.redemptionCount + 1
+        && request.resource.data.redemptionCount <= get(promotionalCodePath(resource.data.promoId)).data.maxPerAccount
+        && request.resource.data.featureIds == get(promotionalCodePath(resource.data.promoId)).data.featureIds
+        && request.resource.data.status == 'active'
+        && validPromoExpiry(resource.data.promoId, request.resource.data.expiresAt)
+        && request.resource.data.campaignEndsAt == get(promotionalCodePath(resource.data.promoId)).data.redeemUntil
+        && request.resource.data.campaignExpiryBehavior == get(promotionalCodePath(resource.data.promoId)).data.campaignExpiryBehavior
+        && request.resource.data.lastRedeemedAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && getAfter(promotionalCodePath(resource.data.promoId)).data.redeemedCount == get(promotionalCodePath(resource.data.promoId)).data.redeemedCount + 1;
+
+      allow update: if isAdmin()
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'updatedAt'])
+        && request.resource.data.status in ['active', 'revoked']
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    match /promoAccessGrants/{grantId} {
+      allow read: if isAdmin() || (activeAccount() && resource.data.uid == request.auth.uid);
+
+      allow create: if isAdmin()
+        && request.resource.data.keys().hasOnly([
+          'id', 'uid', 'userCognitusId', 'featureIds', 'status', 'source', 'label', 'note',
+          'expiresAt', 'grantedByUid', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == grantId
+        && exists(userPath(request.resource.data.uid))
+        && get(userPath(request.resource.data.uid)).data.status == 'active'
+        && request.resource.data.userCognitusId == get(userPath(request.resource.data.uid)).data.cognitusId
+        && request.resource.data.featureIds is list
+        && request.resource.data.featureIds.size() >= 1
+        && request.resource.data.featureIds.size() <= 15
+        && request.resource.data.status == 'active'
+        && request.resource.data.source == 'manual_grant'
+        && shortString(request.resource.data.label, 80)
+        && shortString(request.resource.data.note, 500)
+        && (request.resource.data.expiresAt == null || request.resource.data.expiresAt is timestamp)
+        && request.resource.data.grantedByUid == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isAdmin()
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.userCognitusId == resource.data.userCognitusId
+        && request.resource.data.source == resource.data.source
+        && request.resource.data.grantedByUid == resource.data.grantedByUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.featureIds is list
+        && request.resource.data.featureIds.size() >= 1
+        && request.resource.data.featureIds.size() <= 15
+        && request.resource.data.status in ['active', 'revoked']
+        && shortString(request.resource.data.label, 80)
+        && shortString(request.resource.data.note, 500)
+        && (request.resource.data.expiresAt == null || request.resource.data.expiresAt is timestamp)
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isOwner();
+    }
+
+    match /promoUserData/{recordId} {
+      allow read: if isAdmin() || (activeAccount() && resource.data.ownerUid == request.auth.uid);
+
+      allow create: if activeAccount()
+        && request.resource.data.keys().hasOnly([
+          'id', 'ownerUid', 'type', 'title', 'subjectId', 'organizationId', 'payload',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == recordId
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.type in [
+          'watchlist', 'investigation', 'intelligence_report', 'snapshot',
+          'profile_customization', 'collection', 'search_event'
+        ]
+        && shortString(request.resource.data.title, 120)
+        && (request.resource.data.subjectId == null || shortString(request.resource.data.subjectId, 128))
+        && (request.resource.data.organizationId == null || shortString(request.resource.data.organizationId, 128))
+        && request.resource.data.payload is map
+        && request.resource.data.payload.keys().size() <= 30
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if activeAccount()
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.createdAt == resource.data.createdAt
+        && shortString(request.resource.data.title, 120)
+        && (request.resource.data.subjectId == null || shortString(request.resource.data.subjectId, 128))
+        && (request.resource.data.organizationId == null || shortString(request.resource.data.organizationId, 128))
+        && request.resource.data.payload is map
+        && request.resource.data.payload.keys().size() <= 30
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isAdmin() || (activeAccount() && resource.data.ownerUid == request.auth.uid);
     }
 
     match /{document=**} {
