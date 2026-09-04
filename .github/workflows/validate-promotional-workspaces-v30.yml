@@ -1,0 +1,24 @@
+name: Validate Promotional Workspaces V30
+
+on:
+  push:
+    branches:
+      - main
+      - "agent/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-v30:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check V30 JavaScript syntax
+        run: node --check src/promo/promotionalWorkspacesV30.js
+      - name: Run V30 workspace regression checks
+        run: node scripts/validate-promotional-workspaces-v30.mjs
