@@ -2,8 +2,7 @@ import * as C from "./promotionalCoreV26.js";
 
 const STYLE_ID = "cognitus-promotional-v28";
 const ADMIN_ROUTE = "/admin/promotions";
-const ACCESS_ROUTE = "/promotional-access";
-let syncTimers = [];
+let frame = 0;
 let accountsCache = null;
 let accountsCacheAt = 0;
 
@@ -105,6 +104,7 @@ async function enhanceDirectGrant() {
   form.dataset.promo28Picker = "loading";
   try {
     const accounts = await loadAccounts();
+    if (!form.isConnected || !uidInput.isConnected) return;
     const label = uidInput.closest("label");
     if (!label) return;
     const select = document.createElement("select");
@@ -122,7 +122,7 @@ async function enhanceDirectGrant() {
     select.addEventListener("change", () => renderAccountPreview(select, accounts, preview));
     form.dataset.promo28Picker = "ready";
   } catch (error) {
-    form.dataset.promo28Picker = "failed";
+    if(form.isConnected) form.dataset.promo28Picker = "failed";
     console.info("Promotional Access V28 account picker unavailable", error?.code || error?.message);
   }
 }
@@ -229,7 +229,7 @@ function bindSafeRedemption() {
         C.setBusy(button, true, "Unlocking…", "Redeem Code");
         const result = await redeemWithoutMissingDocumentRead(new FormData(form).get("code"));
         C.setMessage(message, `Access granted. ${result.redemption.featureIds.length} promotional feature${result.redemption.featureIds.length === 1 ? "" : "s"} unlocked.`, "success");
-        setTimeout(() => C.scheduleSync(true), 260);
+        setTimeout(() => C.scheduleSync(true), 300);
       } catch (error) {
         const text = error?.code === "permission-denied"
           ? "Cognitus could not complete this redemption. Refresh once and try again; if it continues, the promotional access rules need to be republished."
@@ -266,15 +266,14 @@ function decorateRoute() {
 }
 
 function scheduleEnhancement() {
-  syncTimers.forEach(clearTimeout);
-  syncTimers = [0, 80, 220, 520, 950, 1600, 2400].map((delay) => setTimeout(decorateRoute, delay));
+  if(frame) cancelAnimationFrame(frame);
+  frame=requestAnimationFrame(()=>{frame=0;decorateRoute();});
 }
 
 export function startPromotionalEnhancementsV28() {
   mountStyles();
+  document.addEventListener(C.PROMO_RENDER_EVENT, scheduleEnhancement);
   window.addEventListener("hashchange", scheduleEnhancement);
   window.addEventListener("pageshow", scheduleEnhancement);
-  window.addEventListener("focus", scheduleEnhancement);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) scheduleEnhancement(); });
   scheduleEnhancement();
 }

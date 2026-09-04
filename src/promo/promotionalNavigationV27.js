@@ -5,7 +5,10 @@ const PROMO_FEATURE_ROUTES = new Set([
   "/network", "/watchlist", "/investigations", "/intelligence-reports", "/change-comparison",
   "/labs", "/enhanced-profile", "/collections", "/analytics", "/early-access"
 ]);
-let timer = null;
+let frame = 0;
+let navObserver = null;
+let shellObserver = null;
+let observedShell = null;
 
 const clean = (value) => String(value ?? "").trim();
 const currentRoute = () => location.hash.replace(/^#/, "").split("?")[0] || "/";
@@ -97,9 +100,19 @@ function updateActiveState(shell) {
   });
 }
 
+function observeShell(shell) {
+  if (observedShell === shell) return;
+  shellObserver?.disconnect();
+  observedShell = shell;
+  if (!shell) return;
+  shellObserver = new MutationObserver(() => scheduleSync());
+  shellObserver.observe(shell, { childList: true });
+}
+
 function sync() {
   if (!nav || !sourceAuthenticated()) return;
   const shell = nav.querySelector(":scope > .nav20-shell");
+  observeShell(shell);
   if (!shell) return;
   const role = sourceRole();
   ensurePrimary(shell, role);
@@ -108,21 +121,16 @@ function sync() {
 }
 
 function scheduleSync() {
-  clearTimeout(timer);
-  timer = setTimeout(sync, 0);
-}
-
-function runBoundedSync() {
-  scheduleSync();
-  [80, 180, 360, 700, 1200, 2200, 4000].forEach((delay) => setTimeout(sync, delay));
+  if (frame) cancelAnimationFrame(frame);
+  frame = requestAnimationFrame(() => { frame = 0; sync(); });
 }
 
 export function startPromotionalNavigationV27() {
   if (!nav) return;
-  runBoundedSync();
-  window.addEventListener("hashchange", runBoundedSync);
-  window.addEventListener("pageshow", runBoundedSync);
-  window.addEventListener("focus", runBoundedSync);
-  document.addEventListener("visibilitychange", () => { if (!document.hidden) runBoundedSync(); });
-  nav.addEventListener("click", () => setTimeout(sync, 120));
+  navObserver = new MutationObserver(() => scheduleSync());
+  navObserver.observe(nav, { childList: true });
+  scheduleSync();
+  window.addEventListener("hashchange", scheduleSync);
+  window.addEventListener("pageshow", scheduleSync);
+  nav.addEventListener("click", () => setTimeout(scheduleSync, 80));
 }
