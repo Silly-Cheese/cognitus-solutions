@@ -3,6 +3,7 @@ import fs from "node:fs";
 const css = fs.readFileSync("src/professionalContrastV40.css", "utf8");
 const js = fs.readFileSync("src/professionalContrastV40.js", "utf8");
 const bootstrap = fs.readFileSync("src/promotionalAccessV26.js", "utf8");
+const index = fs.readFileSync("index.html", "utf8");
 
 const requiredCss = [
   "--c40-text: #101828",
@@ -29,6 +30,9 @@ if (!bootstrap.includes('import { startProfessionalContrastV40 } from "./profess
 }
 if (!bootstrap.includes('safeStartV38("professional-contrast-v40", startProfessionalContrastV40);')) {
   throw new Error("Promotional bootstrap does not start V40 contrast.");
+}
+if (!index.includes('./src/promotionalAccessV26.js?v=20260905-v40-contrast')) {
+  throw new Error("index.html does not force the V40 promotional bootstrap URL.");
 }
 
 function rgb(hex) {
