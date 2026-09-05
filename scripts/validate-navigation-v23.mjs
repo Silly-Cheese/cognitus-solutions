@@ -8,7 +8,7 @@ function assert(condition, message) {
   if (!condition) throw new Error(`Navigation V23 validation failed: ${message}`);
 }
 
-assert(index.includes("navigationEnhancements.js?v=stability-v4-v23-20260817"), "index does not bust the old navigation module cache");
+assert(index.includes("navigationEnhancements.js?v=20260905-v35-live"), "index does not bust the old navigation module cache");
 assert(/navigationStateV23\.js\?v=20260817-v2[34]-/.test(index), "index does not load the V23/V24 state module with a fresh URL");
 assert(/navigationV20\.css\?v=20260817-v2[34]-/.test(state), "state controller does not force a fresh navigation entry stylesheet");
 assert(/navigationV22\.css\?v=20260817-v2[34]-/.test(state), "state controller does not directly refresh the V22 isolation layer");
