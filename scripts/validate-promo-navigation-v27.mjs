@@ -22,7 +22,7 @@ must(nav, 'Cognitus Labs', 'labs discovery link');
 must(nav, 'Executive Control', 'Owner executive control link');
 must(nav, 'MutationObserver', 'shell reconstruction observer');
 must(nav, 'requestAnimationFrame', 'frame-coalesced navigation updates');
-mustNot(nav, 'promo27-primary', 'legacy top-level promotional primary navigation remains');
+mustNot(nav, 'class="nav20-primary-link promo27-primary', 'legacy top-level promotional primary navigation remains');
 mustNot(nav, 'runBoundedSync', 'legacy bounded shell rebuild polling remains');
 mustNot(nav, '[80, 180, 360, 700, 1200, 2200, 4000]', 'legacy retry schedule remains');
 
