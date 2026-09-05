@@ -7,6 +7,8 @@ const files = {
   professionalCss: read("src/professionalCoreV35.css"),
   frenzy: read("src/frenzyV35.js"),
   frenzyCss: read("src/frenzyV35.css"),
+  signalContrast: read("src/frenzySignalOverrideV35.css"),
+  signalContrastJs: read("src/frenzySignalOverrideV35.js"),
   registry: read("src/promo/promotionalRegistryV35.js"),
   features: read("src/promo/promotionalFeaturesV35.js"),
   nav: read("src/promo/promotionalNavigationV27.js"),
@@ -23,6 +25,7 @@ check("production entry starts the professional V35 contract", files.entry.inclu
 check("production entry starts Frenzy V35", files.entry.includes("startFrenzyV35()"));
 check("production entry registers Signal Zero", files.entry.includes("startPromotionalRegistryV35()"));
 check("production entry uses the V35 feature renderer", files.entry.includes("renderFeaturePageV35"));
+check("production entry loads Signal Zero contrast authority", files.entry.includes('import "./frenzySignalOverrideV35.js"'));
 
 check("professional contract applies a single Cognitus visual class", files.professional.includes('classList.add("cognitus-professional")'));
 check("professional contract renames Relationship Mapping", files.professional.includes('name: "Relationship Analysis"'));
@@ -48,8 +51,10 @@ check("Signal Zero requires an active Frenzy window", files.features.includes("!
 check("Signal Zero uses screening summaries for ordinary promo users", files.features.includes('"screeningReportSummaries"'));
 check("Signal Zero uses full reports only for reviewer roles", files.features.includes("REVIEWER_ROLES"));
 check("Signal Zero explains that convergence is not a risk score", files.features.includes("not a risk score"));
+check("Signal Zero dark forms outrank the global professional contract", files.signalContrast.includes("body.cognitus-professional.cognitus-frenzy-active .signal35-panel input"));
+check("Signal Zero contrast authority is mounted as a stylesheet", files.signalContrastJs.includes("frenzySignalOverrideV35.css"));
 
-check("desktop promotional navigation is consolidated under Intelligence", files.nav.includes("Analysis & research") && !files.nav.includes("promo27-primary"));
+check("desktop promotional navigation is consolidated under Intelligence", files.nav.includes("Analysis & research") && !files.nav.includes('class="nav20-primary-link promo27-primary'));
 check("mobile promotional navigation is consolidated under Intelligence", files.mobile.includes("<p>Intelligence</p>") && !files.mobile.includes("nav29-promo-primary"));
 check("Owner navigation exposes Executive Control", files.nav.includes("Executive Control") && files.mobile.includes("Executive Control"));
 
