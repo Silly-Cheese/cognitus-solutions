@@ -19,11 +19,11 @@ let rootObserver = null;
 let countdownTimer = null;
 let sessionReady = false;
 let portalReady = false;
+const clean = (value) => String(value ?? "").trim();
 let frenzyState = normalizeFrenzy(null);
 let resolveReady;
 const frenzyReady = new Promise((resolve) => { resolveReady = resolve; });
 
-const clean = (value) => String(value ?? "").trim();
 const safe = (value) => String(value ?? "")
   .replaceAll("&", "&amp;")
   .replaceAll("<", "&lt;")
