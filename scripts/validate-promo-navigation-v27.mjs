@@ -11,15 +11,18 @@ function mustNot(source, text, label) {
 }
 
 must(entry, 'startPromotionalNavigationV27', 'navigation bootstrap');
-must(nav, '/admin/promotions', 'admin promotions route');
-must(nav, '/promotional-access', 'promotional access route');
-must(nav, 'Promotion Management', 'admin promotion management link');
-must(nav, 'Promo Access', 'user promotional access primary link');
+must(nav, '/admin/promotions', 'admin feature-access route');
+must(nav, '/promotional-access', 'feature access route');
+must(nav, 'Feature Access Management', 'admin feature-access management link');
+must(nav, 'Feature Access', 'user feature-access link');
 must(nav, 'data-promo27-ops-group', 'operations directory group');
+must(nav, 'Analysis & research', 'professional Intelligence directory heading');
 must(nav, 'Intelligence Center', 'intelligence discovery link');
 must(nav, 'Cognitus Labs', 'labs discovery link');
+must(nav, 'Executive Control', 'Owner executive control link');
 must(nav, 'MutationObserver', 'shell reconstruction observer');
 must(nav, 'requestAnimationFrame', 'frame-coalesced navigation updates');
+mustNot(nav, 'promo27-primary', 'legacy top-level promotional primary navigation remains');
 mustNot(nav, 'runBoundedSync', 'legacy bounded shell rebuild polling remains');
 mustNot(nav, '[80, 180, 360, 700, 1200, 2200, 4000]', 'legacy retry schedule remains');
 
