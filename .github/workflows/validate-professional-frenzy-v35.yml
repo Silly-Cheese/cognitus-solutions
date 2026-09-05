@@ -1,0 +1,71 @@
+name: Validate Professional + Frenzy V35
+
+on:
+  push:
+    branches:
+      - main
+      - "agent/**"
+    paths:
+      - "src/professionalCoreV35.js"
+      - "src/professionalCoreV35.css"
+      - "src/professionalFinishV35.js"
+      - "src/professionalFinishV35.css"
+      - "src/frenzyV35.js"
+      - "src/frenzyV35.css"
+      - "src/frenzySignalOverrideV35.js"
+      - "src/frenzySignalOverrideV35.css"
+      - "src/promotionalAccessV26.js"
+      - "src/promo/promotionalRegistryV35.js"
+      - "src/promo/promotionalFeaturesV35.js"
+      - "src/promo/promotionalRegistryV33.js"
+      - "src/promo/promotionalNavigationV27.js"
+      - "src/promo/promotionalMobileV29.js"
+      - "firestore.rules"
+      - "scripts/validate-professional-frenzy-v35.mjs"
+      - ".github/workflows/validate-professional-frenzy-v35.yml"
+  pull_request:
+    paths:
+      - "src/professionalCoreV35.js"
+      - "src/professionalCoreV35.css"
+      - "src/professionalFinishV35.js"
+      - "src/professionalFinishV35.css"
+      - "src/frenzyV35.js"
+      - "src/frenzyV35.css"
+      - "src/frenzySignalOverrideV35.js"
+      - "src/frenzySignalOverrideV35.css"
+      - "src/promotionalAccessV26.js"
+      - "src/promo/promotionalRegistryV35.js"
+      - "src/promo/promotionalFeaturesV35.js"
+      - "src/promo/promotionalRegistryV33.js"
+      - "src/promo/promotionalNavigationV27.js"
+      - "src/promo/promotionalMobileV29.js"
+      - "firestore.rules"
+      - "scripts/validate-professional-frenzy-v35.mjs"
+      - ".github/workflows/validate-professional-frenzy-v35.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check V35 JavaScript syntax
+        run: |
+          node --check src/professionalCoreV35.js
+          node --check src/professionalFinishV35.js
+          node --check src/frenzyV35.js
+          node --check src/frenzySignalOverrideV35.js
+          node --check src/promo/promotionalRegistryV35.js
+          node --check src/promo/promotionalFeaturesV35.js
+          node --check src/promo/promotionalRegistryV33.js
+          node --check src/promo/promotionalNavigationV27.js
+          node --check src/promo/promotionalMobileV29.js
+          node --check src/promotionalAccessV26.js
+          node --check scripts/validate-professional-frenzy-v35.mjs
+      - name: Run Professional + Frenzy V35 regression checks
+        run: node scripts/validate-professional-frenzy-v35.mjs

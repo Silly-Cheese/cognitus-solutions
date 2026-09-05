@@ -1,0 +1,67 @@
+/* Cognitus Professional V35 finishing pass */
+body.cognitus-professional .site-footer {
+  color: #667085 !important;
+  font-weight: 650 !important;
+  border-top: 1px solid #e4e7ec;
+  margin-top: 1rem;
+}
+
+body.cognitus-professional .site-footer .build {
+  display: none !important;
+}
+
+body.cognitus-professional:not(.cognitus-operational) .hero,
+body.cognitus-professional:not(.cognitus-operational) .form-card,
+body.cognitus-professional:not(.cognitus-operational) .panel {
+  border-radius: 16px !important;
+  border-color: #d9dee5 !important;
+  box-shadow: 0 10px 30px rgba(17,24,39,.06) !important;
+}
+
+body.cognitus-professional:not(.cognitus-operational) .hero h1 {
+  font-size: clamp(2.8rem, 7vw, 5.2rem) !important;
+  line-height: .96 !important;
+  letter-spacing: -.06em !important;
+}
+
+body.cognitus-professional .promo26-admin-tabs {
+  gap: .4rem !important;
+}
+
+body.cognitus-professional .promo26-admin-tabs .button {
+  border-radius: 7px !important;
+}
+
+body.cognitus-professional .promo26-feature-card h3,
+body.cognitus-professional .promo26-admin-card h3,
+body.cognitus-professional .promo26-record-card h3 {
+  letter-spacing: -.025em !important;
+}
+
+body.cognitus-professional [data-promo-v26-page] .eyebrow,
+body.cognitus-professional .promo26-feature-section .eyebrow {
+  letter-spacing: .09em !important;
+}
+
+body.cognitus-professional .promo26-feature-card .hero-actions,
+body.cognitus-professional .promo26-record-card .hero-actions,
+body.cognitus-professional .promo26-admin-card .hero-actions {
+  margin-top: .85rem !important;
+}
+
+body.cognitus-professional .promo26-feature-card .button,
+body.cognitus-professional .promo26-record-card .button,
+body.cognitus-professional .promo26-admin-card .button {
+  width: auto !important;
+}
+
+body.cognitus-professional .promo26-feature-grid,
+body.cognitus-professional .promo26-record-grid {
+  gap: .8rem !important;
+}
+
+@media (max-width: 720px) {
+  body.cognitus-professional:not(.cognitus-operational) .hero h1 {
+    font-size: clamp(2.4rem, 12vw, 4rem) !important;
+  }
+}
