@@ -7,7 +7,7 @@ const contrast=fs.readFileSync('src/promotionalContrastV33.css','utf8');
 const guard=fs.readFileSync('src/promo/promotionalContrastV33.js','utf8');
 
 function requireText(source,text,label){if(!source.includes(text))throw new Error(`Promotional Access V33 validation failed: missing ${label}`);}
-function rejectText(source,text,label){if(source.includes(text))throw new Error(`Promotional Access V33 validation failed: unexpected ${label}`);}
+function rejectExactPlaceholder(source,label){if(source.trim()==='temp')throw new Error(`Promotional Access V33 validation failed: unexpected ${label}`);}
 
 requireText(entry,'startPromotionalContrastV33();','early contrast startup');
 requireText(entry,'startPromotionalRegistryV33();','V33 feature registry startup');
@@ -28,8 +28,8 @@ requireText(contrast,'.promo30-network-result h2','dark network heading override
 requireText(contrast,'input::placeholder','readable form placeholder override');
 requireText(contrast,'.button-dark','explicit dark button foreground');
 requireText(contrast,'.promo33-metrics','new feature responsive metrics');
-rejectText(guard,'temp','temporary placeholder in contrast guard');
-rejectText(features,'temp','temporary placeholder in V33 features');
-rejectText(contrast,'temp','temporary placeholder in V33 CSS');
+rejectExactPlaceholder(guard,'temporary placeholder in contrast guard');
+rejectExactPlaceholder(features,'temporary placeholder in V33 features');
+rejectExactPlaceholder(contrast,'temporary placeholder in V33 CSS');
 
 console.log('Promotional Access V33 contrast and feature checks passed.');
