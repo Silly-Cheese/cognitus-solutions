@@ -62,7 +62,13 @@ const openBraces = (files.rules.match(/\{/g) || []).length;
 const closeBraces = (files.rules.match(/\}/g) || []).length;
 check("Firestore rules have balanced braces", openBraces === closeBraces);
 check("Frenzy reuses a publicly readable portal settings document", files.rules.includes("match /settings/portal") && files.rules.includes("allow read: if true;"));
-check("portal settings remain Owner-write controlled", files.rules.includes("allow create, update: if isOwner();"));
+check(
+  "portal settings remain Owner-write controlled",
+  files.rules.includes("allow create: if isOwner()")
+    && files.rules.includes("allow update: if isOwner()")
+    && files.rules.includes("validPortalSettings(request.resource.data)")
+    && files.rules.includes("allow delete: if false;")
+);
 check("repository still has default-deny Firestore boundary", files.rules.includes("match /{document=**}") && files.rules.includes("allow read, write: if false;"));
 
 let failed = 0;
