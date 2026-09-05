@@ -57,6 +57,52 @@ function escapeHtml(value) {
 }
 function safe(value) { return escapeHtml(value); }
 function route() { return location.hash.replace(/^#/, "").split("?")[0] || "/"; }
+const PROMOTIONAL_ROUTES_V38 = new Set([
+  "/intelligence",
+  "/relationships",
+  "/deep-history",
+  "/advanced-search",
+  "/compare",
+  "/network",
+  "/watchlist",
+  "/investigations",
+  "/intelligence-reports",
+  "/change-comparison",
+  "/labs",
+  "/enhanced-profile",
+  "/collections",
+  "/analytics",
+  "/early-access",
+  "/risk-matrix",
+  "/overlap-scanner",
+  "/signal-zero",
+  "/promotional-access",
+  "/admin/promotions",
+  "/executive"
+]);
+let promotionalRouteImportV38 = null;
+function isPromotionalRouteV38(value) { return PROMOTIONAL_ROUTES_V38.has(value); }
+async function handoffPromotionalRouteV38(current) {
+  if (!isPromotionalRouteV38(current)) return false;
+  const hasPromoSurface = Boolean(root?.querySelector(
+    ".promo26-access-hero, .promo26-admin-hero, .promo26-feature-hero, .promo26-locked-page, [data-promo-v26-page]"
+  ));
+  if (!hasPromoSurface && route() === current) {
+    root.innerHTML = '<section class="hero" data-promo-v38-handoff><p class="eyebrow">Cognitus Feature Access</p><h1>Loading secure feature access…</h1><p>Preparing the promotional and intelligence workspace for this account.</p></section>';
+  }
+  document.dispatchEvent(new CustomEvent("cognitus:promo-route-requested", { detail: { route: current, source: "app-v38-before-import" } }));
+  if (!promotionalRouteImportV38) {
+    promotionalRouteImportV38 = import("./promotionalAccessV26.js?v=20260905-v38-router-handoff").catch((error) => {
+      promotionalRouteImportV38 = null;
+      throw error;
+    });
+  }
+  await promotionalRouteImportV38;
+  if (route() === current) {
+    document.dispatchEvent(new CustomEvent("cognitus:promo-route-requested", { detail: { route: current, source: "app-v38-after-import" } }));
+  }
+  return true;
+}
 function params() { return new URLSearchParams(location.hash.split("?")[1] || ""); }
 function setTitle(title) { document.title = `${title} · Cognitus Solutions`; }
 function nowYear() { return new Date().getFullYear(); }
@@ -901,6 +947,10 @@ async function render() {
     renderNav();
     renderFooter();
     const current = route();
+    if (isPromotionalRouteV38(current)) {
+      await handoffPromotionalRouteV38(current);
+      return;
+    }
     if (current === "/") return homePage();
     if (current === "/features") return featuresPage();
     if (current === "/about") return aboutPage();

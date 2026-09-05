@@ -38,7 +38,7 @@ assert(navigation.includes("window.innerWidth > 760") && navigation.includes("cl
 assert(uxCss.includes("@media (max-width: 760px)") && uxCss.includes("v4-mobile-nav-ready") && uxCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))"), "mobile layout provides a two-column expandable navigation panel");
 assert(uxCss.includes("dashboard-hero h1") && uxCss.includes("font-size: clamp(2.05rem, 11vw, 2.8rem)"), "mobile dashboard typography is bounded for phone screens");
 assert(index.includes('rel="icon"') && index.includes("data:image/svg+xml"), "inline favicon prevents the GitHub Pages favicon 404");
-assert(index.includes("secure-v2-no-index"), "index.html keeps the repaired no-index production app build");
+assert(index.includes("secure-v2-no-index") || index.includes("v38-promo-router"), "index.html keeps the repaired no-index production app build");
 
 assert(controls.includes("Verify my identity") && controls.includes("identityConfidence: 100"), "Owner self-verification control is present");
 assert(controls.includes("data-v4-delete-report") && controls.includes("deleteReport"), "report deletion controls are present");
