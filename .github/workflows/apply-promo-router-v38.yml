@@ -1,0 +1,36 @@
+name: Apply Promo Router V38
+
+on:
+  push:
+    branches:
+      - "agent/promo-router-v38"
+    paths:
+      - "scripts/apply-promo-router-v38.mjs"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/promo-router-v38
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply V38 promotional router handoff
+        run: node scripts/apply-promo-router-v38.mjs
+      - name: Commit V38 production changes
+        run: |
+          if git diff --quiet -- index.html src/app.js src/promotionalAccessV26.js; then
+            echo "No generated changes."
+            exit 0
+          fi
+          git config user.name "Executive_Eagle"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html src/app.js src/promotionalAccessV26.js
+          git commit -m "Fix promotional route ownership V38"
+          git push origin HEAD:agent/promo-router-v38
