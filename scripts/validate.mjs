@@ -78,19 +78,18 @@ assert(rules.includes("'identityVerified', 'updatedAt'") && rules.includes("requ
 assert(rules.includes("allow delete: if isOwner()") && rules.includes("resource.data.status == 'pending_review'"), "report deletion is Owner-gated with pending self-delete support");
 assert(rules.includes("allow delete: if isOwner();"), "Owner organization deletion is authorized");
 assert(rules.includes("request.auth.uid == uid") && rules.includes("resource.data.role != 'owner'"), "self deletion and non-Owner portal account deletion are authorized");
-assert(rules.includes("allow create: if false;") && rules.includes("match /bootstrap/{document=**}"), "client-side owner bootstrap writes are disabled");
-assert(rules.includes("match /passwordResetRequests/{requestId}") && rules.includes("allow create: if false;"), "public Firestore password-reset tickets are disabled");
-assert(app.includes("originalSummary") && app.includes("originalDetails"), "review workflows preserve original report summary and details");
+assert(rules.includes("match /settings/bootstrap") && rules.includes("allow write: if false;"), "client-side owner bootstrap writes are disabled");
+assert(rules.includes("match /passwordResetRequests") && rules.includes("allow read, write: if false;"), "public Firestore password-reset tickets are disabled");
+assert(rules.includes("request.resource.data.summary == resource.data.summary") && rules.includes("request.resource.data.details == resource.data.details"), "review workflows preserve original report summary and details");
+assert((rules.match(/{/g) || []).length === (rules.match(/}/g) || []).length, "Firestore rules have balanced braces");
 
-const openBraces = (rules.match(/{/g) || []).length;
-const closeBraces = (rules.match(/}/g) || []).length;
-assert(openBraces === closeBraces, "Firestore rules have balanced braces");
-assert(firebase.firestore?.rules === "firestore.rules", "firebase.json points to Firestore rules");
-assert(!firebase.firestore?.indexes, "firebase.json does not deploy manual indexes");
+assert(firebase?.firestore?.rules === "firestore.rules", "firebase.json points to Firestore rules");
+assert(!Object.prototype.hasOwnProperty.call(firebase?.firestore || {}, "indexes"), "firebase.json does not deploy manual indexes");
 assert(!fs.existsSync("firestore.indexes.json"), "repository contains no manual/composite Firestore index manifest");
 
 if (process.exitCode) {
-  console.error("Cognitus Profile V5 validation failed.");
+  console.error("\nCognitus Profile V5 validation failed.");
   process.exit(process.exitCode);
 }
+
 console.log("\nCognitus Profile V5 validation passed with secure no-index architecture intact.");
