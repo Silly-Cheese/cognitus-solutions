@@ -25,10 +25,10 @@ check("index cache-busts mobile navigation for V37", files.index.includes('navig
 check("navigation imports a freshly keyed promo bootstrap", files.nav.includes('promotionalAccessV26.js?v=20260905-v37-promotions-visible'));
 check("promo bootstrap is globally idempotent", files.promoEntry.includes('__COGNITUS_PROMOTIONAL_V37_STARTED__'));
 check("promo bootstrap emits the V37 readiness event", files.promoEntry.includes('cognitus:promotional-v37-ready'));
-check("desktop gets a primary Intelligence entry", files.visibility.includes('data.promo37Primary') && files.visibility.includes('>Intelligence</span>'));
-check("desktop gets an Intelligence operations group", files.visibility.includes('data.promo37OpsGroup') && files.visibility.includes('Analysis & access'));
+check("desktop gets a primary Intelligence entry", files.visibility.includes('link.dataset.promo37Primary') && files.visibility.includes('<span>Intelligence</span>'));
+check("desktop gets an Intelligence operations group", files.visibility.includes('group.dataset.promo37OpsGroup') && files.visibility.includes('Analysis & access'));
 check("desktop has a Feature Access fallback when the shell is unavailable", files.visibility.includes('ensureLegacyDesktopFallback') && files.visibility.includes('Open Cognitus Feature Access'));
-check("mobile gets a primary Intelligence entry", files.visibility.includes('data.promo37MobilePrimary') && files.visibility.includes('Analysis, investigations, and feature access'));
+check("mobile gets a primary Intelligence entry", files.visibility.includes('link.dataset.promo37MobilePrimary') && files.visibility.includes('Analysis, investigations, and feature access'));
 check("mobile gets an Intelligence directory group", files.visibility.includes('data-promo37-mobile-group') && files.visibility.includes('mobileGroupMarkup'));
 check("Feature Access is discoverable", files.visibility.includes('"/promotional-access", "Feature Access"'));
 check("Feature Access Management is role-gated", files.visibility.includes('"/admin/promotions", "Feature Access Management"') && files.visibility.includes('ADMIN_ROLES.has(role)'));
