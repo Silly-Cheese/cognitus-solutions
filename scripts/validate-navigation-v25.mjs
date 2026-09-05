@@ -8,7 +8,7 @@ function assert(condition, message) {
   if (!condition) throw new Error(`Navigation V25 validation failed: ${message}`);
 }
 
-assert(index.includes("navigationMobileV25.js?v=20260817-v25-dedicated-mobile-shell"), "fresh V25 entry module is not loaded from index.html");
+assert(index.includes('navigationMobileV25.js?v=20260905-v37-promotions-visible'), "current V25/V37 mobile entry module is not loaded from index.html");
 assert(js.includes('document.body.appendChild(drawer)'), "mobile drawer is not physically separated from the legacy .topnav DOM");
 assert(js.includes('drawer.hidden = true'), "drawer does not default to a hard hidden state");
 assert(js.includes('drawer.hidden = !safeOpen'), "drawer visibility is not controlled by one authoritative state function");
