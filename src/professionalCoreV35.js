@@ -85,9 +85,9 @@ function mountStyles() {
     link = document.createElement("link");
     link.id = STYLE_ID;
     link.rel = "stylesheet";
-    document.head.appendChild(link);
   }
   link.href = "./src/professionalCoreV35.css?v=20260905-v35";
+  document.head.appendChild(link);
 }
 
 function applyFeaturePresentation() {
