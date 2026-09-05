@@ -8,10 +8,11 @@ const guard=fs.readFileSync('src/promo/promotionalContrastV33.js','utf8');
 
 function requireText(source,text,label){if(!source.includes(text))throw new Error(`Promotional Access V33 validation failed: missing ${label}`);}
 function requirePattern(source,pattern,label){if(!pattern.test(source))throw new Error(`Promotional Access V33 validation failed: missing ${label}`);}
+function requireEither(source,a,b,label){if(!source.includes(a)&&!source.includes(b))throw new Error(`Promotional Access V33 validation failed: missing ${label}`);}
 function rejectExactPlaceholder(source,label){if(source.trim()==='temp')throw new Error(`Promotional Access V33 validation failed: unexpected ${label}`);}
 
-requireText(entry,'startPromotionalContrastV33();','early contrast startup');
-requireText(entry,'startPromotionalRegistryV33();','V33 feature registry startup');
+requireEither(entry,'startPromotionalContrastV33();','safeStartV38("contrast-v33", startPromotionalContrastV33)','early contrast startup');
+requireEither(entry,'startPromotionalRegistryV33();','safeStartV38("registry-v33", startPromotionalRegistryV33)','V33 feature registry startup');
 if(!entry.includes('renderFeaturePageV33')&&!entry.includes('renderFeaturePageV35'))throw new Error('Promotional Access V33 validation failed: missing V33/V35 feature renderer');
 requirePattern(registry,/id:\s*['"]risk_signal_matrix['"]/,'Risk Signal Matrix registration');
 requirePattern(registry,/route:\s*['"]\/risk-matrix['"]/,'Risk Signal Matrix route');
