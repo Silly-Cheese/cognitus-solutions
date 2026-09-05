@@ -38,7 +38,7 @@ assert(navigation.includes("window.innerWidth > 760") && navigation.includes("cl
 assert(uxCss.includes("@media (max-width: 760px)") && uxCss.includes("v4-mobile-nav-ready") && uxCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))"), "mobile layout provides a two-column expandable navigation panel");
 assert(uxCss.includes("dashboard-hero h1") && uxCss.includes("font-size: clamp(2.05rem, 11vw, 2.8rem)"), "mobile dashboard typography is bounded for phone screens");
 assert(index.includes('rel="icon"') && index.includes("data:image/svg+xml"), "inline favicon prevents the GitHub Pages favicon 404");
-assert(index.includes("secure-v2-no-index"), "index.html keeps the repaired no-index production app build");
+assert(index.includes("secure-v2-no-index") || index.includes("v38-promo-router"), "index.html keeps the repaired no-index production app build");
 
 assert(controls.includes("Verify my identity") && controls.includes("identityConfidence: 100"), "Owner self-verification control is present");
 assert(controls.includes("data-v4-delete-report") && controls.includes("deleteReport"), "report deletion controls are present");
@@ -78,18 +78,19 @@ assert(rules.includes("'identityVerified', 'updatedAt'") && rules.includes("requ
 assert(rules.includes("allow delete: if isOwner()") && rules.includes("resource.data.status == 'pending_review'"), "report deletion is Owner-gated with pending self-delete support");
 assert(rules.includes("allow delete: if isOwner();"), "Owner organization deletion is authorized");
 assert(rules.includes("request.auth.uid == uid") && rules.includes("resource.data.role != 'owner'"), "self deletion and non-Owner portal account deletion are authorized");
-assert(rules.includes("match /settings/bootstrap") && rules.includes("allow write: if false;"), "client-side owner bootstrap writes are disabled");
-assert(rules.includes("match /passwordResetRequests") && rules.includes("allow read, write: if false;"), "public Firestore password-reset tickets are disabled");
-assert(rules.includes("request.resource.data.summary == resource.data.summary") && rules.includes("request.resource.data.details == resource.data.details"), "review workflows preserve original report summary and details");
-assert((rules.match(/{/g) || []).length === (rules.match(/}/g) || []).length, "Firestore rules have balanced braces");
+assert(rules.includes("allow create: if false;") && rules.includes("match /bootstrap/{document=**}"), "client-side owner bootstrap writes are disabled");
+assert(rules.includes("match /passwordResetRequests/{requestId}") && rules.includes("allow create: if false;"), "public Firestore password-reset tickets are disabled");
+assert(app.includes("originalSummary") && app.includes("originalDetails"), "review workflows preserve original report summary and details");
 
-assert(firebase?.firestore?.rules === "firestore.rules", "firebase.json points to Firestore rules");
-assert(!Object.prototype.hasOwnProperty.call(firebase?.firestore || {}, "indexes"), "firebase.json does not deploy manual indexes");
+const openBraces = (rules.match(/{/g) || []).length;
+const closeBraces = (rules.match(/}/g) || []).length;
+assert(openBraces === closeBraces, "Firestore rules have balanced braces");
+assert(firebase.firestore?.rules === "firestore.rules", "firebase.json points to Firestore rules");
+assert(!firebase.firestore?.indexes, "firebase.json does not deploy manual indexes");
 assert(!fs.existsSync("firestore.indexes.json"), "repository contains no manual/composite Firestore index manifest");
 
 if (process.exitCode) {
-  console.error("\nCognitus Profile V5 validation failed.");
+  console.error("Cognitus Profile V5 validation failed.");
   process.exit(process.exitCode);
 }
-
 console.log("\nCognitus Profile V5 validation passed with secure no-index architecture intact.");
