@@ -9,6 +9,7 @@ import { startPromotionalInvestigationsV32 } from "./promo/promotionalInvestigat
 import { startPromotionalRegistryV33 } from "./promo/promotionalRegistryV33.js";
 import { startPromotionalContrastV33 } from "./promo/promotionalContrastV33.js";
 
+startPromotionalContrastV33();
 startPromotionalRegistryV33();
 startPromotionalAccessV26({
   renderFeature: renderFeaturePageV33,
@@ -20,4 +21,3 @@ startPromotionalEnhancementsV28();
 startPromotionalMobileV29();
 startPromotionalWorkspacesV30();
 startPromotionalInvestigationsV32();
-startPromotionalContrastV33();
