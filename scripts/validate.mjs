@@ -23,7 +23,7 @@ const firebase = JSON.parse(read("firebase.json"));
 
 assert(index.includes('src/app.js?v='), "index.html loads the consolidated production router");
 assert(!index.includes("appV1.js") && !index.includes("appSafe.js"), "legacy routers are not production entrypoints");
-assert(index.includes("stability-v4"), "index.html cache-busts the stability V4 navigation layer");
+assert(index.includes('src/navigationEnhancements.js?v='), "index.html cache-busts the production navigation enhancement layer");
 assert(navigation.includes('import "./controlsV4.js"'), "navigation loads V4 operational controls");
 assert(navigation.includes('import "./assessmentV4.js"'), "navigation loads editable profile assessment controls");
 assert(navigation.includes('import "./profileV5.js"'), "navigation loads Profile V5 and smart appeal workflows");
