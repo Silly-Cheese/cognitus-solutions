@@ -1,5 +1,7 @@
 import fs from "node:fs";
 
+// V36 feature catalog currently contains 18 entitlement identifiers, including Signal Zero.
+
 const path="firestore.v19.rules";
 if(!fs.existsSync(path))throw new Error("Promotional Access V26 requires firestore.v19.rules. Run build-firestore-v19.mjs first.");
 let rules=fs.readFileSync(path,"utf8");
@@ -90,7 +92,7 @@ const promoRules=`
         && request.resource.data.campaignExpiryBehavior in ['preserve_access', 'revoke_on_campaign_end']
         && request.resource.data.featureIds is list
         && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
+        && request.resource.data.featureIds.size() <= 18
         && request.resource.data.eligibleRoles is list
         && request.resource.data.eligibleRoles.size() >= 1
         && request.resource.data.eligibleRoles.size() <= 6
@@ -125,7 +127,7 @@ const promoRules=`
         && request.resource.data.campaignExpiryBehavior in ['preserve_access', 'revoke_on_campaign_end']
         && request.resource.data.featureIds is list
         && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
+        && request.resource.data.featureIds.size() <= 18
         && request.resource.data.eligibleRoles is list
         && request.resource.data.eligibleRoles.size() >= 1
         && request.resource.data.eligibleRoles.size() <= 6
@@ -219,7 +221,7 @@ const promoRules=`
         && request.resource.data.userCognitusId == get(userPath(request.resource.data.uid)).data.cognitusId
         && request.resource.data.featureIds is list
         && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
+        && request.resource.data.featureIds.size() <= 18
         && request.resource.data.status == 'active'
         && request.resource.data.source == 'manual_grant'
         && shortString(request.resource.data.label, 80)
@@ -238,7 +240,7 @@ const promoRules=`
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.featureIds is list
         && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
+        && request.resource.data.featureIds.size() <= 18
         && request.resource.data.status in ['active', 'revoked']
         && shortString(request.resource.data.label, 80)
         && shortString(request.resource.data.note, 500)

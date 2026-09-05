@@ -309,6 +309,66 @@ service cloud.firestore {
         );
     }
 
+    // ============================================================
+    // V36: PROMOTIONAL ENTITLEMENT CATALOG VALIDATION
+    //
+    // Promotional access never grants staff/admin authority. It only
+    // grants product feature identifiers. The catalog is explicit so
+    // malformed or invented feature IDs cannot be persisted.
+    // ============================================================
+
+    function validPromoFeatureList(value) {
+      return value is list
+        && value.size() >= 1
+        && value.size() <= 18
+        && value.hasOnly([
+          'intelligence_center',
+          'relationship_mapping',
+          'deep_history',
+          'advanced_search',
+          'account_comparison',
+          'network_explorer',
+          'watchlist',
+          'saved_investigations',
+          'intelligence_reports',
+          'change_comparison',
+          'cognitus_labs',
+          'enhanced_profile',
+          'search_collections',
+          'search_analytics',
+          'early_access',
+          'risk_signal_matrix',
+          'organization_overlap',
+          'signal_zero'
+        ]);
+    }
+
+    function validPromoEligibleRoles(value) {
+      return value is list
+        && value.size() >= 1
+        && value.size() <= 6
+        && value.hasOnly([
+          'user',
+          'verified_employer_member',
+          'org_admin',
+          'reviewer',
+          'admin',
+          'owner'
+        ]);
+    }
+
+    function validPromoWorkspaceType(value) {
+      return value in [
+        'watchlist',
+        'investigation',
+        'intelligence_report',
+        'snapshot',
+        'profile_customization',
+        'collection',
+        'search_event'
+      ];
+    }
+
     function validDiscordId(value) {
       return value is string && value.matches('^[0-9]{15,25}$');
     }
@@ -1767,7 +1827,19 @@ service cloud.firestore {
     }
 
 
-    // Promotional Access V26: codes, entitlements, redemptions, and private feature workspaces.
+    // ============================================================
+    // PROMOTIONAL / FEATURE ACCESS — V36
+    //
+    // These rules authorize entitlement records only. They DO NOT
+    // authorize access to protected reports, employment records,
+    // staff queues, organization administration, or Owner functions.
+    // Each underlying collection above remains authoritative.
+    //
+    // Signal Zero is deliberately only an entitlement here. Its
+    // Frenzy-time availability is controlled by settings/portal in
+    // the application, while all data reads still pass the ordinary
+    // report/employment/profile rules.
+    // ============================================================
     match /promotionalCodes/{code} {
       allow get: if activeAccount();
       allow list: if isAdmin();
@@ -1802,12 +1874,8 @@ service cloud.firestore {
         && request.resource.data.accessDurationSeconds <= 157680000
         && (request.resource.data.accessEndsAt == null || request.resource.data.accessEndsAt is timestamp)
         && request.resource.data.campaignExpiryBehavior in ['preserve_access', 'revoke_on_campaign_end']
-        && request.resource.data.featureIds is list
-        && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
-        && request.resource.data.eligibleRoles is list
-        && request.resource.data.eligibleRoles.size() >= 1
-        && request.resource.data.eligibleRoles.size() <= 6
+        && validPromoFeatureList(request.resource.data.featureIds)
+        && validPromoEligibleRoles(request.resource.data.eligibleRoles)
         && (request.resource.data.eligibleOrganizationId == null || shortString(request.resource.data.eligibleOrganizationId, 128))
         && request.resource.data.distribution in ['secret', 'campaign']
         && request.resource.data.createdByUid == request.auth.uid
@@ -1837,12 +1905,8 @@ service cloud.firestore {
         && (request.resource.data.redeemUntil == null || request.resource.data.redeemUntil is timestamp)
         && (request.resource.data.accessEndsAt == null || request.resource.data.accessEndsAt is timestamp)
         && request.resource.data.campaignExpiryBehavior in ['preserve_access', 'revoke_on_campaign_end']
-        && request.resource.data.featureIds is list
-        && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
-        && request.resource.data.eligibleRoles is list
-        && request.resource.data.eligibleRoles.size() >= 1
-        && request.resource.data.eligibleRoles.size() <= 6
+        && validPromoFeatureList(request.resource.data.featureIds)
+        && validPromoEligibleRoles(request.resource.data.eligibleRoles)
         && (request.resource.data.eligibleOrganizationId == null || shortString(request.resource.data.eligibleOrganizationId, 128))
         && request.resource.data.distribution in ['secret', 'campaign']
         && request.resource.data.updatedAt == request.time;
@@ -1878,6 +1942,7 @@ service cloud.firestore {
         && request.resource.data.redemptionCount == 1
         && request.resource.data.redemptionCount <= get(promotionalCodePath(request.resource.data.promoId)).data.maxPerAccount
         && request.resource.data.featureIds == get(promotionalCodePath(request.resource.data.promoId)).data.featureIds
+        && validPromoFeatureList(request.resource.data.featureIds)
         && request.resource.data.status == 'active'
         && request.resource.data.source == 'promotional_code'
         && validPromoExpiry(request.resource.data.promoId, request.resource.data.expiresAt)
@@ -1903,6 +1968,7 @@ service cloud.firestore {
         && request.resource.data.redemptionCount == resource.data.redemptionCount + 1
         && request.resource.data.redemptionCount <= get(promotionalCodePath(resource.data.promoId)).data.maxPerAccount
         && request.resource.data.featureIds == get(promotionalCodePath(resource.data.promoId)).data.featureIds
+        && validPromoFeatureList(request.resource.data.featureIds)
         && request.resource.data.status == 'active'
         && validPromoExpiry(resource.data.promoId, request.resource.data.expiresAt)
         && request.resource.data.campaignEndsAt == get(promotionalCodePath(resource.data.promoId)).data.redeemUntil
@@ -1931,9 +1997,7 @@ service cloud.firestore {
         && exists(userPath(request.resource.data.uid))
         && get(userPath(request.resource.data.uid)).data.status == 'active'
         && request.resource.data.userCognitusId == get(userPath(request.resource.data.uid)).data.cognitusId
-        && request.resource.data.featureIds is list
-        && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
+        && validPromoFeatureList(request.resource.data.featureIds)
         && request.resource.data.status == 'active'
         && request.resource.data.source == 'manual_grant'
         && shortString(request.resource.data.label, 80)
@@ -1950,9 +2014,7 @@ service cloud.firestore {
         && request.resource.data.source == resource.data.source
         && request.resource.data.grantedByUid == resource.data.grantedByUid
         && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.featureIds is list
-        && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
+        && validPromoFeatureList(request.resource.data.featureIds)
         && request.resource.data.status in ['active', 'revoked']
         && shortString(request.resource.data.label, 80)
         && shortString(request.resource.data.note, 500)
@@ -1972,10 +2034,7 @@ service cloud.firestore {
         ])
         && request.resource.data.id == recordId
         && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.type in [
-          'watchlist', 'investigation', 'intelligence_report', 'snapshot',
-          'profile_customization', 'collection', 'search_event'
-        ]
+        && validPromoWorkspaceType(request.resource.data.type)
         && shortString(request.resource.data.title, 120)
         && (request.resource.data.subjectId == null || shortString(request.resource.data.subjectId, 128))
         && (request.resource.data.organizationId == null || shortString(request.resource.data.organizationId, 128))
@@ -2000,6 +2059,13 @@ service cloud.firestore {
       allow delete: if isAdmin() || (activeAccount() && resource.data.ownerUid == request.auth.uid);
     }
 
+    // ============================================================
+    // FINAL DEFAULT-DENY BOUNDARY
+    //
+    // Any collection introduced by future Cognitus code is denied
+    // until a deliberate rule is added. This prevents new features
+    // from silently inheriting access.
+    // ============================================================
     match /{document=**} {
       allow read, write: if false;
     }
