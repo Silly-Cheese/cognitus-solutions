@@ -1,0 +1,393 @@
+.legal34-root {
+  width: min(1360px, 100%);
+}
+
+.legal34-shell {
+  display: grid;
+  gap: 1rem;
+  color: #121212;
+}
+
+.legal34-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(260px, .65fr);
+  gap: 1rem;
+  align-items: stretch;
+  padding: clamp(1.5rem, 5vw, 4.25rem);
+  border: 1px solid #d8d8d2;
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 86% 10%, rgba(255,255,255,.12), transparent 27%),
+    linear-gradient(135deg, #111 0%, #1a1a1a 65%, #242424 100%);
+  color: #fff;
+  box-shadow: 0 30px 90px rgba(0,0,0,.13);
+  overflow: hidden;
+}
+
+.legal34-kicker {
+  margin: 0 0 1rem;
+  color: rgba(255,255,255,.63);
+  font-size: .74rem;
+  font-weight: 950;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+
+.legal34-hero h1 {
+  margin: 0;
+  max-width: 10ch;
+  color: #fff;
+  font-size: clamp(3rem, 8vw, 6.75rem);
+  line-height: .9;
+  letter-spacing: -.075em;
+}
+
+.legal34-lead {
+  max-width: 760px;
+  margin: 1.35rem 0 0;
+  color: rgba(255,255,255,.74);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.7;
+}
+
+.legal34-meta {
+  display: grid;
+  align-content: end;
+  gap: .65rem;
+  min-width: 0;
+}
+
+.legal34-meta span {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: .75rem;
+  padding: .8rem .9rem;
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 14px;
+  background: rgba(255,255,255,.055);
+  color: rgba(255,255,255,.76);
+  line-height: 1.35;
+}
+
+.legal34-meta strong {
+  color: #fff;
+}
+
+.legal34-switcher {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .55rem;
+  padding: .55rem;
+  border: 1px solid #dcdcd7;
+  border-radius: 18px;
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 10px 30px rgba(0,0,0,.045);
+}
+
+.legal34-switcher a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: .72rem 1rem;
+  border-radius: 13px;
+  color: #3f3f3f;
+  font-weight: 900;
+}
+
+.legal34-switcher a:hover,
+.legal34-switcher a.is-active {
+  background: #111;
+  color: #fff;
+}
+
+.legal34-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.legal34-toc {
+  position: sticky;
+  top: 96px;
+  display: grid;
+  gap: .18rem;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding: 1rem;
+  border: 1px solid #dcdcd7;
+  border-radius: 20px;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 12px 35px rgba(0,0,0,.045);
+  scrollbar-width: thin;
+}
+
+.legal34-toc > strong {
+  padding: .25rem .45rem .65rem;
+  font-size: .78rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.legal34-toc a {
+  display: block;
+  padding: .55rem .6rem;
+  border-radius: 10px;
+  color: #5d5d5d;
+  font-size: .82rem;
+  font-weight: 750;
+  line-height: 1.35;
+}
+
+.legal34-toc a:hover,
+.legal34-toc a:focus-visible {
+  background: #f0f0ed;
+  color: #111;
+}
+
+.legal34-document {
+  min-width: 0;
+  padding: clamp(1.35rem, 4vw, 3.4rem);
+  border: 1px solid #dcdcd7;
+  border-radius: 28px;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 22px 65px rgba(0,0,0,.065);
+}
+
+.legal34-document > section {
+  scroll-margin-top: 120px;
+  padding: 1.65rem 0;
+  border-bottom: 1px solid #e5e5e1;
+}
+
+.legal34-document > section:first-child {
+  padding-top: 0;
+}
+
+.legal34-document > section:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.legal34-document h2 {
+  margin: 0 0 .85rem;
+  color: #111;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  line-height: 1.08;
+  letter-spacing: -.045em;
+}
+
+.legal34-document p,
+.legal34-document li {
+  color: #4f4f4f;
+  font-size: .98rem;
+  line-height: 1.78;
+}
+
+.legal34-document p {
+  margin: .7rem 0 0;
+}
+
+.legal34-document ul,
+.legal34-document ol {
+  display: grid;
+  gap: .45rem;
+  margin: .85rem 0 0;
+  padding-left: 1.35rem;
+}
+
+.legal34-document strong {
+  color: #111;
+}
+
+.legal34-callout {
+  margin-bottom: .5rem;
+  padding: 1.25rem !important;
+  border: 1px solid #d1d1cb !important;
+  border-radius: 18px;
+  background: #f6f6f3;
+}
+
+.legal34-callout > strong {
+  display: block;
+  margin-bottom: .45rem;
+  font-size: .78rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.legal34-callout p {
+  margin: 0;
+  color: #3f3f3f;
+}
+
+.legal34-callout-important {
+  background: #111;
+  border-color: #111 !important;
+}
+
+.legal34-callout-important > strong,
+.legal34-callout-important p {
+  color: #fff;
+}
+
+.legal34-callout-important p {
+  color: rgba(255,255,255,.76);
+}
+
+.legal34-endnote {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 1.15rem 1.25rem;
+  border: 1px solid #dcdcd7;
+  border-radius: 18px;
+  background: rgba(255,255,255,.9);
+  color: #666;
+  font-size: .86rem;
+}
+
+.legal34-endnote strong {
+  color: #111;
+}
+
+@media (max-width: 980px) {
+  .legal34-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .legal34-meta {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .legal34-meta span {
+    grid-template-columns: 1fr;
+    gap: .25rem;
+  }
+
+  .legal34-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .legal34-toc {
+    position: static;
+    display: flex;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: .3rem;
+    white-space: nowrap;
+  }
+
+  .legal34-toc > strong {
+    display: none;
+  }
+
+  .legal34-toc a {
+    flex: 0 0 auto;
+    border: 1px solid #deded9;
+    background: #fff;
+  }
+}
+
+@media (max-width: 620px) {
+  .legal34-root {
+    padding: 1rem !important;
+  }
+
+  .legal34-hero,
+  .legal34-document {
+    border-radius: 20px;
+  }
+
+  .legal34-hero {
+    padding: 1.4rem;
+  }
+
+  .legal34-hero h1 {
+    font-size: clamp(2.65rem, 15vw, 4.35rem);
+  }
+
+  .legal34-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .legal34-switcher {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .legal34-switcher a {
+    padding-inline: .55rem;
+    font-size: .86rem;
+  }
+
+  .legal34-document {
+    padding: 1.25rem;
+  }
+
+  .legal34-document > section {
+    padding: 1.3rem 0;
+    scroll-margin-top: 30px;
+  }
+
+  .legal34-document p,
+  .legal34-document li {
+    font-size: .95rem;
+    line-height: 1.72;
+  }
+
+  .legal34-endnote {
+    display: grid;
+  }
+}
+
+@media print {
+  .legal34-switcher,
+  .legal34-toc {
+    display: none !important;
+  }
+
+  .legal34-root,
+  .legal34-shell,
+  .legal34-layout {
+    width: 100%;
+    display: block;
+  }
+
+  .legal34-hero,
+  .legal34-document,
+  .legal34-endnote {
+    box-shadow: none;
+    border-color: #aaa;
+  }
+
+  .legal34-hero {
+    background: #fff;
+    color: #000;
+  }
+
+  .legal34-hero h1,
+  .legal34-kicker,
+  .legal34-lead,
+  .legal34-meta span,
+  .legal34-meta strong {
+    color: #000;
+  }
+
+  .legal34-meta span {
+    border-color: #aaa;
+  }
+
+  .legal34-callout-important {
+    background: #fff;
+    border-color: #111 !important;
+  }
+
+  .legal34-callout-important > strong,
+  .legal34-callout-important p {
+    color: #111;
+  }
+}
