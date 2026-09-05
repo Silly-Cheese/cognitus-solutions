@@ -1,0 +1,30 @@
+name: Validate Promo Router V38
+
+on:
+  push:
+    branches:
+      - "agent/promo-router-v38"
+      - main
+  pull_request:
+    paths:
+      - "index.html"
+      - "src/app.js"
+      - "src/promotionalAccessV26.js"
+      - "scripts/validate-promo-router-v38.mjs"
+      - ".github/workflows/validate-promo-router-v38.yml"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check V38 JavaScript syntax
+        run: |
+          node --check src/app.js
+          node --check src/promotionalAccessV26.js
+          node --check scripts/validate-promo-router-v38.mjs
+      - name: Run V38 promo route ownership regression checks
+        run: node scripts/validate-promo-router-v38.mjs
