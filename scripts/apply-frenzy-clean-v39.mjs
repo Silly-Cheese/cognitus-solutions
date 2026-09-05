@@ -1,5 +1,6 @@
 import fs from "node:fs";
 
+// One-time V39 materializer: move clean initialization ahead of Frenzy state normalization.
 const path = "src/frenzyV35.js";
 let source = fs.readFileSync(path, "utf8");
 
