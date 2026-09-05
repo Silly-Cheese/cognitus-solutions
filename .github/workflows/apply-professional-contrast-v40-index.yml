@@ -1,0 +1,37 @@
+name: Apply Professional Contrast V40 Index
+
+on:
+  push:
+    branches:
+      - "agent/professional-contrast-v40"
+    paths:
+      - "scripts/apply-professional-contrast-v40-index.mjs"
+      - ".github/workflows/apply-professional-contrast-v40-index.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/professional-contrast-v40
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Advance V40 bootstrap cache key
+        run: node scripts/apply-professional-contrast-v40-index.mjs
+      - name: Commit V40 index update
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "No generated changes."
+            exit 0
+          fi
+          git config user.name "Executive_Eagle"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Force Professional Contrast V40 bootstrap"
+          git push origin HEAD:agent/professional-contrast-v40
