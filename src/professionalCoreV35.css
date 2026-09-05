@@ -1,0 +1,492 @@
+/* Cognitus Professional Core V35
+   A single, restrained visual contract for operational Cognitus surfaces.
+   Frenzy Mode intentionally overrides selected rules in frenzyV35.css. */
+
+:root {
+  --c35-bg: #f4f6f8;
+  --c35-surface: #ffffff;
+  --c35-surface-subtle: #f8fafb;
+  --c35-ink: #111827;
+  --c35-text: #273343;
+  --c35-muted: #667085;
+  --c35-border: #d9dee5;
+  --c35-border-strong: #c6cdd6;
+  --c35-navy: #172033;
+  --c35-navy-soft: #263248;
+  --c35-success: #176b46;
+  --c35-warning: #8a5a13;
+  --c35-danger: #a33939;
+  --c35-radius: 12px;
+  --c35-radius-sm: 8px;
+  --c35-shadow: 0 8px 24px rgba(17, 24, 39, .055);
+}
+
+body.cognitus-professional {
+  background: var(--c35-bg) !important;
+  color: var(--c35-ink) !important;
+}
+
+body.cognitus-professional::before {
+  display: none !important;
+}
+
+body.cognitus-professional .topbar {
+  min-height: 64px;
+  padding: .6rem clamp(1rem, 3vw, 2.25rem) !important;
+  background: rgba(255,255,255,.97) !important;
+  border-bottom: 1px solid var(--c35-border) !important;
+  box-shadow: 0 1px 0 rgba(17,24,39,.02) !important;
+  backdrop-filter: blur(14px);
+}
+
+body.cognitus-professional .brand {
+  gap: .7rem !important;
+}
+
+body.cognitus-professional .brand-mark {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 9px !important;
+  background: var(--c35-navy) !important;
+  box-shadow: none !important;
+  font-size: .86rem !important;
+  letter-spacing: -.04em !important;
+}
+
+body.cognitus-professional .brand strong {
+  font-size: .92rem !important;
+  letter-spacing: -.015em !important;
+}
+
+body.cognitus-professional .brand small {
+  color: var(--c35-muted) !important;
+  font-size: .7rem !important;
+}
+
+body.cognitus-professional .page-root {
+  width: min(1260px, 100%) !important;
+  padding: clamp(1.1rem, 3.2vw, 2.4rem) !important;
+}
+
+body.cognitus-professional.cognitus-operational .hero,
+body.cognitus-professional.cognitus-operational .form-card,
+body.cognitus-professional.cognitus-operational .panel,
+body.cognitus-professional.cognitus-operational .report-document,
+body.cognitus-professional.cognitus-operational .dashboard-hero > div:first-child,
+body.cognitus-professional.cognitus-operational .account-card {
+  background: var(--c35-surface) !important;
+  border: 1px solid var(--c35-border) !important;
+  border-radius: var(--c35-radius) !important;
+  box-shadow: var(--c35-shadow) !important;
+}
+
+body.cognitus-professional.cognitus-operational .hero,
+body.cognitus-professional.cognitus-operational .form-card,
+body.cognitus-professional.cognitus-operational .panel,
+body.cognitus-professional.cognitus-operational .report-document {
+  padding: clamp(1.25rem, 3vw, 2.15rem) !important;
+}
+
+body.cognitus-professional.cognitus-operational .hero h1,
+body.cognitus-professional.cognitus-operational .form-card h1,
+body.cognitus-professional.cognitus-operational .report-document h1,
+body.cognitus-professional.cognitus-operational .dashboard-hero h1 {
+  max-width: none !important;
+  margin: 0 0 .75rem !important;
+  font-size: clamp(2rem, 4.5vw, 3.35rem) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.045em !important;
+  color: var(--c35-ink) !important;
+}
+
+body.cognitus-professional.cognitus-operational .hero p,
+body.cognitus-professional.cognitus-operational .form-card > p,
+body.cognitus-professional.cognitus-operational .panel p {
+  color: var(--c35-muted) !important;
+  line-height: 1.6 !important;
+}
+
+body.cognitus-professional .eyebrow {
+  color: #475467 !important;
+  font-size: .69rem !important;
+  font-weight: 800 !important;
+  letter-spacing: .11em !important;
+  text-transform: uppercase !important;
+}
+
+body.cognitus-professional .button,
+body.cognitus-professional button[type="submit"] {
+  min-height: 40px !important;
+  padding: .64rem .9rem !important;
+  border-radius: var(--c35-radius-sm) !important;
+  font-size: .88rem !important;
+  font-weight: 750 !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+body.cognitus-professional .button:hover,
+body.cognitus-professional button[type="submit"]:hover {
+  transform: none !important;
+}
+
+body.cognitus-professional .button-dark,
+body.cognitus-professional button[type="submit"] {
+  background: var(--c35-navy) !important;
+  border-color: var(--c35-navy) !important;
+  color: #fff !important;
+}
+
+body.cognitus-professional .button-dark:hover,
+body.cognitus-professional button[type="submit"]:hover {
+  background: var(--c35-navy-soft) !important;
+}
+
+body.cognitus-professional .button-light {
+  background: #fff !important;
+  color: var(--c35-ink) !important;
+  border-color: var(--c35-border-strong) !important;
+}
+
+body.cognitus-professional input,
+body.cognitus-professional select,
+body.cognitus-professional textarea {
+  background: #fff !important;
+  color: var(--c35-ink) !important;
+  border: 1px solid var(--c35-border-strong) !important;
+  border-radius: var(--c35-radius-sm) !important;
+  box-shadow: none !important;
+}
+
+body.cognitus-professional input::placeholder,
+body.cognitus-professional textarea::placeholder {
+  color: #98a2b3 !important;
+  opacity: 1 !important;
+}
+
+body.cognitus-professional input:focus,
+body.cognitus-professional select:focus,
+body.cognitus-professional textarea:focus {
+  border-color: #667085 !important;
+  outline: 2px solid rgba(102,112,133,.16) !important;
+  outline-offset: 1px !important;
+}
+
+body.cognitus-professional .feature-card,
+body.cognitus-professional .stat-card,
+body.cognitus-professional .result-card,
+body.cognitus-professional .workflow-card,
+body.cognitus-professional .record-row {
+  background: var(--c35-surface) !important;
+  border: 1px solid var(--c35-border) !important;
+  border-radius: var(--c35-radius) !important;
+  box-shadow: none !important;
+}
+
+body.cognitus-professional .feature-card > span,
+body.cognitus-professional .record-meta span,
+body.cognitus-professional .alias-list span {
+  border-radius: 6px !important;
+}
+
+body.cognitus-professional .notice {
+  border-radius: var(--c35-radius-sm) !important;
+  border-color: var(--c35-border) !important;
+  background: var(--c35-surface-subtle) !important;
+  color: var(--c35-text) !important;
+}
+
+body.cognitus-professional .notice-error {
+  border-color: #e2bcbc !important;
+  background: #fff8f8 !important;
+  color: #7e2f2f !important;
+}
+
+body.cognitus-professional .notice-success {
+  border-color: #b8d8c7 !important;
+  background: #f6fbf8 !important;
+  color: #245d43 !important;
+}
+
+body.cognitus-professional .admin-table-wrap {
+  border-color: var(--c35-border) !important;
+  border-radius: var(--c35-radius-sm) !important;
+  background: #fff !important;
+}
+
+body.cognitus-professional .admin-table th {
+  background: #f7f8fa !important;
+  color: #667085 !important;
+  font-size: .68rem !important;
+  letter-spacing: .08em !important;
+}
+
+body.cognitus-professional .admin-table td,
+body.cognitus-professional .admin-table th {
+  border-color: #eaecf0 !important;
+}
+
+/* Desktop workspace shell */
+body.cognitus-professional .nav20-shell {
+  gap: .2rem !important;
+}
+
+body.cognitus-professional .nav20-primary-link,
+body.cognitus-professional .nav20-operations-button,
+body.cognitus-professional .nav20-icon-button {
+  border-radius: 7px !important;
+  font-size: .78rem !important;
+  font-weight: 700 !important;
+}
+
+body.cognitus-professional .nav20-primary-link.is-active,
+body.cognitus-professional .nav20-operations-button.is-active,
+body.cognitus-professional .nav20-icon-button.is-active {
+  background: #eef1f5 !important;
+  color: var(--c35-navy) !important;
+}
+
+body.cognitus-professional .nav20-operations-panel {
+  border: 1px solid var(--c35-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 18px 50px rgba(17,24,39,.14) !important;
+}
+
+body.cognitus-professional .nav20-ops-intro,
+body.cognitus-professional .nav20-ops-group {
+  border-radius: 9px !important;
+}
+
+body.cognitus-professional .nav20-ops-links a {
+  border-radius: 8px !important;
+}
+
+body.cognitus-professional .nav20-account {
+  border-radius: 8px !important;
+}
+
+body.cognitus-professional .nav20-avatar {
+  border-radius: 7px !important;
+  background: var(--c35-navy) !important;
+}
+
+/* Mobile workspace shell */
+body.cognitus-professional .nav25-drawer {
+  background: #fff !important;
+}
+
+body.cognitus-professional .nav25-account,
+body.cognitus-professional .nav25-primary-link,
+body.cognitus-professional .nav25-group-links a,
+body.cognitus-professional .nav25-utility {
+  border-radius: 9px !important;
+}
+
+body.cognitus-professional .nav25-primary-link.is-active,
+body.cognitus-professional .nav25-group-links a.is-active,
+body.cognitus-professional .nav25-utility.is-active {
+  background: #eef1f5 !important;
+  color: var(--c35-navy) !important;
+}
+
+/* Promotional / restricted analysis surfaces become ordinary Cognitus workspaces. */
+body.cognitus-professional [data-promo-v26-page],
+body.cognitus-professional .promo26-access-hero,
+body.cognitus-professional .promo26-admin-hero,
+body.cognitus-professional .promo26-feature-hero,
+body.cognitus-professional .promo26-feature-section,
+body.cognitus-professional .promo26-active-access,
+body.cognitus-professional .promo30-tool-stage,
+body.cognitus-professional .promo30-subject-dossier,
+body.cognitus-professional .promo32-archive,
+body.cognitus-professional .promo33-dashboard > section {
+  border-radius: var(--c35-radius) !important;
+}
+
+body.cognitus-professional .promo26-access-hero,
+body.cognitus-professional .promo26-admin-hero,
+body.cognitus-professional .promo26-feature-hero,
+body.cognitus-professional .promo26-feature-section,
+body.cognitus-professional .promo26-active-access,
+body.cognitus-professional .promo30-tool-stage,
+body.cognitus-professional .promo32-archive {
+  background: #fff !important;
+  color: var(--c35-ink) !important;
+  border: 1px solid var(--c35-border) !important;
+  box-shadow: var(--c35-shadow) !important;
+}
+
+body.cognitus-professional .promo26-access-hero::before,
+body.cognitus-professional .promo26-feature-hero::before,
+body.cognitus-professional .promo26-admin-hero::before {
+  opacity: .03 !important;
+}
+
+body.cognitus-professional .promo26-access-hero h1,
+body.cognitus-professional .promo26-admin-hero h1,
+body.cognitus-professional .promo26-feature-hero h1 {
+  color: var(--c35-ink) !important;
+  max-width: 20ch !important;
+  font-size: clamp(2rem, 4.5vw, 3.4rem) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.045em !important;
+}
+
+body.cognitus-professional .promo26-access-hero p,
+body.cognitus-professional .promo26-admin-hero p,
+body.cognitus-professional .promo26-feature-hero p,
+body.cognitus-professional .promo26-feature-section p,
+body.cognitus-professional .promo30-stage-head p,
+body.cognitus-professional .promo32-archive p {
+  color: var(--c35-muted) !important;
+}
+
+body.cognitus-professional .promo26-feature-card,
+body.cognitus-professional .promo26-admin-card,
+body.cognitus-professional .promo26-entitlement,
+body.cognitus-professional .promo26-record-card,
+body.cognitus-professional .promo33-metric,
+body.cognitus-professional .promo33-overlap-person,
+body.cognitus-professional .promo32-report-card {
+  background: #fff !important;
+  color: var(--c35-ink) !important;
+  border: 1px solid var(--c35-border) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+body.cognitus-professional .promo26-feature-card:hover,
+body.cognitus-professional .promo26-admin-card:hover,
+body.cognitus-professional .promo26-record-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: var(--c35-border-strong) !important;
+}
+
+body.cognitus-professional .promo26-mini-badge,
+body.cognitus-professional .promo26-status,
+body.cognitus-professional .promo26-status-chip,
+body.cognitus-professional .promo26-feature-pills span,
+body.cognitus-professional .promo30-stage-status,
+body.cognitus-professional .promo32-security-pill {
+  border-radius: 6px !important;
+  letter-spacing: .04em !important;
+  font-weight: 750 !important;
+}
+
+body.cognitus-professional .promo30-stage-head {
+  background: #f8fafb !important;
+  color: var(--c35-ink) !important;
+  border: 1px solid var(--c35-border) !important;
+  border-radius: 9px !important;
+}
+
+body.cognitus-professional .promo30-stage-head span,
+body.cognitus-professional .promo30-stage-head h2,
+body.cognitus-professional .promo30-stage-head strong {
+  color: var(--c35-ink) !important;
+}
+
+body.cognitus-professional .promo30-result-stage,
+body.cognitus-professional .promo30-empty-state,
+body.cognitus-professional .promo33-chart,
+body.cognitus-professional .promo32-archive-result {
+  background: #fbfcfd !important;
+  color: var(--c35-text) !important;
+  border-color: var(--c35-border) !important;
+}
+
+body.cognitus-professional .promo30-empty-visual {
+  opacity: .35 !important;
+}
+
+body.cognitus-professional .promo26-privacy-note,
+body.cognitus-professional .promo32-report-meta,
+body.cognitus-professional .promo26-entitlement small,
+body.cognitus-professional .promo26-record-card p,
+body.cognitus-professional .promo33-overlap-person p {
+  color: var(--c35-muted) !important;
+}
+
+body.cognitus-professional .promo26-lock-backdrop {
+  background: rgba(16,24,40,.52) !important;
+  backdrop-filter: blur(6px) !important;
+}
+
+body.cognitus-professional .promo26-lock-modal {
+  background: #fff !important;
+  color: var(--c35-ink) !important;
+  border: 1px solid var(--c35-border) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 24px 70px rgba(16,24,40,.24) !important;
+}
+
+body.cognitus-professional .pro35-context-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  flex-wrap: wrap;
+  margin: -.2rem 0 1rem;
+  padding: .65rem .8rem;
+  border: 1px solid var(--c35-border);
+  border-radius: 8px;
+  background: #f8fafb;
+  color: #475467;
+  font-size: .76rem;
+  font-weight: 650;
+}
+
+body.cognitus-professional .pro35-context-strip strong {
+  color: var(--c35-navy);
+  font-weight: 800;
+}
+
+body.cognitus-professional .pro35-context-strip span {
+  display: inline-flex;
+  gap: .35rem;
+  align-items: center;
+}
+
+body.cognitus-professional .pro35-context-strip i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4f7b67;
+}
+
+@media (max-width: 720px) {
+  body.cognitus-professional .page-root {
+    padding: .85rem !important;
+  }
+
+  body.cognitus-professional.cognitus-operational .hero,
+  body.cognitus-professional.cognitus-operational .form-card,
+  body.cognitus-professional.cognitus-operational .panel,
+  body.cognitus-professional .promo26-access-hero,
+  body.cognitus-professional .promo26-admin-hero,
+  body.cognitus-professional .promo26-feature-hero,
+  body.cognitus-professional .promo26-feature-section,
+  body.cognitus-professional .promo26-active-access,
+  body.cognitus-professional .promo30-tool-stage,
+  body.cognitus-professional .promo32-archive {
+    border-radius: 10px !important;
+  }
+
+  body.cognitus-professional .pro35-context-strip {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.cognitus-professional *,
+  body.cognitus-professional *::before,
+  body.cognitus-professional *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
