@@ -8,7 +8,9 @@ import { startPromotionalWorkspacesV30 } from "./promo/promotionalWorkspacesV30.
 import { startPromotionalInvestigationsV32 } from "./promo/promotionalInvestigationV32.js";
 import { startPromotionalRegistryV33 } from "./promo/promotionalRegistryV33.js";
 import { startPromotionalContrastV33 } from "./promo/promotionalContrastV33.js";
+import { startLegalPoliciesV34 } from "./legalPoliciesV34.js";
 
+startLegalPoliciesV34();
 startPromotionalContrastV33();
 startPromotionalRegistryV33();
 startPromotionalAccessV26({
