@@ -1,0 +1,31 @@
+name: Validate Legal Policies V34
+
+on:
+  pull_request:
+    paths:
+      - 'src/legalPoliciesV34.js'
+      - 'src/legalPoliciesV34.css'
+      - 'src/promotionalAccessV26.js'
+      - 'scripts/validate-legal-policies-v34.mjs'
+      - '.github/workflows/validate-legal-policies-v34.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/legalPoliciesV34.js'
+      - 'src/legalPoliciesV34.css'
+      - 'src/promotionalAccessV26.js'
+      - 'scripts/validate-legal-policies-v34.mjs'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check Legal Policies V34 JavaScript syntax
+        run: node --check src/legalPoliciesV34.js
+      - name: Run Legal Policies V34 regression checks
+        run: node scripts/validate-legal-policies-v34.mjs
