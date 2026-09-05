@@ -7,14 +7,22 @@ const css = fs.readFileSync("src/promotionalMobileV29.css", "utf8");
 function requireText(source, text, label) {
   if (!source.includes(text)) throw new Error(`Promotional Mobile V29 validation failed: missing ${label}`);
 }
+function forbid(source, text, label) {
+  if (source.includes(text)) throw new Error(`Promotional Mobile V29 validation failed: ${label}`);
+}
 
 requireText(entry, 'startPromotionalMobileV29', 'mobile startup import/call');
-requireText(mobile, 'data-promo29-mobile-primary', 'mobile Promo Access primary navigation');
-requireText(mobile, 'Promotion Management', 'mobile admin promotion management entry');
+requireText(mobile, '<p>Intelligence</p>', 'consolidated mobile Intelligence directory');
+requireText(mobile, 'Feature Access', 'mobile feature access entry');
+requireText(mobile, 'Feature Access Management', 'mobile admin feature-access management entry');
+requireText(mobile, 'Executive Control', 'mobile Owner executive control entry');
 requireText(mobile, '/promotional-access', 'mobile access hub route');
 requireText(mobile, '/intelligence', 'mobile intelligence route');
 requireText(mobile, '/labs', 'mobile labs route');
 requireText(mobile, 'MOBILE_BREAKPOINT = 1180', 'shared mobile breakpoint');
+requireText(mobile, 'observeDrawer', 'targeted drawer reconstruction observer');
+requireText(mobile, 'requestAnimationFrame', 'frame-coalesced mobile sync');
+forbid(mobile, 'data-promo29-mobile-primary', 'legacy dedicated Promo Access primary tile remains');
 requireText(css, '@media(max-width:1180px)', 'tablet/mobile responsive rules');
 requireText(css, '@media(max-width:720px)', 'phone responsive rules');
 requireText(css, '.promo26-lock-backdrop', 'mobile lock modal treatment');
