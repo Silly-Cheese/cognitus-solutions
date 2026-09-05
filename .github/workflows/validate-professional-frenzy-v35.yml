@@ -8,6 +8,8 @@ on:
     paths:
       - "src/professionalCoreV35.js"
       - "src/professionalCoreV35.css"
+      - "src/professionalFinishV35.js"
+      - "src/professionalFinishV35.css"
       - "src/frenzyV35.js"
       - "src/frenzyV35.css"
       - "src/frenzySignalOverrideV35.js"
@@ -25,6 +27,8 @@ on:
     paths:
       - "src/professionalCoreV35.js"
       - "src/professionalCoreV35.css"
+      - "src/professionalFinishV35.js"
+      - "src/professionalFinishV35.css"
       - "src/frenzyV35.js"
       - "src/frenzyV35.css"
       - "src/frenzySignalOverrideV35.js"
@@ -53,6 +57,7 @@ jobs:
       - name: Check V35 JavaScript syntax
         run: |
           node --check src/professionalCoreV35.js
+          node --check src/professionalFinishV35.js
           node --check src/frenzyV35.js
           node --check src/frenzySignalOverrideV35.js
           node --check src/promo/promotionalRegistryV35.js
