@@ -2,6 +2,7 @@ import * as C from './promotionalCoreV26.js';
 import { renderFeaturePage as renderFeaturePageV26 } from './promotionalFeaturesV26.js';
 
 const SEVERITY_WEIGHT={Informational:0,Low:1,Moderate:2,High:3,Critical:4};
+const REVIEWER_ROLES=new Set(['reviewer','admin','owner']);
 
 function shell(feature,formHtml,resultId){
   C.setTitle(feature.name);
@@ -16,12 +17,17 @@ async function riskMatrix(feature){
   C.root.querySelector('[data-v33-risk-form]').addEventListener('submit',async(event)=>{
     event.preventDefault();const out=C.root.querySelector('#promo33-risk-result');out.innerHTML='<p>Analyzing authorized Cognitus records…</p>';
     const value=new FormData(event.currentTarget).get('subject');const profile=await C.findProfile(value);if(!profile){out.innerHTML=C.notice('No matching Cognitus profile was found.','error');return;}
-    const [reports,employment]=await Promise.all([C.safeReadWhere('reports','subjectProfileId','==',profile.id,250),C.safeReadWhere('employmentRecords','profileId','==',profile.id,250)]);
-    const approved=reports.filter(row=>['approved','published'].includes(C.lower(row.status)));
+    const staff=REVIEWER_ROLES.has(C.userRecord?.role);
+    const [reports,employment]=await Promise.all([
+      staff?C.safeReadWhere('reports','subjectProfileId','==',profile.id,250):C.safeReadWhere('screeningReportSummaries','subjectProfileId','==',profile.id,250),
+      C.safeReadWhere('employmentRecords','profileId','==',profile.id,250)
+    ]);
+    const visible=staff?reports:reports.filter(row=>['screening','public'].includes(C.lower(row.visibility)));
+    const approved=visible.filter(row=>['approved','published'].includes(C.lower(row.status)));
     const severe=approved.filter(row=>Number(SEVERITY_WEIGHT[row.severity]||0)>=3).length;
     const score=approved.length?Math.round(approved.reduce((sum,row)=>sum+Number(SEVERITY_WEIGHT[row.severity]||0),0)/(approved.length*4)*100):0;
     const categories=countBy(approved,'category');const severities=countBy(approved,'severity');
-    out.innerHTML=`<div class="promo33-dashboard"><section class="promo26-feature-section promo30-subject-dossier"><div class="promo26-section-heading"><div><p class="eyebrow">Signal Subject</p><h2>${C.safe(profile.displayName||'Unnamed Profile')}</h2></div><span class="promo26-mini-badge">${C.safe(profile.cognitusId||profile.id)}</span></div><p>This matrix summarizes records your account is currently authorized to read. It is not an automated guilt or hiring decision.</p></section><div class="promo33-metrics"><article class="promo33-metric"><span>Authorized Reports</span><strong>${reports.length}</strong></article><article class="promo33-metric"><span>Approved / Published</span><strong>${approved.length}</strong></article><article class="promo33-metric"><span>High + Critical</span><strong>${severe}</strong></article><article class="promo33-metric"><span>Severity Index</span><strong>${score}</strong></article></div><div class="promo26-two-col"><section class="promo26-feature-section"><p class="eyebrow">Category Distribution</p><h2>Report patterns</h2>${categories.length?chart(categories):C.notice('No authorized approved reports are available for category analysis.')}</section><section class="promo26-feature-section"><p class="eyebrow">Severity Distribution</p><h2>Signal intensity</h2>${severities.length?chart(severities):C.notice('No authorized approved reports are available for severity analysis.')}</section></div><section class="promo26-feature-section"><p class="eyebrow">Context</p><h2>Employment footprint</h2><p>${employment.length} authorized employment record${employment.length===1?'':'s'} were available to this account. Use the underlying records and context before making any decision.</p></section></div>`;
+    out.innerHTML=`<div class="promo33-dashboard"><section class="promo26-feature-section promo30-subject-dossier"><div class="promo26-section-heading"><div><p class="eyebrow">Signal Subject</p><h2>${C.safe(profile.displayName||'Unnamed Profile')}</h2></div><span class="promo26-mini-badge">${C.safe(profile.cognitusId||profile.id)}</span></div><p>This matrix summarizes records your account is currently authorized to read. It is not an automated guilt or hiring decision.</p></section><div class="promo33-metrics"><article class="promo33-metric"><span>Authorized Reports</span><strong>${visible.length}</strong></article><article class="promo33-metric"><span>Approved / Published</span><strong>${approved.length}</strong></article><article class="promo33-metric"><span>High + Critical</span><strong>${severe}</strong></article><article class="promo33-metric"><span>Severity Index</span><strong>${score}</strong></article></div><div class="promo26-two-col"><section class="promo26-feature-section"><p class="eyebrow">Category Distribution</p><h2>Report patterns</h2>${categories.length?chart(categories):C.notice('No authorized approved reports are available for category analysis.')}</section><section class="promo26-feature-section"><p class="eyebrow">Severity Distribution</p><h2>Signal intensity</h2>${severities.length?chart(severities):C.notice('No authorized approved reports are available for severity analysis.')}</section></div><section class="promo26-feature-section"><p class="eyebrow">Context</p><h2>Employment footprint</h2><p>${employment.length} authorized employment record${employment.length===1?'':'s'} were available to this account. ${staff?'Reviewer-level report visibility is active.':'Only screening-visible report summaries are included for this account.'} Use the underlying records and context before making any decision.</p></section></div>`;
   });
 }
 
