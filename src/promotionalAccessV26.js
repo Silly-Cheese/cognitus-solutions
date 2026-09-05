@@ -12,6 +12,7 @@ import { startPromotionalRegistryV35 } from "./promo/promotionalRegistryV35.js";
 import { startLegalPoliciesV34 } from "./legalPoliciesV34.js";
 import { startProfessionalCoreV35 } from "./professionalCoreV35.js";
 import { startFrenzyV35 } from "./frenzyV35.js";
+import "./frenzySignalOverrideV35.js";
 
 startProfessionalCoreV35();
 startLegalPoliciesV34();
