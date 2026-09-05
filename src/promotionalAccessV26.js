@@ -12,6 +12,7 @@ import { startPromotionalRegistryV35 } from "./promo/promotionalRegistryV35.js";
 import { startLegalPoliciesV34 } from "./legalPoliciesV34.js";
 import { startProfessionalCoreV35 } from "./professionalCoreV35.js";
 import { startProfessionalFinishV35 } from "./professionalFinishV35.js";
+import { startProfessionalContrastV40 } from "./professionalContrastV40.js";
 import { startFrenzyV35 } from "./frenzyV35.js";
 import "./frenzySignalOverrideV35.js";
 
@@ -55,6 +56,10 @@ if (!window[BOOTSTRAP_KEY]) {
   safeStartV38("mobile-v29", startPromotionalMobileV29);
   safeStartV38("workspaces-v30", startPromotionalWorkspacesV30);
   safeStartV38("investigations-v32", startPromotionalInvestigationsV32);
+
+  // V40 is intentionally last. It resolves the V33 dark-surface assumptions that
+  // conflict with the V35 professional light workspace redesign.
+  safeStartV38("professional-contrast-v40", startProfessionalContrastV40);
 
   document.dispatchEvent(new CustomEvent("cognitus:promotional-v37-ready"));
   document.dispatchEvent(new CustomEvent("cognitus:promotional-v38-ready"));
