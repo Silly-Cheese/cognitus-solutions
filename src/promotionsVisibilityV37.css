@@ -1,0 +1,76 @@
+/* Cognitus Promotions Visibility V37
+   Keeps Intelligence, Feature Access, Frenzy/Executive controls discoverable
+   even when an older navigation layer is still present in the browser. */
+
+.promo37-primary svg{
+  width:19px;
+  height:19px;
+  fill:currentColor;
+}
+
+.nav20-shell .promo37-ops-group{
+  border-color:#d8d8d3!important;
+  background:#fbfbf9!important;
+}
+
+.nav20-shell .promo37-ops-group .nav20-ops-heading strong{
+  color:#161616!important;
+}
+
+.nav20-shell .promo37-ops-group .nav20-ops-heading span{
+  color:#73736e!important;
+}
+
+.nav20-shell .promo37-ops-group .nav20-ops-links a{
+  color:#171717!important;
+}
+
+.nav20-shell .promo37-ops-group .nav20-ops-links a small{
+  color:#6e6e69!important;
+}
+
+.nav20-shell .promo37-ops-group .nav20-ops-links a.is-current{
+  background:#f0f0ed!important;
+  border-radius:12px!important;
+}
+
+.promo37-fallback-link{
+  font-weight:850!important;
+}
+
+#cognitus-mobile-nav25 .promo37-mobile-primary .nav25-primary-icon{
+  background:#111!important;
+  color:#fff!important;
+}
+
+#cognitus-mobile-nav25 .promo37-mobile-group{
+  border-top:1px solid #deded9;
+  padding-top:1rem;
+}
+
+#cognitus-mobile-nav25 .promo37-mobile-group>p{
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  font-size:.7rem;
+  font-weight:900;
+  color:#74746f;
+}
+
+@media(min-width:1181px){
+  body.promo37-visibility-ready .nav20-shell .promo37-primary{
+    display:flex!important;
+  }
+}
+
+@media(max-width:1180px){
+  .promo37-fallback-link{display:none!important}
+  #cognitus-mobile-nav25 .promo37-mobile-primary,
+  #cognitus-mobile-nav25 .promo37-mobile-group{display:flex}
+  #cognitus-mobile-nav25 .promo37-mobile-group{display:block}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .promo37-primary,
+  .promo37-mobile-primary,
+  .promo37-mobile-group *{transition:none!important}
+}

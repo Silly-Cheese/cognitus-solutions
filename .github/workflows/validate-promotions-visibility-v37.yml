@@ -1,0 +1,27 @@
+name: Validate Promotions Visibility V37
+
+on:
+  push:
+    branches:
+      - main
+      - "agent/**"
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check V37 JavaScript syntax
+        run: |
+          node --check src/promotionsVisibilityV37.js
+          node --check src/promotionalAccessV26.js
+          node --check scripts/validate-promotions-visibility-v37.mjs
+      - name: Run Promotions Visibility V37 regression checks
+        run: node scripts/validate-promotions-visibility-v37.mjs

@@ -15,20 +15,28 @@ import { startProfessionalFinishV35 } from "./professionalFinishV35.js";
 import { startFrenzyV35 } from "./frenzyV35.js";
 import "./frenzySignalOverrideV35.js";
 
-startProfessionalCoreV35();
-startProfessionalFinishV35();
-startLegalPoliciesV34();
-startFrenzyV35();
-startPromotionalContrastV33();
-startPromotionalRegistryV33();
-startPromotionalRegistryV35();
-startPromotionalAccessV26({
-  renderFeature: renderFeaturePageV35,
-  renderAccessHub,
-  renderAdmin: renderPromoAdmin
-});
-startPromotionalNavigationV27();
-startPromotionalEnhancementsV28();
-startPromotionalMobileV29();
-startPromotionalWorkspacesV30();
-startPromotionalInvestigationsV32();
+const BOOTSTRAP_KEY = "__COGNITUS_PROMOTIONAL_V37_STARTED__";
+
+if (!window[BOOTSTRAP_KEY]) {
+  window[BOOTSTRAP_KEY] = true;
+
+  startProfessionalCoreV35();
+  startProfessionalFinishV35();
+  startLegalPoliciesV34();
+  startFrenzyV35();
+  startPromotionalContrastV33();
+  startPromotionalRegistryV33();
+  startPromotionalRegistryV35();
+  startPromotionalAccessV26({
+    renderFeature: renderFeaturePageV35,
+    renderAccessHub,
+    renderAdmin: renderPromoAdmin
+  });
+  startPromotionalNavigationV27();
+  startPromotionalEnhancementsV28();
+  startPromotionalMobileV29();
+  startPromotionalWorkspacesV30();
+  startPromotionalInvestigationsV32();
+
+  document.dispatchEvent(new CustomEvent("cognitus:promotional-v37-ready"));
+}
