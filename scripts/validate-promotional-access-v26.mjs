@@ -29,7 +29,7 @@ requireText(admin,"Bulk Quantity","bulk promotional code generation");
 requireText(features,"employmentRecords","authorized employment feature data");
 requireText(features,"intelligence_report","saved intelligence reports");
 requireText(features,"profile_customization","enhanced profile cards");
-requireText(nav,'import \"./promotionalAccessV26.js\";',"production entry import");
+requireText(nav,'import \"./promotionalAccessV26.js?v=20260905-v35-live\";',"production entry import");
 requireText(rules,"match /promotionalCodes/{code}","promotional code rules");
 requireText(rules,"match /promoRedemptions/{redemptionId}","redemption rules");
 requireText(rules,"match /promoAccessGrants/{grantId}","grant rules");
