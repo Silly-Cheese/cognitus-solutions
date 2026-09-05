@@ -2,11 +2,16 @@ name: Validate Professional + Frenzy V35
 
 on:
   push:
+    branches:
+      - main
+      - "agent/**"
     paths:
       - "src/professionalCoreV35.js"
       - "src/professionalCoreV35.css"
       - "src/frenzyV35.js"
       - "src/frenzyV35.css"
+      - "src/frenzySignalOverrideV35.js"
+      - "src/frenzySignalOverrideV35.css"
       - "src/promotionalAccessV26.js"
       - "src/promo/promotionalRegistryV35.js"
       - "src/promo/promotionalFeaturesV35.js"
@@ -22,6 +27,8 @@ on:
       - "src/professionalCoreV35.css"
       - "src/frenzyV35.js"
       - "src/frenzyV35.css"
+      - "src/frenzySignalOverrideV35.js"
+      - "src/frenzySignalOverrideV35.css"
       - "src/promotionalAccessV26.js"
       - "src/promo/promotionalRegistryV35.js"
       - "src/promo/promotionalFeaturesV35.js"
@@ -47,6 +54,7 @@ jobs:
         run: |
           node --check src/professionalCoreV35.js
           node --check src/frenzyV35.js
+          node --check src/frenzySignalOverrideV35.js
           node --check src/promo/promotionalRegistryV35.js
           node --check src/promo/promotionalFeaturesV35.js
           node --check src/promo/promotionalRegistryV33.js
