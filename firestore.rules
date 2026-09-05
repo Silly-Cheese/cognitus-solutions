@@ -1,5 +1,21 @@
 rules_version = '2';
 
+// Cognitus Solutions — Firestore Security Rules
+// Security baseline: Foundation V19 + Promotional Access + Professional/Frenzy V36
+//
+// Design principles:
+//   • default deny
+//   • role and organization scoped access
+//   • immutable identifiers where practical
+//   • user-owned records remain user-scoped
+//   • staff access is explicit, never inferred from promotional access
+//   • promotional entitlements unlock product functionality only
+//   • Frenzy / Signal Zero never expands protected-record visibility
+//   • Owner-only emergency/event configuration remains schema validated
+//
+// NOTE: GitHub Pages does not deploy Firestore rules. Publishing this
+// file to Firebase remains a separate deployment step.
+
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
@@ -189,6 +205,168 @@ service cloud.firestore {
           && expiry > request.time
           && expiry <= request.time + duration.value(get(promotionalCodePath(code)).data.accessDurationSeconds + 600, 's')
         );
+    }
+
+
+    // ============================================================
+    // V36: PORTAL / EVENT POLICY VALIDATION
+    //
+    // The settings/portal document is intentionally readable by the
+    // client because Frenzy is a site-wide event surface. Only the
+    // Owner may write it. These helpers prevent malformed retention
+    // or Frenzy payloads from being persisted by the Owner UI.
+    // ============================================================
+
+    function validNullableTimestamp(value) {
+      return value == null || value is timestamp;
+    }
+
+    function validRetentionPolicy(value) {
+      return value is map
+        && value.keys().hasOnly([
+          'closedWorkflowDays',
+          'auditDays',
+          'inactiveAccountDays'
+        ])
+        && value.closedWorkflowDays is int
+        && value.closedWorkflowDays >= 30
+        && value.closedWorkflowDays <= 3650
+        && value.auditDays is int
+        && value.auditDays >= 90
+        && value.auditDays <= 3650
+        && value.inactiveAccountDays is int
+        && value.inactiveAccountDays >= 30
+        && value.inactiveAccountDays <= 3650;
+    }
+
+    function validFrenzyState(value) {
+      return value is map
+        && value.keys().hasOnly([
+          'active',
+          'eventId',
+          'title',
+          'message',
+          'announcement',
+          'level',
+          'audience',
+          'signalZeroEnabled',
+          'startedAt',
+          'endsAt',
+          'endedAt',
+          'dropActive',
+          'dropLabel',
+          'dropCode',
+          'activatedByUid',
+          'activatedByCognitusId',
+          'updatedAt'
+        ])
+        && value.active is bool
+        && shortString(value.eventId, 96)
+        && shortString(value.title, 80)
+        && shortString(value.message, 240)
+        && shortString(value.announcement, 240)
+        && value.level >= 0
+        && value.level <= 100
+        && value.audience == 'all_active_accounts'
+        && value.signalZeroEnabled is bool
+        && validNullableTimestamp(value.startedAt)
+        && validNullableTimestamp(value.endsAt)
+        && validNullableTimestamp(value.endedAt)
+        && value.dropActive is bool
+        && shortString(value.dropLabel, 80)
+        && shortString(value.dropCode, 80)
+        && shortString(value.activatedByUid, 128)
+        && shortString(value.activatedByCognitusId, 64)
+        && validNullableTimestamp(value.updatedAt)
+        && (
+          value.active == false
+          || (
+            value.eventId.size() > 0
+            && value.startedAt is timestamp
+            && value.endsAt is timestamp
+            && value.endsAt > value.startedAt
+          )
+        );
+    }
+
+    function validPortalSettings(value) {
+      return value is map
+        && (
+          !value.keys().hasAny(['retentionPolicy'])
+          || validRetentionPolicy(value.retentionPolicy)
+        )
+        && (
+          !value.keys().hasAny(['retentionPolicyUpdatedAt'])
+          || validNullableTimestamp(value.retentionPolicyUpdatedAt)
+        )
+        && (
+          !value.keys().hasAny(['retentionPolicyUpdatedByUid'])
+          || shortString(value.retentionPolicyUpdatedByUid, 128)
+        )
+        && (
+          !value.keys().hasAny(['frenzy'])
+          || validFrenzyState(value.frenzy)
+        );
+    }
+
+    // ============================================================
+    // V36: PROMOTIONAL ENTITLEMENT CATALOG VALIDATION
+    //
+    // Promotional access never grants staff/admin authority. It only
+    // grants product feature identifiers. The catalog is explicit so
+    // malformed or invented feature IDs cannot be persisted.
+    // ============================================================
+
+    function validPromoFeatureList(value) {
+      return value is list
+        && value.size() >= 1
+        && value.size() <= 18
+        && value.hasOnly([
+          'intelligence_center',
+          'relationship_mapping',
+          'deep_history',
+          'advanced_search',
+          'account_comparison',
+          'network_explorer',
+          'watchlist',
+          'saved_investigations',
+          'intelligence_reports',
+          'change_comparison',
+          'cognitus_labs',
+          'enhanced_profile',
+          'search_collections',
+          'search_analytics',
+          'early_access',
+          'risk_signal_matrix',
+          'organization_overlap',
+          'signal_zero'
+        ]);
+    }
+
+    function validPromoEligibleRoles(value) {
+      return value is list
+        && value.size() >= 1
+        && value.size() <= 6
+        && value.hasOnly([
+          'user',
+          'verified_employer_member',
+          'org_admin',
+          'reviewer',
+          'admin',
+          'owner'
+        ]);
+    }
+
+    function validPromoWorkspaceType(value) {
+      return value in [
+        'watchlist',
+        'investigation',
+        'intelligence_report',
+        'snapshot',
+        'profile_customization',
+        'collection',
+        'search_event'
+      ];
     }
 
     function validDiscordId(value) {
@@ -503,9 +681,7 @@ service cloud.firestore {
         && getAfter(externalProfileClaimPath(profileId, request.resource.data.linkedUserId)).data.applicantUid == request.resource.data.linkedUserId
         && request.resource.data.updatedAt == request.time;
 
-      allow delete: if (signedIn()
-          && profileId == request.auth.uid
-          && resource.data.linkedUserId == request.auth.uid)
+      allow delete: if (signedIn() && profileId == request.auth.uid && resource.data.linkedUserId == request.auth.uid)
         || isOwner();
     }
 
@@ -549,7 +725,9 @@ service cloud.firestore {
           'verificationStatus', 'trustLevel', 'memberCount', 'updatedAt'
         ])
         && request.resource.data.cognitusId == resource.data.cognitusId
-        && request.resource.data.verificationStatus in ['pending_verification', 'verified', 'unverified', 'suspended', 'restricted']
+        && request.resource.data.verificationStatus in [
+          'pending_verification', 'verified', 'unverified', 'suspended', 'restricted'
+        ]
         && request.resource.data.trustLevel in ['unreviewed', 'good', 'watch', 'concern', 'high_risk']
         && request.resource.data.updatedAt == request.time;
 
@@ -566,8 +744,8 @@ service cloud.firestore {
         && request.resource.data.keys().hasOnly([
           'id', 'cognitusId', 'checkedByUid', 'checkedByCognitusId', 'organizationId',
           'searchType', 'searchField', 'searchQuery', 'reason', 'additionalNotes',
-          'targetProfileId', 'targetOrganizationId', 'resultIds', 'resultCount', 'resultSummary',
-          'downloadedReport', 'createdAt', 'updatedAt'
+          'targetProfileId', 'targetOrganizationId', 'resultIds', 'resultCount',
+          'resultSummary', 'downloadedReport', 'createdAt', 'updatedAt'
         ])
         && request.resource.data.id == checkId
         && validCognitusId(request.resource.data.cognitusId, 'CHK')
@@ -602,17 +780,19 @@ service cloud.firestore {
         || (signedIn() && resource.data.submittedByUid == request.auth.uid)
         || ownsReportSubject(resource.data)
         || hasReportGrant(reportId)
-        || (activeAccount()
+        || (
+          activeAccount()
           && resource.data.subjectOrganizationId != null
           && resource.data.status in ['approved', 'published']
-          && resource.data.visibility in ['screening', 'public']);
+          && resource.data.visibility in ['screening', 'public']
+        );
 
       allow create: if activeAccount()
         && request.resource.data.keys().hasOnly([
           'id', 'cognitusId', 'subjectProfileId', 'subjectOrganizationId', 'submittedByUid',
-          'submittedByCognitusId', 'submittedByOrganizationId', 'category', 'severity', 'summary',
-          'details', 'status', 'visibility', 'reviewedByUid', 'reviewedAt', 'decisionNotes',
-          'publishedAt', 'appealStatus', 'createdAt', 'updatedAt'
+          'submittedByCognitusId', 'submittedByOrganizationId', 'category', 'severity',
+          'summary', 'details', 'status', 'visibility', 'reviewedByUid', 'reviewedAt',
+          'decisionNotes', 'publishedAt', 'appealStatus', 'createdAt', 'updatedAt'
         ])
         && request.resource.data.id == reportId
         && validCognitusId(request.resource.data.cognitusId, 'RPT')
@@ -659,15 +839,19 @@ service cloud.firestore {
         && request.resource.data.severity == resource.data.severity
         && request.resource.data.summary == resource.data.summary
         && request.resource.data.details == resource.data.details
-        && request.resource.data.status in ['pending_review', 'under_review', 'approved', 'denied', 'published', 'archived', 'disputed']
+        && request.resource.data.status in [
+          'pending_review', 'under_review', 'approved', 'denied', 'published', 'archived', 'disputed'
+        ]
         && request.resource.data.visibility in ['private_review', 'screening', 'public']
         && request.resource.data.reviewedByUid == request.auth.uid
         && request.resource.data.updatedAt == request.time;
 
       allow delete: if isOwner()
-        || (activeAccount()
+        || (
+          activeAccount()
           && resource.data.submittedByUid == request.auth.uid
-          && resource.data.status == 'pending_review');
+          && resource.data.status == 'pending_review'
+        );
     }
 
     match /screeningReportSummaries/{summaryId} {
@@ -707,8 +891,8 @@ service cloud.firestore {
       allow create: if canRequestReports(currentUser().organizationId)
         && request.resource.data.keys().hasOnly([
           'id', 'reportId', 'reportCognitusId', 'subjectProfileId', 'requesterUid',
-          'requesterCognitusId', 'requesterDisplayName', 'requesterOrganizationId',
-          'requestReason', 'status', 'decidedAt', 'decidedByUid', 'createdAt', 'updatedAt'
+          'requesterCognitusId', 'requesterDisplayName', 'requesterOrganizationId', 'requestReason',
+          'status', 'decidedAt', 'decidedByUid', 'createdAt', 'updatedAt'
         ])
         && request.resource.data.id == requestId
         && requestId == request.resource.data.reportId + '__' + request.auth.uid
@@ -744,8 +928,14 @@ service cloud.firestore {
         && request.resource.data.requesterOrganizationId == resource.data.requesterOrganizationId
         && request.resource.data.requestReason == resource.data.requestReason
         && (
-          (resource.data.status == 'pending' && request.resource.data.status in ['approved', 'denied'])
-          || (resource.data.status == 'approved' && request.resource.data.status == 'revoked')
+          (
+            resource.data.status == 'pending'
+            && request.resource.data.status in ['approved', 'denied']
+          )
+          || (
+            resource.data.status == 'approved'
+            && request.resource.data.status == 'revoked'
+          )
         )
         && request.resource.data.decidedAt == request.time
         && request.resource.data.decidedByUid == request.auth.uid
@@ -778,12 +968,14 @@ service cloud.firestore {
     match /reportAccessGrants/{reportId} {
       allow read: if isReviewer()
         || ownsProfile(resource.data.subjectProfileId)
-        || (activeAccount()
+        || (
+          activeAccount()
           && resource.data.approvedUids is list
           && (
             request.auth.uid in resource.data.approvedUids
             || ('owner:' + request.auth.uid) in resource.data.approvedUids
-          ));
+          )
+        );
 
       allow create: if (isReviewer() || ownsProfile(request.resource.data.subjectProfileId))
         && request.resource.data.keys().hasOnly([
@@ -860,8 +1052,9 @@ service cloud.firestore {
         && requestId == request.auth.uid
         && request.resource.data.keys().hasOnly([
           'id', 'cognitusId', 'applicantUid', 'applicantCognitusId', 'applicantDisplayName',
-          'organizationId', 'organizationCognitusId', 'organizationName', 'positionTitle', 'reason',
-          'status', 'submittedAt', 'updatedAt', 'reviewedAt', 'reviewedByUid', 'reviewerNotes'
+          'organizationId', 'organizationCognitusId', 'organizationName', 'positionTitle',
+          'reason', 'status', 'submittedAt', 'updatedAt', 'reviewedAt', 'reviewedByUid',
+          'reviewerNotes'
         ])
         && request.resource.data.id == requestId
         && request.resource.data.applicantUid == request.auth.uid
@@ -897,8 +1090,9 @@ service cloud.firestore {
         && resource.data.status in ['denied', 'withdrawn']
         && request.resource.data.keys().hasOnly([
           'id', 'cognitusId', 'applicantUid', 'applicantCognitusId', 'applicantDisplayName',
-          'organizationId', 'organizationCognitusId', 'organizationName', 'positionTitle', 'reason',
-          'status', 'submittedAt', 'updatedAt', 'reviewedAt', 'reviewedByUid', 'reviewerNotes'
+          'organizationId', 'organizationCognitusId', 'organizationName', 'positionTitle',
+          'reason', 'status', 'submittedAt', 'updatedAt', 'reviewedAt', 'reviewedByUid',
+          'reviewerNotes'
         ])
         && request.resource.data.id == resource.data.id
         && request.resource.data.cognitusId == resource.data.cognitusId
@@ -1044,7 +1238,11 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
 
       allow update: if canAddEmploymentRecords(resource.data.organizationId)
-        && (resource.data.createdByUid == request.auth.uid || role() == 'org_admin' || isAdmin())
+        && (
+          resource.data.createdByUid == request.auth.uid
+          || role() == 'org_admin'
+          || isAdmin()
+        )
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'positionTitle', 'department', 'employmentType', 'startedOn', 'endedOn',
           'endReason', 'eligibleForRehire', 'recordStatus', 'updatedAt'
@@ -1236,7 +1434,8 @@ service cloud.firestore {
     }
 
     match /claims/{claimId} {
-      allow read: if isReviewer() || (signedIn() && resource.data.submittedByUid == request.auth.uid);
+      allow read: if isReviewer()
+        || (signedIn() && resource.data.submittedByUid == request.auth.uid);
 
       allow create: if activeAccount()
         && request.resource.data.keys().hasOnly([
@@ -1272,13 +1471,14 @@ service cloud.firestore {
     }
 
     match /appeals/{appealId} {
-      allow read: if isReviewer() || (signedIn() && resource.data.submittedByUid == request.auth.uid);
+      allow read: if isReviewer()
+        || (signedIn() && resource.data.submittedByUid == request.auth.uid);
 
       allow create: if activeAccount()
         && request.resource.data.keys().hasOnly([
           'id', 'cognitusId', 'profileId', 'reportId', 'submittedByUid', 'submittedByCognitusId',
-          'reason', 'statement', 'status', 'reviewedByUid', 'decision', 'decisionNotes', 'closedAt',
-          'createdAt', 'updatedAt'
+          'reason', 'statement', 'status', 'reviewedByUid', 'decision', 'decisionNotes',
+          'closedAt', 'createdAt', 'updatedAt'
         ])
         && request.resource.data.id == appealId
         && validCognitusId(request.resource.data.cognitusId, 'APL')
@@ -1304,7 +1504,9 @@ service cloud.firestore {
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'status', 'reviewedByUid', 'decision', 'decisionNotes', 'closedAt', 'updatedAt'
         ])
-        && request.resource.data.status in ['pending_review', 'under_review', 'accepted', 'denied', 'partially_accepted', 'closed']
+        && request.resource.data.status in [
+          'pending_review', 'under_review', 'accepted', 'denied', 'partially_accepted', 'closed'
+        ]
         && request.resource.data.reviewedByUid == request.auth.uid
         && request.resource.data.updatedAt == request.time;
 
@@ -1312,7 +1514,8 @@ service cloud.firestore {
     }
 
     match /auditLogs/{auditId} {
-      allow read: if isAdmin() || (signedIn() && resource.data.actorUid == request.auth.uid);
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.actorUid == request.auth.uid);
 
       allow create: if activeAccount()
         && request.resource.data.keys().hasOnly([
@@ -1336,7 +1539,8 @@ service cloud.firestore {
     }
 
     match /downloads/{downloadId} {
-      allow read: if isAdmin() || (signedIn() && resource.data.downloadedByUid == request.auth.uid);
+      allow read: if isAdmin()
+        || (signedIn() && resource.data.downloadedByUid == request.auth.uid);
 
       allow create: if activeAccount()
         && request.resource.data.keys().hasOnly([
@@ -1356,9 +1560,18 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Public client configuration and live-event state.
+    // Reads remain public for the current Frenzy bootstrap. Writes
+    // are Owner-only and must satisfy the V36 schema validators.
     match /settings/portal {
       allow read: if true;
-      allow create, update: if isOwner();
+
+      allow create: if isOwner()
+        && validPortalSettings(request.resource.data);
+
+      allow update: if isOwner()
+        && validPortalSettings(request.resource.data);
+
       allow delete: if false;
     }
 
@@ -1450,9 +1663,8 @@ service cloud.firestore {
 
       allow create: if activeAccount()
         && request.resource.data.keys().hasOnly([
-          'id', 'cognitusId', 'requesterUid', 'requesterCognitusId', 'requestType',
-          'statement', 'status', 'reviewedByUid', 'reviewerNotes', 'decidedAt',
-          'createdAt', 'updatedAt'
+          'id', 'cognitusId', 'requesterUid', 'requesterCognitusId', 'requestType', 'statement',
+          'status', 'reviewedByUid', 'reviewerNotes', 'decidedAt', 'createdAt', 'updatedAt'
         ])
         && request.resource.data.id == privacyId
         && validCognitusId(request.resource.data.cognitusId, 'PVR')
@@ -1483,6 +1695,7 @@ service cloud.firestore {
 
     match /profileMergeMap/{sourceProfileId} {
       allow read: if activeAccount();
+
       allow create: if isOwner()
         && request.resource.data.keys().hasOnly([
           'sourceProfileId', 'targetProfileId', 'sourceCognitusId', 'targetCognitusId',
@@ -1497,10 +1710,11 @@ service cloud.firestore {
         && request.resource.data.mergedByUid == request.auth.uid
         && shortString(request.resource.data.reason, 1000)
         && request.resource.data.mergedAt == request.time;
+
       allow update, delete: if false;
     }
 
-    // Owner-only canonical profile creation/repair and merge metadata.
+    // Owner-only canonical profile creation and repair workflows.
     match /profiles/{profileId} {
       allow create: if isOwner()
         && exists(userPath(profileId))
@@ -1524,7 +1738,7 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
     }
 
-    // Owner-only profile-reference rewrites used by the merge tool.
+    // Owner-only reference rewrites used after a canonical profile merge.
     match /reports/{reportId} {
       allow update: if isOwner()
         && request.resource.data.diff(resource.data).changedKeys().hasOnly(['subjectProfileId', 'updatedAt'])
@@ -1613,7 +1827,19 @@ service cloud.firestore {
     }
 
 
-    // Promotional Access V26: codes, entitlements, redemptions, and private feature workspaces.
+    // ============================================================
+    // PROMOTIONAL / FEATURE ACCESS — V36
+    //
+    // These rules authorize entitlement records only. They DO NOT
+    // authorize access to protected reports, employment records,
+    // staff queues, organization administration, or Owner functions.
+    // Each underlying collection above remains authoritative.
+    //
+    // Signal Zero is deliberately only an entitlement here. Its
+    // Frenzy-time availability is controlled by settings/portal in
+    // the application, while all data reads still pass the ordinary
+    // report/employment/profile rules.
+    // ============================================================
     match /promotionalCodes/{code} {
       allow get: if activeAccount();
       allow list: if isAdmin();
@@ -1648,12 +1874,8 @@ service cloud.firestore {
         && request.resource.data.accessDurationSeconds <= 157680000
         && (request.resource.data.accessEndsAt == null || request.resource.data.accessEndsAt is timestamp)
         && request.resource.data.campaignExpiryBehavior in ['preserve_access', 'revoke_on_campaign_end']
-        && request.resource.data.featureIds is list
-        && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
-        && request.resource.data.eligibleRoles is list
-        && request.resource.data.eligibleRoles.size() >= 1
-        && request.resource.data.eligibleRoles.size() <= 6
+        && validPromoFeatureList(request.resource.data.featureIds)
+        && validPromoEligibleRoles(request.resource.data.eligibleRoles)
         && (request.resource.data.eligibleOrganizationId == null || shortString(request.resource.data.eligibleOrganizationId, 128))
         && request.resource.data.distribution in ['secret', 'campaign']
         && request.resource.data.createdByUid == request.auth.uid
@@ -1683,12 +1905,8 @@ service cloud.firestore {
         && (request.resource.data.redeemUntil == null || request.resource.data.redeemUntil is timestamp)
         && (request.resource.data.accessEndsAt == null || request.resource.data.accessEndsAt is timestamp)
         && request.resource.data.campaignExpiryBehavior in ['preserve_access', 'revoke_on_campaign_end']
-        && request.resource.data.featureIds is list
-        && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
-        && request.resource.data.eligibleRoles is list
-        && request.resource.data.eligibleRoles.size() >= 1
-        && request.resource.data.eligibleRoles.size() <= 6
+        && validPromoFeatureList(request.resource.data.featureIds)
+        && validPromoEligibleRoles(request.resource.data.eligibleRoles)
         && (request.resource.data.eligibleOrganizationId == null || shortString(request.resource.data.eligibleOrganizationId, 128))
         && request.resource.data.distribution in ['secret', 'campaign']
         && request.resource.data.updatedAt == request.time;
@@ -1724,6 +1942,7 @@ service cloud.firestore {
         && request.resource.data.redemptionCount == 1
         && request.resource.data.redemptionCount <= get(promotionalCodePath(request.resource.data.promoId)).data.maxPerAccount
         && request.resource.data.featureIds == get(promotionalCodePath(request.resource.data.promoId)).data.featureIds
+        && validPromoFeatureList(request.resource.data.featureIds)
         && request.resource.data.status == 'active'
         && request.resource.data.source == 'promotional_code'
         && validPromoExpiry(request.resource.data.promoId, request.resource.data.expiresAt)
@@ -1749,6 +1968,7 @@ service cloud.firestore {
         && request.resource.data.redemptionCount == resource.data.redemptionCount + 1
         && request.resource.data.redemptionCount <= get(promotionalCodePath(resource.data.promoId)).data.maxPerAccount
         && request.resource.data.featureIds == get(promotionalCodePath(resource.data.promoId)).data.featureIds
+        && validPromoFeatureList(request.resource.data.featureIds)
         && request.resource.data.status == 'active'
         && validPromoExpiry(resource.data.promoId, request.resource.data.expiresAt)
         && request.resource.data.campaignEndsAt == get(promotionalCodePath(resource.data.promoId)).data.redeemUntil
@@ -1777,9 +1997,7 @@ service cloud.firestore {
         && exists(userPath(request.resource.data.uid))
         && get(userPath(request.resource.data.uid)).data.status == 'active'
         && request.resource.data.userCognitusId == get(userPath(request.resource.data.uid)).data.cognitusId
-        && request.resource.data.featureIds is list
-        && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
+        && validPromoFeatureList(request.resource.data.featureIds)
         && request.resource.data.status == 'active'
         && request.resource.data.source == 'manual_grant'
         && shortString(request.resource.data.label, 80)
@@ -1796,9 +2014,7 @@ service cloud.firestore {
         && request.resource.data.source == resource.data.source
         && request.resource.data.grantedByUid == resource.data.grantedByUid
         && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.featureIds is list
-        && request.resource.data.featureIds.size() >= 1
-        && request.resource.data.featureIds.size() <= 15
+        && validPromoFeatureList(request.resource.data.featureIds)
         && request.resource.data.status in ['active', 'revoked']
         && shortString(request.resource.data.label, 80)
         && shortString(request.resource.data.note, 500)
@@ -1818,10 +2034,7 @@ service cloud.firestore {
         ])
         && request.resource.data.id == recordId
         && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.type in [
-          'watchlist', 'investigation', 'intelligence_report', 'snapshot',
-          'profile_customization', 'collection', 'search_event'
-        ]
+        && validPromoWorkspaceType(request.resource.data.type)
         && shortString(request.resource.data.title, 120)
         && (request.resource.data.subjectId == null || shortString(request.resource.data.subjectId, 128))
         && (request.resource.data.organizationId == null || shortString(request.resource.data.organizationId, 128))
@@ -1846,6 +2059,13 @@ service cloud.firestore {
       allow delete: if isAdmin() || (activeAccount() && resource.data.ownerUid == request.auth.uid);
     }
 
+    // ============================================================
+    // FINAL DEFAULT-DENY BOUNDARY
+    //
+    // Any collection introduced by future Cognitus code is denied
+    // until a deliberate rule is added. This prevents new features
+    // from silently inheriting access.
+    // ============================================================
     match /{document=**} {
       allow read, write: if false;
     }

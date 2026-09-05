@@ -72,6 +72,19 @@ function operationsForRole(role) {
         ["/employer-status", "Employer Status", "Request or review employer access"],
         ...(employer ? [["/employer/members", "Organization Members", "Members and granular permissions"]] : [])
       ]
+    },
+    {
+      label: "Intelligence",
+      promo29: true,
+      items: [
+        ["/intelligence", "Intelligence Center", "Structured subject review across authorized records"],
+        ["/investigations", "Investigations", "Saved case workspaces and authorized report history"],
+        ["/analytics", "Activity Analytics", "Review search and check activity"],
+        ["/promotional-access", "Feature Access", "Entitlements, access codes, and restricted analysis tools"],
+        ["/labs", "Cognitus Labs", "Controlled experimental and early-access capabilities"],
+        ...(admin ? [["/admin/promotions", "Feature Access Management", "Codes, direct grants, limits, and revocations"]] : []),
+        ...(owner ? [["/executive", "Executive Control", "Executive_Eagle event and owner controls"]] : [])
+      ]
     }
   ];
   if (["reviewer", "admin", "owner"].includes(role)) {
@@ -125,10 +138,10 @@ function drawerMarkup(name, role, count) {
     </a>`).join("");
 
   const operations = operationsForRole(role).map((group) => `
-    <section class="nav25-group">
+    <section class="nav25-group${group.promo29 ? " nav29-promo-group" : ""}"${group.promo29 ? ` data-promo29-mobile-group data-promo29-role="${escapeHtml(role)}"` : ""}>
       <p>${escapeHtml(group.label)}</p>
       <div class="nav25-group-links">
-        ${group.items.map(([path, label, note]) => `<a href="#${escapeHtml(path)}" class="${routeActive(path) ? "is-active" : ""}"${routeActive(path) ? ' aria-current="page"' : ""}><strong>${escapeHtml(label)}</strong><small>${escapeHtml(note)}</small></a>`).join("")}
+        ${group.items.map(([path, label, note]) => `<a href="#${escapeHtml(path)}"${group.promo29 ? ` data-promo29-route="${escapeHtml(path)}"` : ""} class="${routeActive(path) ? "is-active" : ""}"${routeActive(path) ? ' aria-current="page"' : ""}><strong>${escapeHtml(label)}</strong><small>${escapeHtml(note)}</small></a>`).join("")}
       </div>
     </section>`).join("");
 

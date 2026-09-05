@@ -1,0 +1,60 @@
+name: Validate Firestore V36
+
+on:
+  push:
+    branches:
+      - main
+      - "agent/**"
+    paths:
+      - "firestore.rules"
+      - "firebase.v36.json"
+      - "scripts/apply-firestore-v36-phase2.mjs"
+      - "scripts/build-promotional-rules-v26.mjs"
+      - "scripts/validate-firestore-v36.mjs"
+      - ".github/workflows/validate-firestore-v36.yml"
+  pull_request:
+    paths:
+      - "firestore.rules"
+      - "firebase.v36.json"
+      - "scripts/apply-firestore-v36-phase2.mjs"
+      - "scripts/build-promotional-rules-v26.mjs"
+      - "scripts/validate-firestore-v36.mjs"
+      - ".github/workflows/validate-firestore-v36.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Check Firestore V36 scripts
+        run: |
+          node --check scripts/apply-firestore-v36-phase2.mjs
+          node --check scripts/validate-firestore-v36.mjs
+          node --check scripts/build-promotional-rules-v26.mjs
+
+      - name: Validate canonical Firestore V36 rules
+        run: node scripts/validate-firestore-v36.mjs
+
+      - name: Verify phase 2 materializer is idempotent
+        run: |
+          node scripts/apply-firestore-v36-phase2.mjs
+          git diff --exit-code -- firestore.rules scripts/build-promotional-rules-v26.mjs
+
+      - name: Compile canonical Firestore V36 rules in emulator
+        run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus --config firebase.v36.json "echo Firestore V36 canonical rules compiled"

@@ -2,6 +2,7 @@ import fs from "node:fs";
 
 const entry = fs.readFileSync("src/promotionalAccessV26.js", "utf8");
 const mobile = fs.readFileSync("src/promo/promotionalMobileV29.js", "utf8");
+const baseMobile = fs.readFileSync("src/navigationMobileV25.js", "utf8");
 const css = fs.readFileSync("src/promotionalMobileV29.css", "utf8");
 
 function requireText(source, text, label) {
@@ -23,6 +24,16 @@ requireText(mobile, 'MOBILE_BREAKPOINT = 1180', 'shared mobile breakpoint');
 requireText(mobile, 'observeDrawer', 'targeted drawer reconstruction observer');
 requireText(mobile, 'requestAnimationFrame', 'frame-coalesced mobile sync');
 forbid(mobile, 'nav29-promo-primary', 'legacy dedicated Promo Access primary tile remains');
+
+// V36 fallback: the dedicated mobile shell must contain the Intelligence
+// directory natively so it cannot disappear because of module timing.
+requireText(baseMobile, 'label: "Intelligence"', 'native mobile Intelligence group');
+requireText(baseMobile, 'promo29: true', 'promo directory fallback marker');
+requireText(baseMobile, 'data-promo29-mobile-group', 'mobile promo group compatibility marker');
+requireText(baseMobile, '/promotional-access', 'native Feature Access route');
+requireText(baseMobile, '/admin/promotions', 'native Feature Access Management route');
+requireText(baseMobile, '/executive', 'native Owner Executive Control route');
+
 requireText(css, '@media(max-width:1180px)', 'tablet/mobile responsive rules');
 requireText(css, '@media(max-width:720px)', 'phone responsive rules');
 requireText(css, '.promo26-lock-backdrop', 'mobile lock modal treatment');
