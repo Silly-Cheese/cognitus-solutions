@@ -45,7 +45,8 @@ function mountStyles() {
     link.rel = "stylesheet";
     document.head.appendChild(link);
   }
-  link.href = "./src/promotionsVisibilityV37.css?v=20260905-v37-visible";
+  const href = "./src/promotionsVisibilityV37.css?v=20260905-v37-visible";
+  if (link.getAttribute("href") !== href) link.href = href;
 }
 
 function sourceAuthenticated() {
@@ -130,11 +131,14 @@ function ensureDesktopOperations(shell, role) {
     grid.appendChild(group);
   }
 
-  group.innerHTML = `
-    <div class="nav20-ops-heading"><span>Intelligence</span><strong>Analysis & access</strong></div>
-    <div class="nav20-ops-links">
-      ${itemsForRole(role).map(([path, label, note]) => `<a href="./#${escapeHtml(path)}" data-promo27-operation data-promo27-route="${escapeHtml(path)}" data-promo37-route="${escapeHtml(path)}"><span>${escapeHtml(label)}</span><small>${escapeHtml(note)}</small></a>`).join("")}
-    </div>`;
+  if (group.dataset.promo37Signature !== signature) {
+    group.dataset.promo37Signature = signature;
+    group.innerHTML = `
+      <div class="nav20-ops-heading"><span>Intelligence</span><strong>Analysis & access</strong></div>
+      <div class="nav20-ops-links">
+        ${itemsForRole(role).map(([path, label, note]) => `<a href="./#${escapeHtml(path)}" data-promo27-operation data-promo27-route="${escapeHtml(path)}" data-promo37-route="${escapeHtml(path)}"><span>${escapeHtml(label)}</span><small>${escapeHtml(note)}</small></a>`).join("")}
+      </div>`;
+  }
 
   const current = currentRoute();
   group.querySelectorAll("[data-promo37-route]").forEach((link) => {
