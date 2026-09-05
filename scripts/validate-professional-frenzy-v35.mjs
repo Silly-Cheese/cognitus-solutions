@@ -21,9 +21,9 @@ function check(name, condition) {
   checks.push({ name, ok: Boolean(condition) });
 }
 
-check("production entry starts the professional V35 contract", files.entry.includes("startProfessionalCoreV35()"));
-check("production entry starts Frenzy V35", files.entry.includes("startFrenzyV35()"));
-check("production entry registers Signal Zero", files.entry.includes("startPromotionalRegistryV35()"));
+check("production entry starts the professional V35 contract", files.entry.includes("startProfessionalCoreV35()") || files.entry.includes('safeStartV38("professional-core-v35", startProfessionalCoreV35)'));
+check("production entry starts Frenzy V35", files.entry.includes("startFrenzyV35()") || files.entry.includes('safeStartV38("frenzy-v35", startFrenzyV35)'));
+check("production entry registers Signal Zero", files.entry.includes("startPromotionalRegistryV35()") || files.entry.includes('safeStartV38("registry-v35", startPromotionalRegistryV35)'));
 check("production entry uses the V35 feature renderer", files.entry.includes("renderFeaturePageV35"));
 check("production entry loads Signal Zero contrast authority", files.entry.includes('import "./frenzySignalOverrideV35.js"'));
 
