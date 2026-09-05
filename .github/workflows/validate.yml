@@ -55,6 +55,9 @@ jobs:
           node --check src/promo/promotionalMobileV29.js
           node --check src/promo/promotionalWorkspacesV30.js
           node --check src/promo/promotionalInvestigationV32.js
+          node --check src/promo/promotionalRegistryV33.js
+          node --check src/promo/promotionalFeaturesV33.js
+          node --check src/promo/promotionalContrastV33.js
           node --check scripts/build-firestore-v19.mjs
           node --check scripts/build-promotional-rules-v26.mjs
           node --check scripts/validate-promotional-access-v26.mjs
@@ -62,6 +65,7 @@ jobs:
           node --check scripts/validate-promotional-workspaces-v30.mjs
           node --check scripts/validate-promotional-stability-v31.mjs
           node --check scripts/validate-promotional-investigation-v32.mjs
+          node --check scripts/validate-promotional-contrast-v33.mjs
           node --check scripts/validate-foundation-v19.mjs
           node --check scripts/validate-navigation-v20.mjs
 
@@ -118,6 +122,9 @@ jobs:
 
       - name: Run Promotional Investigations V32 checks
         run: node scripts/validate-promotional-investigation-v32.mjs
+
+      - name: Run Promotional Access V33 contrast and feature checks
+        run: node scripts/validate-promotional-contrast-v33.mjs
 
       - name: Build Foundation V19 Firestore rules
         run: node scripts/build-firestore-v19.mjs
