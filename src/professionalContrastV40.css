@@ -1,0 +1,491 @@
+/* Cognitus Professional Contrast V40
+   Final visual contrast authority for normal Cognitus surfaces.
+   This stylesheet intentionally loads after V33/V35 presentation layers.
+   Light surfaces use dark text; explicitly dark surfaces use light text. */
+
+:root {
+  --c40-bg: #f2f4f7;
+  --c40-surface: #ffffff;
+  --c40-soft: #f8fafc;
+  --c40-text: #101828;
+  --c40-body: #344054;
+  --c40-muted: #475467;
+  --c40-subtle: #667085;
+  --c40-line: #d0d5dd;
+  --c40-line-strong: #98a2b3;
+  --c40-dark: #172033;
+  --c40-dark-2: #1d2939;
+  --c40-on-dark: #ffffff;
+  --c40-on-dark-muted: #d0d5dd;
+  --c40-danger: #842029;
+  --c40-danger-bg: #fff5f5;
+  --c40-success: #155e3d;
+  --c40-success-bg: #f3faf6;
+  --c40-warning: #7a4a06;
+  --c40-warning-bg: #fffbeb;
+}
+
+/* Global readable baseline. */
+body.cognitus-professional {
+  background: var(--c40-bg) !important;
+  color: var(--c40-text) !important;
+}
+
+body.cognitus-professional .page-root {
+  color: var(--c40-body) !important;
+}
+
+body.cognitus-professional .page-root h1,
+body.cognitus-professional .page-root h2,
+body.cognitus-professional .page-root h3,
+body.cognitus-professional .page-root h4,
+body.cognitus-professional .page-root h5,
+body.cognitus-professional .page-root h6,
+body.cognitus-professional .page-root strong,
+body.cognitus-professional .page-root dt,
+body.cognitus-professional .page-root th,
+body.cognitus-professional .panel-header,
+body.cognitus-professional .brand strong {
+  color: var(--c40-text) !important;
+}
+
+body.cognitus-professional .page-root p,
+body.cognitus-professional .page-root small,
+body.cognitus-professional .page-root .muted,
+body.cognitus-professional .page-root .disclaimer,
+body.cognitus-professional .brand small,
+body.cognitus-professional .site-footer {
+  color: var(--c40-muted) !important;
+}
+
+body.cognitus-professional .eyebrow {
+  color: var(--c40-muted) !important;
+}
+
+/* Standard light application surfaces. */
+body.cognitus-professional .hero,
+body.cognitus-professional .form-card,
+body.cognitus-professional .panel,
+body.cognitus-professional .legal-card,
+body.cognitus-professional .report-document,
+body.cognitus-professional .feature-card,
+body.cognitus-professional .stat-card,
+body.cognitus-professional .result-card,
+body.cognitus-professional .workflow-card,
+body.cognitus-professional .record-row,
+body.cognitus-professional .dashboard-hero > div:first-child,
+body.cognitus-professional .empty-state {
+  background: var(--c40-surface) !important;
+  color: var(--c40-text) !important;
+  border-color: var(--c40-line) !important;
+}
+
+body.cognitus-professional .feature-card p,
+body.cognitus-professional .result-card p,
+body.cognitus-professional .stat-card span,
+body.cognitus-professional .stat-card small,
+body.cognitus-professional .record-row span,
+body.cognitus-professional .record-row small,
+body.cognitus-professional .workflow-card small,
+body.cognitus-professional .report-records span,
+body.cognitus-professional .empty-state {
+  color: var(--c40-muted) !important;
+}
+
+/* Restore the intentional high-contrast account summary that V35 accidentally lightened. */
+body.cognitus-professional .dashboard-hero .account-card {
+  background: var(--c40-dark) !important;
+  color: var(--c40-on-dark) !important;
+  border-color: var(--c40-dark) !important;
+}
+body.cognitus-professional .dashboard-hero .account-card strong {
+  color: var(--c40-on-dark) !important;
+}
+body.cognitus-professional .dashboard-hero .account-card span,
+body.cognitus-professional .dashboard-hero .account-card small {
+  color: var(--c40-on-dark-muted) !important;
+}
+
+/* Forms: no faded text on white fields. */
+body.cognitus-professional label,
+html.promo33-active body.cognitus-professional label {
+  color: var(--c40-body) !important;
+}
+body.cognitus-professional input,
+body.cognitus-professional select,
+body.cognitus-professional textarea,
+html.promo33-active body.cognitus-professional input,
+html.promo33-active body.cognitus-professional select,
+html.promo33-active body.cognitus-professional textarea {
+  background: #fff !important;
+  color: var(--c40-text) !important;
+  border-color: var(--c40-line-strong) !important;
+}
+body.cognitus-professional input::placeholder,
+body.cognitus-professional textarea::placeholder,
+html.promo33-active body.cognitus-professional input::placeholder,
+html.promo33-active body.cognitus-professional textarea::placeholder {
+  color: var(--c40-subtle) !important;
+  opacity: 1 !important;
+}
+body.cognitus-professional select option,
+html.promo33-active body.cognitus-professional select option {
+  background: #fff !important;
+  color: var(--c40-text) !important;
+}
+
+/* Buttons have deterministic foreground/background pairs. */
+body.cognitus-professional .button-dark,
+body.cognitus-professional button[type="submit"],
+html.promo33-active body.cognitus-professional .button-dark {
+  background: var(--c40-dark) !important;
+  color: #fff !important;
+  border-color: var(--c40-dark) !important;
+}
+body.cognitus-professional .button-light,
+html.promo33-active body.cognitus-professional .button-light {
+  background: #fff !important;
+  color: var(--c40-text) !important;
+  border-color: var(--c40-line-strong) !important;
+}
+body.cognitus-professional .button-light:hover,
+html.promo33-active body.cognitus-professional .button-light:hover {
+  background: #f2f4f7 !important;
+  color: var(--c40-text) !important;
+}
+
+/* Notices/statuses. */
+body.cognitus-professional .notice,
+body.cognitus-professional .promo26-notice {
+  background: var(--c40-soft) !important;
+  color: var(--c40-body) !important;
+  border-color: var(--c40-line) !important;
+}
+body.cognitus-professional .notice-error,
+body.cognitus-professional .promo26-notice.is-error {
+  background: var(--c40-danger-bg) !important;
+  color: var(--c40-danger) !important;
+  border-color: #e5b8bd !important;
+}
+body.cognitus-professional .notice-success,
+body.cognitus-professional .promo26-notice.is-success {
+  background: var(--c40-success-bg) !important;
+  color: var(--c40-success) !important;
+  border-color: #acd5bf !important;
+}
+
+/* Desktop navigation. */
+body.cognitus-professional .nav20-primary-link,
+body.cognitus-professional .nav20-operations-button,
+body.cognitus-professional .nav20-icon-button,
+body.cognitus-professional .nav20-ops-links a,
+body.cognitus-professional .nav20-operations-panel,
+body.cognitus-professional .nav20-ops-group,
+body.cognitus-professional .nav20-ops-intro {
+  color: var(--c40-body) !important;
+}
+body.cognitus-professional .nav20-primary-link.is-active,
+body.cognitus-professional .nav20-operations-button.is-active,
+body.cognitus-professional .nav20-icon-button.is-active,
+body.cognitus-professional .nav20-ops-links a.is-active {
+  color: var(--c40-text) !important;
+  background: #eaecf0 !important;
+}
+body.cognitus-professional .nav20-operations-panel {
+  background: #fff !important;
+  border-color: var(--c40-line) !important;
+}
+body.cognitus-professional .nav20-operations-panel small,
+body.cognitus-professional .nav20-operations-panel p {
+  color: var(--c40-muted) !important;
+}
+body.cognitus-professional .nav20-avatar {
+  background: var(--c40-dark) !important;
+  color: #fff !important;
+}
+
+/* Mobile navigation. */
+body.cognitus-professional.nav25-ready .nav25-drawer {
+  background: #f2f4f7 !important;
+  color: var(--c40-text) !important;
+}
+body.cognitus-professional .nav25-account {
+  background: var(--c40-dark) !important;
+  color: #fff !important;
+}
+body.cognitus-professional .nav25-account strong {
+  color: #fff !important;
+}
+body.cognitus-professional .nav25-account small {
+  color: var(--c40-on-dark-muted) !important;
+}
+body.cognitus-professional .nav25-avatar {
+  background: #fff !important;
+  color: var(--c40-text) !important;
+}
+body.cognitus-professional .nav25-primary-link,
+body.cognitus-professional .nav25-group-links a,
+body.cognitus-professional .nav25-directory,
+body.cognitus-professional .nav25-utility {
+  color: var(--c40-text) !important;
+}
+body.cognitus-professional .nav25-primary-link small,
+body.cognitus-professional .nav25-group-links small,
+body.cognitus-professional .nav25-directory-title span,
+body.cognitus-professional .nav25-group > p {
+  color: var(--c40-muted) !important;
+}
+body.cognitus-professional .nav25-primary-link.is-active,
+body.cognitus-professional .nav25-group-links a.is-active {
+  background: #eaecf0 !important;
+  color: var(--c40-text) !important;
+  border-color: var(--c40-line-strong) !important;
+}
+body.cognitus-professional .nav25-primary-link.is-employer,
+body.cognitus-professional .nav25-primary-link.is-employer strong,
+body.cognitus-professional .nav25-primary-link.is-employer small {
+  color: #42307d !important;
+}
+body.cognitus-professional .nav25-utility.is-active {
+  background: var(--c40-dark) !important;
+  color: #fff !important;
+}
+
+/* Promo V26/V30/V32/V33 light surfaces. Higher specificity deliberately defeats
+   V33's old assumption that promo heroes are dark. */
+html.promo33-active body.cognitus-professional .promo26-access-hero,
+html.promo33-active body.cognitus-professional .promo26-admin-hero,
+html.promo33-active body.cognitus-professional .promo26-feature-hero,
+html.promo33-active body.cognitus-professional .promo26-feature-section,
+html.promo33-active body.cognitus-professional .promo26-active-access,
+html.promo33-active body.cognitus-professional .promo26-feature-card,
+html.promo33-active body.cognitus-professional .promo26-admin-card,
+html.promo33-active body.cognitus-professional .promo26-entitlement,
+html.promo33-active body.cognitus-professional .promo26-record-card,
+html.promo33-active body.cognitus-professional .promo26-workspace-list > article,
+html.promo33-active body.cognitus-professional .promo26-release-list > article,
+html.promo33-active body.cognitus-professional .promo26-redemption-table > article,
+html.promo33-active body.cognitus-professional .promo26-intel-report,
+html.promo33-active body.cognitus-professional .promo30-command-strip,
+html.promo33-active body.cognitus-professional .promo30-tool-stage,
+html.promo33-active body.cognitus-professional .promo30-tool-stage > .promo30-result-stage,
+html.promo33-active body.cognitus-professional .promo30-comparison-board,
+html.promo33-active body.cognitus-professional .promo30-history-stream article,
+html.promo33-active body.cognitus-professional .promo30-subject-dossier,
+html.promo33-active body.cognitus-professional .promo30-empty-state,
+html.promo33-active body.cognitus-professional .promo30-stage-head,
+html.promo33-active body.cognitus-professional .promo32-archive,
+html.promo33-active body.cognitus-professional .promo32-archive-result,
+html.promo33-active body.cognitus-professional .promo32-report-card,
+html.promo33-active body.cognitus-professional .promo33-metric,
+html.promo33-active body.cognitus-professional .promo33-chart,
+html.promo33-active body.cognitus-professional .promo33-overlap-person {
+  background: #fff !important;
+  color: var(--c40-text) !important;
+  border-color: var(--c40-line) !important;
+}
+
+html.promo33-active body.cognitus-professional .promo26-access-hero h1,
+html.promo33-active body.cognitus-professional .promo26-access-hero h2,
+html.promo33-active body.cognitus-professional .promo26-access-hero h3,
+html.promo33-active body.cognitus-professional .promo26-admin-hero h1,
+html.promo33-active body.cognitus-professional .promo26-admin-hero h2,
+html.promo33-active body.cognitus-professional .promo26-admin-hero h3,
+html.promo33-active body.cognitus-professional .promo26-feature-hero h1,
+html.promo33-active body.cognitus-professional .promo26-feature-hero h2,
+html.promo33-active body.cognitus-professional .promo26-feature-hero h3,
+html.promo33-active body.cognitus-professional .promo26-feature-section h1,
+html.promo33-active body.cognitus-professional .promo26-feature-section h2,
+html.promo33-active body.cognitus-professional .promo26-feature-section h3,
+html.promo33-active body.cognitus-professional .promo26-feature-card h3,
+html.promo33-active body.cognitus-professional .promo26-admin-card h3,
+html.promo33-active body.cognitus-professional .promo26-record-card h3,
+html.promo33-active body.cognitus-professional .promo30-stage-head h2,
+html.promo33-active body.cognitus-professional .promo30-stage-head strong,
+html.promo33-active body.cognitus-professional .promo33-metric strong,
+html.promo33-active body.cognitus-professional .promo33-overlap-person h3 {
+  color: var(--c40-text) !important;
+}
+
+html.promo33-active body.cognitus-professional .promo26-access-hero p,
+html.promo33-active body.cognitus-professional .promo26-admin-hero p,
+html.promo33-active body.cognitus-professional .promo26-feature-hero p,
+html.promo33-active body.cognitus-professional .promo26-feature-section p,
+html.promo33-active body.cognitus-professional .promo26-feature-section small,
+html.promo33-active body.cognitus-professional .promo26-feature-card p,
+html.promo33-active body.cognitus-professional .promo26-feature-card small,
+html.promo33-active body.cognitus-professional .promo26-admin-card p,
+html.promo33-active body.cognitus-professional .promo26-admin-card small,
+html.promo33-active body.cognitus-professional .promo26-record-card p,
+html.promo33-active body.cognitus-professional .promo26-record-card small,
+html.promo33-active body.cognitus-professional .promo26-entitlement small,
+html.promo33-active body.cognitus-professional .promo30-stage-head p,
+html.promo33-active body.cognitus-professional .promo30-command-signals span,
+html.promo33-active body.cognitus-professional .promo30-empty-state p,
+html.promo33-active body.cognitus-professional .promo32-archive p,
+html.promo33-active body.cognitus-professional .promo33-metric span,
+html.promo33-active body.cognitus-professional .promo33-chart-row span,
+html.promo33-active body.cognitus-professional .promo33-overlap-person p {
+  color: var(--c40-muted) !important;
+}
+
+html.promo33-active body.cognitus-professional .promo26-access-hero label,
+html.promo33-active body.cognitus-professional .promo26-admin-hero label,
+html.promo33-active body.cognitus-professional .promo26-feature-hero label,
+html.promo33-active body.cognitus-professional .promo30-stage-head label {
+  color: var(--c40-body) !important;
+}
+
+html.promo33-active body.cognitus-professional .promo26-mini-badge,
+html.promo33-active body.cognitus-professional .promo26-status,
+html.promo33-active body.cognitus-professional .promo26-status-chip,
+html.promo33-active body.cognitus-professional .promo26-feature-pills span,
+html.promo33-active body.cognitus-professional .promo26-record-meta span,
+html.promo33-active body.cognitus-professional .promo30-stage-status,
+html.promo33-active body.cognitus-professional .promo32-security-pill,
+html.promo33-active body.cognitus-professional .promo33-overlap-tags span {
+  background: #eef2f6 !important;
+  color: var(--c40-body) !important;
+  border-color: #d0d5dd !important;
+}
+
+/* Keep intentionally dark visualization surfaces dark, but make every text role readable. */
+html.promo33-active body.cognitus-professional .promo30-network-result,
+html.promo33-active body.cognitus-professional .promo30-graph-canvas,
+html.promo33-active body.cognitus-professional [data-promo30-feature="intelligence_center"] .promo30-primary-control {
+  background: var(--c40-dark) !important;
+  color: var(--c40-on-dark) !important;
+  border-color: #344054 !important;
+}
+html.promo33-active body.cognitus-professional .promo30-network-result h1,
+html.promo33-active body.cognitus-professional .promo30-network-result h2,
+html.promo33-active body.cognitus-professional .promo30-network-result h3,
+html.promo33-active body.cognitus-professional .promo30-network-result strong,
+html.promo33-active body.cognitus-professional .promo30-graph-canvas h1,
+html.promo33-active body.cognitus-professional .promo30-graph-canvas h2,
+html.promo33-active body.cognitus-professional .promo30-graph-canvas h3,
+html.promo33-active body.cognitus-professional .promo30-graph-canvas strong {
+  color: #fff !important;
+}
+html.promo33-active body.cognitus-professional .promo30-network-result p,
+html.promo33-active body.cognitus-professional .promo30-network-result small,
+html.promo33-active body.cognitus-professional .promo30-graph-canvas p,
+html.promo33-active body.cognitus-professional .promo30-graph-canvas small,
+html.promo33-active body.cognitus-professional [data-promo30-feature="intelligence_center"] .promo30-primary-control label {
+  color: var(--c40-on-dark-muted) !important;
+}
+
+/* Executive Control: crisp light administrative workspace. */
+body.cognitus-professional .exec35-header,
+body.cognitus-professional .exec35-stat,
+body.cognitus-professional .exec35-panel,
+body.cognitus-professional .exec35-identity {
+  background: #fff !important;
+  color: var(--c40-text) !important;
+  border-color: var(--c40-line) !important;
+}
+body.cognitus-professional .exec35-identity {
+  background: var(--c40-soft) !important;
+}
+body.cognitus-professional .exec35-header h1,
+body.cognitus-professional .exec35-header h2,
+body.cognitus-professional .exec35-header strong,
+body.cognitus-professional .exec35-stat strong,
+body.cognitus-professional .exec35-panel h2,
+body.cognitus-professional .exec35-panel h3,
+body.cognitus-professional .exec35-panel strong,
+body.cognitus-professional .exec35-identity strong {
+  color: var(--c40-text) !important;
+}
+body.cognitus-professional .exec35-header p,
+body.cognitus-professional .exec35-stat span,
+body.cognitus-professional .exec35-stat small,
+body.cognitus-professional .exec35-panel-head p,
+body.cognitus-professional .exec35-identity span,
+body.cognitus-professional .exec35-identity small {
+  color: var(--c40-muted) !important;
+}
+body.cognitus-professional .exec35-live {
+  background: var(--c40-warning-bg) !important;
+  border-color: #e5c07b !important;
+}
+
+/* Frenzy and Signal Zero are the deliberate exception to normal Cognitus. */
+body.cognitus-professional .frenzy35-banner,
+body.cognitus-professional .frenzy35-activation-card,
+body.cognitus-professional .exec35-frenzy-preview,
+body.cognitus-professional .signal35-hero,
+body.cognitus-professional .signal35-panel,
+body.cognitus-professional .signal35-result,
+body.cognitus-professional .signal35-metric,
+body.cognitus-professional .signal35-anomaly {
+  color: var(--c40-on-dark) !important;
+}
+body.cognitus-professional .frenzy35-banner p,
+body.cognitus-professional .frenzy35-banner small,
+body.cognitus-professional .frenzy35-copy span,
+body.cognitus-professional .frenzy35-countdown span,
+body.cognitus-professional .frenzy35-activation-card p,
+body.cognitus-professional .exec35-frenzy-preview p,
+body.cognitus-professional .signal35-hero p,
+body.cognitus-professional .signal35-panel p,
+body.cognitus-professional .signal35-result p,
+body.cognitus-professional .signal35-anomaly p,
+body.cognitus-professional .signal35-metric span {
+  color: var(--c40-on-dark-muted) !important;
+}
+body.cognitus-professional .frenzy35-activation-card h2,
+body.cognitus-professional .frenzy35-activation-card strong,
+body.cognitus-professional .exec35-frenzy-preview strong,
+body.cognitus-professional .signal35-hero h1,
+body.cognitus-professional .signal35-panel h2,
+body.cognitus-professional .signal35-result h2,
+body.cognitus-professional .signal35-result h3,
+body.cognitus-professional .signal35-metric strong,
+body.cognitus-professional .signal35-anomaly strong {
+  color: #fff !important;
+}
+body.cognitus-professional .signal35-panel label {
+  color: #e4e7ec !important;
+}
+body.cognitus-professional .signal35-panel input,
+body.cognitus-professional .signal35-panel select,
+body.cognitus-professional .signal35-panel textarea {
+  background: #111318 !important;
+  color: #fff !important;
+  border-color: #667085 !important;
+}
+body.cognitus-professional .signal35-panel input::placeholder,
+body.cognitus-professional .signal35-panel textarea::placeholder {
+  color: #aeb7c4 !important;
+}
+
+/* Dark baseline cards elsewhere. */
+body.cognitus-professional .trust-card,
+body.cognitus-professional .report-id-card {
+  color: #fff !important;
+  background: var(--c40-dark) !important;
+}
+body.cognitus-professional .trust-card h2,
+body.cognitus-professional .report-id-card strong {
+  color: #fff !important;
+}
+body.cognitus-professional .trust-card p,
+body.cognitus-professional .report-id-card span,
+body.cognitus-professional .report-id-card small {
+  color: var(--c40-on-dark-muted) !important;
+}
+
+/* Accessible focus visibility. */
+body.cognitus-professional :focus-visible {
+  outline: 3px solid #344054 !important;
+  outline-offset: 3px !important;
+}
+body.cognitus-professional .frenzy35-banner :focus-visible,
+body.cognitus-professional .frenzy35-activation :focus-visible,
+body.cognitus-professional .signal35-shell :focus-visible,
+body.cognitus-professional .trust-card :focus-visible,
+body.cognitus-professional .report-id-card :focus-visible,
+body.cognitus-professional .dashboard-hero .account-card :focus-visible {
+  outline-color: #fbbf24 !important;
+}
