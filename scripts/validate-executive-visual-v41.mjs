@@ -27,7 +27,7 @@ const checks = [
   [executiveV43.includes("FRENZY_ACTIVATED") && executiveV43.includes("FRENZY_ENDED"), "Executive V43 preserves Frenzy audit actions"],
   [executiveV43.includes("MutationObserver") && executiveV43.includes("data-executive-v43-page"), "Executive V43 reclaims the route if the base router overwrites it"],
   [executiveV43Css.includes(".exec43-workspace") && executiveV43Css.includes(".exec43-form"), "Executive V43 has dedicated professional workspace formatting"],
-  [executiveV43Css.includes("#101828") && executiveV43Css.includes("#ffffff"), "Executive V43 defines strong light-surface contrast"],
+  [executiveV43Css.includes("#101828") && (executiveV43Css.includes("#ffffff") || executiveV43Css.includes("#fff")), "Executive V43 defines strong light-surface contrast"],
 
   [runtimeV43.includes("REQUEST_TIMEOUT_MS = 10000") && runtimeV43.includes("withTimeout"), "Promo Runtime V43 bounds promotional route waits"],
   [runtimeV43.includes("data-promo-v43-retry") && runtimeV43.includes("claimRoute(true)"), "Promo Runtime V43 exposes route retry"],
