@@ -1,6 +1,6 @@
 import * as C from "./promo/promotionalCoreV26.js";
 import { renderFeaturePageV35 } from "./promo/promotionalFeaturesV35.js";
-import { renderSignalZeroV44 } from "./signalZeroV44.js?v=20260906-v44";
+import { renderSignalZeroV44 } from "./signalZeroV44.js?v=20260906-v45";
 import { renderAccessHub, renderPromoAdmin } from "./promo/promotionalAdminV26.js";
 
 const START_KEY = "__COGNITUS_PROMO_RUNTIME_V43_STARTED__";
@@ -31,11 +31,11 @@ function withTimeout(promise, message, timeoutMs = REQUEST_TIMEOUT_MS) {
 function startExecutiveIsolated() {
   if (route() !== EXECUTIVE_ROUTE) return Promise.resolve(false);
   if (!executivePromise) {
-    executivePromise = import("./executiveControlV43.js?v=20260906-v44-executive")
+    executivePromise = import("./executiveControlV43.js?v=20260906-v45-executive")
       .then(async (module) => {
         const started = module.startExecutiveControlV43();
         try {
-          const maintenance = await import("./executiveMaintenanceV44.js?v=20260906-v44");
+          const maintenance = await import("./executiveMaintenanceV44.js?v=20260906-v45");
           maintenance.startExecutiveMaintenanceV44();
         } catch (error) {
           console.error("Executive Maintenance V44 isolated loader failed", error);
@@ -181,7 +181,11 @@ function claimRoute(force = false) {
     return;
   }
 
-  if (!force && busy) return;
+  if (busy) {
+    retryTimer = setTimeout(() => claimRoute(force), 60);
+    return;
+  }
+
   const missingSignalV44 = expectedRoute === SIGNAL_ZERO_ROUTE && !C.root?.querySelector("[data-signal44-page]");
   if (!force && !missingSignalV44 && hasRealPromoSurface() && !C.root?.querySelector("[data-promo-v38-handoff], [data-promo-v43-loading]")) return;
   renderPromoRoute(expectedRoute, force || missingSignalV44);
@@ -198,8 +202,11 @@ function installObserver() {
       }
       return;
     }
+
+    if (busy || C.root.querySelector("[data-promo-v43-loading], [data-promo-v43-error]")) return;
+
     const missingSignalV44 = current === SIGNAL_ZERO_ROUTE && !C.root.querySelector("[data-signal44-page]");
-    if (missingSignalV44 || C.root.querySelector("[data-promo-v38-handoff]") || (!hasRealPromoSurface() && !busy)) {
+    if (missingSignalV44 || C.root.querySelector("[data-promo-v38-handoff]") || !hasRealPromoSurface()) {
       clearTimeout(retryTimer);
       retryTimer = setTimeout(() => claimRoute(missingSignalV44), 0);
     }
