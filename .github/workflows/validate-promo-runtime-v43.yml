@@ -17,5 +17,7 @@ jobs:
         run: node --check src/promoRuntimeV43.js
       - name: Check Executive Control V43 syntax
         run: node --check src/executiveControlV43.js
+      - name: Check Executive route shield syntax
+        run: node --check src/executiveRouteShieldV43.js
       - name: Run Promo Runtime V43 contract checks
         run: node scripts/validate-promo-runtime-v43.mjs
