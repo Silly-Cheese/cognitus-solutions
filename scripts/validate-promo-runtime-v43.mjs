@@ -8,7 +8,7 @@ const executiveCss = read("src/executiveControlV43.css");
 const executiveShield = read("src/executiveRouteShieldV43.js");
 
 const checks = [
-  [promo.includes('import { startPromoRuntimeV43 } from "./promoRuntimeV43.js"'), "shared promo bootstrap imports V43 authority"],
+  [promo.includes('import { startPromoRuntimeV43 } from "./promoRuntimeV43.js'), "shared promo bootstrap imports V43 authority"],
   [promo.includes('safeStartV38("promo-runtime-v43", startPromoRuntimeV43)'), "V43 authority is started"],
   [promo.includes('import "./executiveRouteShieldV43.js"'), "Executive startup shield loads with promotional bootstrap"],
   [runtime.includes("C.PROMO_ROUTES") && runtime.includes("/executive"), "V43 covers promotional routes and Executive Control"],
@@ -17,7 +17,7 @@ const checks = [
   [runtime.includes("renderAccessHub") && runtime.includes("renderPromoAdmin") && runtime.includes("renderFeaturePageV35"), "V43 can render access hub, admin, and feature routes directly"],
   [runtime.includes("C.loadAccess(force)") && runtime.includes("C.renderLockedFeature(feature)"), "V43 preserves entitlement checks and locked states"],
   [!runtime.includes('import { startExecutiveControlV43 }'), "Executive V43 is not statically imported by the shared promotional runtime"],
-  [runtime.includes('import("./executiveControlV43.js?v=20260906-v43-executive-isolated")'), "Executive V43 is lazy-loaded behind an isolated module boundary"],
+  [runtime.includes('import("./executiveControlV43.js?v=20260906-v44-executive")'), "Executive V43 is lazy-loaded behind an isolated module boundary"],
   [runtime.includes("executivePromise = null") && runtime.includes("Executive Control V43 isolated loader failed"), "Executive V43 failure cannot abort ordinary promotional module evaluation"],
   [executive.indexOf("const clean") < executive.indexOf("let frenzyState = normalizeFrenzy(null)"), "Executive V43 has no clean temporal-dead-zone regression"],
   [executive.includes('userRecord?.status === "active"') && executive.includes('userRecord?.role === "owner"'), "Executive V43 preserves Owner-only access"],
