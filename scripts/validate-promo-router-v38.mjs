@@ -16,7 +16,7 @@ function check(label, condition) {
 }
 
 check("index loads fresh V38 base router", index.includes('src/app.js?v=20260905-v38-promo-router'));
-check("index independently loads a versioned promo bootstrap", /src\/promotionalAccessV26\.js\?v=20260905-v(?:38-router-handoff|40-contrast|41-executive-visual)/.test(index));
+check("index independently loads a versioned promo bootstrap", /src\/promotionalAccessV26\.js\?v=202609(?:05-v(?:38-router-handoff|40-contrast|41-executive-visual)|06-v44-signal-maintenance)/.test(index));
 check("base router declares V38 promotional routes", app.includes("PROMOTIONAL_ROUTES_V38") && app.includes('"/promotional-access"') && app.includes('"/admin/promotions"') && app.includes('"/executive"') && app.includes('"/signal-zero"'));
 check("base router recognizes promo routes before ordinary route dispatch", app.indexOf("if (isPromotionalRouteV38(current))") > -1 && app.indexOf("if (isPromotionalRouteV38(current))") < app.indexOf('if (current === "/")'));
 check("base router hands promo routes to bootstrap", app.includes('import("./promotionalAccessV26.js?v=20260905-v38-router-handoff")'));
