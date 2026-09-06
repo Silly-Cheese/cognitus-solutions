@@ -16,6 +16,7 @@ import { startProfessionalContrastV40 } from "./professionalContrastV40.js";
 import { startProfessionalRefineV41 } from "./professionalRefineV41.js";
 import { startFrenzyV35 } from "./frenzyV35.js";
 import { startPromoRuntimeV43 } from "./promoRuntimeV43.js";
+import "./executiveRouteShieldV43.js";
 import "./frenzySignalOverrideV35.js";
 
 const LEGACY_BOOTSTRAP_KEY = "__COGNITUS_PROMOTIONAL_V37_STARTED__";
@@ -25,9 +26,9 @@ const ROUTE_BRIDGE_KEY = "__COGNITUS_PROMOTIONAL_ROUTE_BRIDGE_V38__";
 function safeStartV38(label, starter) {
   try {
     const result = starter();
-    result?.catch?.((error) => console.error(`Promotional optional layer failed: ${label}`, error));
+    result?.catch?.((error) => console.error(`Promotional V38 optional layer failed: ${label}`, error));
   } catch (error) {
-    console.error(`Promotional optional layer failed: ${label}`, error);
+    console.error(`Promotional V38 optional layer failed: ${label}`, error);
   }
 }
 
