@@ -1,7 +1,6 @@
 import * as C from "./promo/promotionalCoreV26.js";
 import { renderFeaturePageV35 } from "./promo/promotionalFeaturesV35.js";
 import { renderAccessHub, renderPromoAdmin } from "./promo/promotionalAdminV26.js";
-import { startExecutiveControlV43 } from "./executiveControlV43.js";
 
 const START_KEY = "__COGNITUS_PROMO_RUNTIME_V43_STARTED__";
 const EXECUTIVE_ROUTE = "/executive";
@@ -11,6 +10,7 @@ let observer = null;
 let generation = 0;
 let retryTimer = null;
 let busy = false;
+let executivePromise = null;
 
 const route = () => location.hash.replace(/^#/, "").split("?")[0] || "/";
 const isPromoRoute = (value) => C.PROMO_ROUTES.has(value);
@@ -24,6 +24,24 @@ function withTimeout(promise, message, timeoutMs = REQUEST_TIMEOUT_MS) {
       timer = setTimeout(() => reject(new Error(message)), timeoutMs);
     })
   ]).finally(() => clearTimeout(timer));
+}
+
+function startExecutiveIsolated() {
+  if (route() !== EXECUTIVE_ROUTE) return Promise.resolve(false);
+  if (!executivePromise) {
+    executivePromise = import("./executiveControlV43.js?v=20260906-v43-executive-isolated")
+      .then((module) => module.startExecutiveControlV43())
+      .catch((error) => {
+        console.error("Executive Control V43 isolated loader failed", error);
+        executivePromise = null;
+        if (route() === EXECUTIVE_ROUTE && C.root) {
+          C.root.innerHTML = failureMarkup("Executive Control could not start. Retry the Owner workspace.", true);
+          bindRetry();
+        }
+        return false;
+      });
+  }
+  return executivePromise;
 }
 
 function hasRealPromoSurface() {
@@ -50,9 +68,9 @@ function loadingMarkup(expectedRoute) {
   </section>`;
 }
 
-function failureMarkup(message) {
-  return `<section class="hero hero-wide" data-promo-v43-error data-promo-v26-page>
-    <p class="eyebrow">Feature Access</p>
+function failureMarkup(message, executive = false) {
+  return `<section class="hero hero-wide" data-promo-v43-error ${executive ? "data-executive-v43-page data-executive-v35-page" : "data-promo-v26-page"}>
+    <p class="eyebrow">${executive ? "Executive Control" : "Feature Access"}</p>
     <h1>This workspace did not finish loading.</h1>
     <div class="notice notice-error">${C.safe(message || "The secure feature-access request timed out.")}</div>
     <div class="hero-actions"><button class="button button-dark" type="button" data-promo-v43-retry>Retry</button><a class="button button-light" href="#/dashboard">Dashboard</a></div>
@@ -68,7 +86,10 @@ function loginMarkup() {
 }
 
 function bindRetry() {
-  C.root?.querySelector("[data-promo-v43-retry]")?.addEventListener("click", () => claimRoute(true));
+  C.root?.querySelector("[data-promo-v43-retry]")?.addEventListener("click", () => {
+    if (route() === EXECUTIVE_ROUTE) executivePromise = null;
+    claimRoute(true);
+  });
 }
 
 function announce(expectedRoute) {
@@ -140,7 +161,7 @@ function claimRoute(force = false) {
   if (!isManagedRoute(expectedRoute)) return;
 
   if (expectedRoute === EXECUTIVE_ROUTE) {
-    startExecutiveControlV43();
+    startExecutiveIsolated();
     return;
   }
 
@@ -155,7 +176,9 @@ function installObserver() {
     const current = route();
     if (!isManagedRoute(current)) return;
     if (current === EXECUTIVE_ROUTE) {
-      if (!C.root.querySelector("[data-executive-v43-page]")) queueMicrotask(() => startExecutiveControlV43());
+      if (!C.root.querySelector("[data-executive-v43-page]") && !C.root.querySelector(".exec43-loading-bar")) {
+        queueMicrotask(() => startExecutiveIsolated());
+      }
       return;
     }
     if (C.root.querySelector("[data-promo-v38-handoff]") || (!hasRealPromoSurface() && !busy)) {
@@ -167,7 +190,6 @@ function installObserver() {
 }
 
 export function startPromoRuntimeV43() {
-  startExecutiveControlV43();
   installObserver();
   if (!window[START_KEY]) {
     window[START_KEY] = true;
