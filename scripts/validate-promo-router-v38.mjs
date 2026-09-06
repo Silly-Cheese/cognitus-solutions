@@ -25,7 +25,11 @@ check("promo bootstrap retains legacy V37 compatibility guard", promo.includes('
 check("promo bootstrap imports scheduleSync bridge", promo.includes('import { scheduleSync, startPromotionalAccessV26 }'));
 check("critical promo router starts before optional professional layers", promo.indexOf("const criticalRouter = startPromotionalAccessV26") > -1 && promo.indexOf("const criticalRouter = startPromotionalAccessV26") < promo.indexOf('safeStartV38("professional-core-v35"'));
 check("optional layer failures are isolated", promo.includes("function safeStartV38") && promo.includes("Promotional V38 optional layer failed"));
-check("promo route bridge resyncs core router", promo.includes('document.addEventListener("cognitus:promo-route-requested", () => scheduleSync(false))'));
+check(
+  "promo route bridge resyncs core router",
+  promo.includes('document.addEventListener("cognitus:promo-route-requested"') && promo.includes("scheduleSync(false)")
+);
+check("Executive route is isolated from shared promo module evaluation", !promo.includes('import { startExecutiveControlV41 }') && promo.includes('import("./executiveControlV42.js?v=20260905-v42-promo-isolation")'));
 check("unknown routes still retain normal 404", app.includes('hero("404", "Page not found."'));
 check("promo handoff executes before generic 404", app.indexOf("if (isPromotionalRouteV38(current))") < app.indexOf('hero("404", "Page not found."'));
 
