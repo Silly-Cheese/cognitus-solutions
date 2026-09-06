@@ -25,8 +25,6 @@ function normalizeMaintenance(raw) {
     etaText: clean(data.etaText),
     startedAt: data.startedAt || null,
     scheduledEndAt: data.scheduledEndAt || null,
-    activatedByUid: clean(data.activatedByUid),
-    activatedByCognitusId: clean(data.activatedByCognitusId),
     updatedAt: data.updatedAt || null
   };
 }
@@ -198,8 +196,6 @@ async function activateFromData(data, forcedEmergency = false) {
     etaText: (forcedEmergency ? "Service will resume after emergency checks are complete." : clean(data.get("etaText"))).slice(0, 120),
     startedAt: Fire.serverTimestamp(),
     scheduledEndAt: durationMinutes ? Fire.Timestamp.fromMillis(now + durationMinutes * 60 * 1000) : null,
-    activatedByUid: authUser.uid,
-    activatedByCognitusId: userRecord?.cognitusId || "",
     updatedAt: Fire.serverTimestamp()
   };
   const wording = mode === "emergency" ? "EMERGENCY PAUSE" : "MAINTENANCE MODE";
