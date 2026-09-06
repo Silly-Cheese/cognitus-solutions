@@ -5,6 +5,7 @@ import { renderAccessHub, renderPromoAdmin } from "./promo/promotionalAdminV26.j
 
 const START_KEY = "__COGNITUS_PROMO_RUNTIME_V43_STARTED__";
 const EXECUTIVE_ROUTE = "/executive";
+const SIGNAL_ZERO_ROUTE = "/signal-zero";
 const REQUEST_TIMEOUT_MS = 10000;
 
 let observer = null;
@@ -181,8 +182,9 @@ function claimRoute(force = false) {
   }
 
   if (!force && busy) return;
-  if (!force && hasRealPromoSurface() && !C.root?.querySelector("[data-promo-v38-handoff], [data-promo-v43-loading]")) return;
-  renderPromoRoute(expectedRoute, force);
+  const missingSignalV44 = expectedRoute === SIGNAL_ZERO_ROUTE && !C.root?.querySelector("[data-signal44-page]");
+  if (!force && !missingSignalV44 && hasRealPromoSurface() && !C.root?.querySelector("[data-promo-v38-handoff], [data-promo-v43-loading]")) return;
+  renderPromoRoute(expectedRoute, force || missingSignalV44);
 }
 
 function installObserver() {
@@ -196,9 +198,10 @@ function installObserver() {
       }
       return;
     }
-    if (C.root.querySelector("[data-promo-v38-handoff]") || (!hasRealPromoSurface() && !busy)) {
+    const missingSignalV44 = current === SIGNAL_ZERO_ROUTE && !C.root.querySelector("[data-signal44-page]");
+    if (missingSignalV44 || C.root.querySelector("[data-promo-v38-handoff]") || (!hasRealPromoSurface() && !busy)) {
       clearTimeout(retryTimer);
-      retryTimer = setTimeout(() => claimRoute(false), 0);
+      retryTimer = setTimeout(() => claimRoute(missingSignalV44), 0);
     }
   });
   observer.observe(C.root, { childList: true, subtree: false });
