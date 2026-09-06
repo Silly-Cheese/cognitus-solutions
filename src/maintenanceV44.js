@@ -7,6 +7,7 @@ const PORTAL_COLLECTION = "settings";
 const PORTAL_DOC = "portal";
 const START_KEY = "__COGNITUS_MAINTENANCE_V44_STARTED__";
 const REQUEST_TIMEOUT_MS = 9000;
+const MAX_TIMER_MS = 2147483000;
 
 const clean = (value) => String(value ?? "").trim();
 const safe = (value) => String(value ?? "")
@@ -27,8 +28,6 @@ function normalizeMaintenance(raw) {
     etaText: clean(data.etaText),
     startedAt: data.startedAt || null,
     scheduledEndAt: data.scheduledEndAt || null,
-    activatedByUid: clean(data.activatedByUid),
-    activatedByCognitusId: clean(data.activatedByCognitusId),
     updatedAt: data.updatedAt || null
   };
 }
@@ -42,6 +41,7 @@ let authUser = null;
 let activeOwner = false;
 let portalUnsubscribe = null;
 let authUnsubscribe = null;
+let expiryTimer = null;
 let initialized = false;
 let initializing = null;
 
@@ -86,6 +86,20 @@ function effectiveMaintenance() {
   return !end || end > Date.now();
 }
 
+function scheduleExpiryCheck() {
+  clearTimeout(expiryTimer);
+  expiryTimer = null;
+  if (!maintenanceState.active) return;
+  const end = timestampMs(maintenanceState.scheduledEndAt);
+  if (!end) return;
+  const remaining = end - Date.now();
+  if (remaining <= 0) return;
+  expiryTimer = setTimeout(() => {
+    expiryTimer = null;
+    applyGate();
+  }, Math.min(remaining + 250, MAX_TIMER_MS));
+}
+
 function isRecoveryRoute() {
   return route() === "/login";
 }
@@ -120,6 +134,7 @@ function removeNode(id) {
 }
 
 function applyGate() {
+  scheduleExpiryCheck();
   const active = effectiveMaintenance();
   document.documentElement.toggleAttribute("data-cognitus-maintenance", active);
   document.documentElement.setAttribute("data-cognitus-maintenance-mode", active ? maintenanceState.mode : "off");
