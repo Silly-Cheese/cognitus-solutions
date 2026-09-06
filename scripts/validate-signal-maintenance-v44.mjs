@@ -27,6 +27,8 @@ const checks = [
   [maintenance.includes('record?.status === "active"') && maintenance.includes('record?.role === "owner"'), "Only an active Owner receives maintenance bypass"],
   [maintenance.includes('route() === "/login"'), "Login remains available as the Owner recovery route"],
   [maintenance.includes("cognitus-maintenance-overlay-v44") && maintenance.includes("Check Again"), "Maintenance mode provides a public full-screen gate with recovery refresh"],
+  [maintenance.includes("scheduleExpiryCheck") && maintenance.includes("expiryTimer"), "Scheduled maintenance releases the client gate when its end time is reached"],
+  [!maintenance.includes("activatedByUid") && !maintenance.includes("activatedByCognitusId"), "Public maintenance state does not expose Owner identifiers"],
   [maintenanceCss.includes("z-index:2147482000") && maintenanceCss.includes("#111827"), "Maintenance screen is visually authoritative and high contrast"],
   [promo.includes('import "./maintenanceV44.js?v=20260906-v44-site-gate"'), "Universal promotional bootstrap starts the maintenance gate"],
 
@@ -34,6 +36,7 @@ const checks = [
   [executiveMaintenance.includes("SITE_MAINTENANCE_STARTED") && executiveMaintenance.includes("SITE_EMERGENCY_LOCKED") && executiveMaintenance.includes("SITE_MAINTENANCE_ENDED"), "Maintenance and emergency actions are audited"],
   [executiveMaintenance.includes("Pause Website Access") && executiveMaintenance.includes("Emergency Pause Now") && executiveMaintenance.includes("Restore Website"), "Executive Control exposes maintenance, emergency, and restoration actions"],
   [executiveMaintenance.includes('Fire.setDoc(portalRef(), { maintenance: next }, { merge: true })'), "Maintenance uses a non-destructive settings/portal merge"],
+  [!executiveMaintenance.includes("activatedByUid") && !executiveMaintenance.includes("activatedByCognitusId"), "Owner identity remains in audit data rather than public portal maintenance state"],
   [executiveMaintenanceCss.includes(".exec-maint44-form") && executiveMaintenanceCss.includes(".exec-maint44-emergency"), "Executive maintenance controls have dedicated professional formatting"],
   [runtime.includes("executiveMaintenanceV44.js?v=20260906-v44") && runtime.includes("Executive Maintenance V44 isolated loader failed"), "Maintenance controls are isolated from Executive Control startup"]
 ];
