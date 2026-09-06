@@ -331,9 +331,10 @@ function showMessage(message, tone = "neutral") {
 function bindControls() {
   root?.querySelector("[data-exec43-activate]")?.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const button = event.currentTarget.querySelector('button[type="submit"]');
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
     button.disabled = true;
-    try { await activateFrenzy(event.currentTarget); showMessage("Frenzy Mode activated.", "success"); }
+    try { await activateFrenzy(form); showMessage("Frenzy Mode activated.", "success"); }
     catch (error) { showMessage(error?.message || "Frenzy Mode could not be activated.", "error"); }
     finally { button.disabled = false; }
   });
@@ -347,20 +348,22 @@ function bindControls() {
   }));
 
   root?.querySelector("[data-exec43-extend]")?.addEventListener("click", async (event) => {
-    event.currentTarget.disabled = true;
+    const button = event.currentTarget;
+    button.disabled = true;
     try {
       const end = Math.max(Date.now(), timestampMs(frenzyState.endsAt) || Date.now()) + 10 * 60 * 1000;
       await updateFrenzy({ endsAt: Fire.Timestamp.fromMillis(end) }, "FRENZY_EXTENDED", "Extended Frenzy Mode by 10 minutes.");
     } catch (error) { showMessage(error?.message || "Frenzy could not be extended.", "error"); }
-    finally { event.currentTarget.disabled = false; }
+    finally { button.disabled = false; }
   });
 
   root?.querySelector("[data-exec43-announcement]")?.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const button = event.currentTarget.querySelector('button[type="submit"]');
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    const announcement = clean(new FormData(form).get("announcement")).slice(0, 240);
     button.disabled = true;
     try {
-      const announcement = clean(new FormData(event.currentTarget).get("announcement")).slice(0, 240);
       await updateFrenzy({ announcement }, "FRENZY_ANNOUNCEMENT", "Updated the Frenzy announcement.");
       showMessage("Announcement published.", "success");
     } catch (error) { showMessage(error?.message || "The announcement could not be published.", "error"); }
@@ -369,8 +372,9 @@ function bindControls() {
 
   root?.querySelector("[data-exec43-drop]")?.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const button = event.currentTarget.querySelector('button[type="submit"]');
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const button = form.querySelector('button[type="submit"]');
     button.disabled = true;
     try {
       await updateFrenzy({
@@ -385,12 +389,13 @@ function bindControls() {
 
   root?.querySelector("[data-exec43-end]")?.addEventListener("click", async (event) => {
     if (!confirm("End Frenzy Mode for the entire site now?")) return;
-    event.currentTarget.disabled = true;
+    const button = event.currentTarget;
+    button.disabled = true;
     try {
       await updateFrenzy({ active: false, endedAt: Fire.serverTimestamp() }, "FRENZY_ENDED", `Ended Frenzy Mode ${frenzyState.eventId || ""}.`);
       showMessage("Frenzy Mode ended.", "success");
     } catch (error) { showMessage(error?.message || "Frenzy Mode could not be ended.", "error"); }
-    finally { event.currentTarget.disabled = false; }
+    finally { button.disabled = false; }
   });
 }
 
