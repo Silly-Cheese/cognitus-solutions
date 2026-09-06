@@ -50,7 +50,7 @@ function requestLegacyRender() {
   document.dispatchEvent(new CustomEvent("cognitus:promo-route-requested", {
     detail: { route: ROUTE, source: "executive-v42-bridge" }
   }));
-  // Frenzy V35 listens to pageshow and uses the same Owner-only Executive renderer.
+  // Frenzy V35 listens to pageshow once its secure initializer has attached.
   window.dispatchEvent(new Event("pageshow"));
 }
 
@@ -96,7 +96,6 @@ export function startExecutiveControlV42() {
   observeRouteSurface();
   claimRoute();
   window.addEventListener("hashchange", claimRoute);
-  window.addEventListener("pageshow", claimRoute);
   document.addEventListener("DOMContentLoaded", claimRoute);
   return true;
 }
