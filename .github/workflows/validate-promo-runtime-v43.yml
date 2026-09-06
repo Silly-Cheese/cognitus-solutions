@@ -1,0 +1,21 @@
+name: Validate Promo Runtime V43
+
+on:
+  push:
+    branches: [ main, "agent/**" ]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check Promo Runtime V43 syntax
+        run: node --check src/promoRuntimeV43.js
+      - name: Check Executive Control V43 syntax
+        run: node --check src/executiveControlV43.js
+      - name: Run Promo Runtime V43 contract checks
+        run: node scripts/validate-promo-runtime-v43.mjs
