@@ -223,10 +223,12 @@ async function restoreWebsite() {
 function bindPanel() {
   document.querySelector("[data-maint44-form]")?.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const button = event.currentTarget.querySelector('button[type="submit"]');
+    const form = event.currentTarget;
+    const button = form.querySelector('button[type="submit"]');
+    const data = new FormData(form);
     button.disabled = true;
     try {
-      if (await activateFromData(new FormData(event.currentTarget), false)) {
+      if (await activateFromData(data, false)) {
         showMessage("Maintenance access gate activated.", "success");
         await readMaintenance();
         injectPanel(true);
@@ -236,25 +238,29 @@ function bindPanel() {
   });
 
   document.querySelector("[data-maint44-emergency]")?.addEventListener("click", async (event) => {
-    event.currentTarget.disabled = true;
+    const button = event.currentTarget;
+    const form = document.querySelector("[data-maint44-form]");
+    button.disabled = true;
     try {
-      if (await activateFromData(new FormData(document.querySelector("[data-maint44-form]")), true)) {
+      if (!form) throw new Error("Maintenance controls changed before the emergency pause could start. Retry the Owner workspace.");
+      if (await activateFromData(new FormData(form), true)) {
         await readMaintenance();
         injectPanel(true);
       }
     } catch (error) { showMessage(error?.message || "Emergency pause could not be activated.", "error"); }
-    finally { event.currentTarget.disabled = false; }
+    finally { button.disabled = false; }
   });
 
   document.querySelector("[data-maint44-restore]")?.addEventListener("click", async (event) => {
-    event.currentTarget.disabled = true;
+    const button = event.currentTarget;
+    button.disabled = true;
     try {
       if (await restoreWebsite()) {
         await readMaintenance();
         injectPanel(true);
       }
     } catch (error) { showMessage(error?.message || "Website access could not be restored.", "error"); }
-    finally { event.currentTarget.disabled = false; }
+    finally { button.disabled = false; }
   });
 }
 
