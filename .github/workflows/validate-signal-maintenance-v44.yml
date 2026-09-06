@@ -1,0 +1,29 @@
+name: Validate Signal Zero and Maintenance V44
+
+on:
+  push:
+    branches:
+      - main
+      - agent/signal-zero-maintenance-v44
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-v44:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check V44 JavaScript syntax
+        run: |
+          node --check src/signalZeroV44.js
+          node --check src/maintenanceV44.js
+          node --check src/executiveMaintenanceV44.js
+          node --check src/promoRuntimeV43.js
+          node --check src/promotionalAccessV26.js
+      - name: Validate Signal Zero and maintenance contract
+        run: node scripts/validate-signal-maintenance-v44.mjs

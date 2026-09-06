@@ -34,7 +34,7 @@ const checks = [
   [runtimeV43.includes("[data-promo-v38-handoff]") && runtimeV43.includes("MutationObserver"), "Promo Runtime V43 recovers base-router handoff overwrites"],
   [runtimeV43.includes("startExecutiveControlV43"), "Promo Runtime V43 delegates Executive Control to isolated V43"],
 
-  [loader.includes('import { startPromoRuntimeV43 } from "./promoRuntimeV43.js"'), "Promotional bootstrap imports V43 runtime"],
+  [loader.includes('import { startPromoRuntimeV43 } from "./promoRuntimeV43.js'), "Promotional bootstrap imports V43 runtime"],
   [loader.includes('safeStartV38("promo-runtime-v43", startPromoRuntimeV43)'), "Promotional bootstrap starts V43 runtime"],
   [loader.indexOf('safeStartV38("promo-runtime-v43", startPromoRuntimeV43)') > loader.indexOf("if (!window[BOOTSTRAP_KEY])"), "V43 runtime startup is not dependent on legacy bootstrap ownership"],
   [loader.indexOf('safeStartV38("professional-contrast-v40"') < loader.indexOf('safeStartV38("professional-refine-v41"'), "V41 visual refinement still starts after V40 contrast"],

@@ -1,9 +1,11 @@
 import * as C from "./promo/promotionalCoreV26.js";
 import { renderFeaturePageV35 } from "./promo/promotionalFeaturesV35.js";
+import { renderSignalZeroV44 } from "./signalZeroV44.js?v=20260906-v44";
 import { renderAccessHub, renderPromoAdmin } from "./promo/promotionalAdminV26.js";
 
 const START_KEY = "__COGNITUS_PROMO_RUNTIME_V43_STARTED__";
 const EXECUTIVE_ROUTE = "/executive";
+const SIGNAL_ZERO_ROUTE = "/signal-zero";
 const REQUEST_TIMEOUT_MS = 10000;
 
 let observer = null;
@@ -29,8 +31,17 @@ function withTimeout(promise, message, timeoutMs = REQUEST_TIMEOUT_MS) {
 function startExecutiveIsolated() {
   if (route() !== EXECUTIVE_ROUTE) return Promise.resolve(false);
   if (!executivePromise) {
-    executivePromise = import("./executiveControlV43.js?v=20260906-v43-executive-isolated")
-      .then((module) => module.startExecutiveControlV43())
+    executivePromise = import("./executiveControlV43.js?v=20260906-v44-executive")
+      .then(async (module) => {
+        const started = module.startExecutiveControlV43();
+        try {
+          const maintenance = await import("./executiveMaintenanceV44.js?v=20260906-v44");
+          maintenance.startExecutiveMaintenanceV44();
+        } catch (error) {
+          console.error("Executive Maintenance V44 isolated loader failed", error);
+        }
+        return started;
+      })
       .catch((error) => {
         console.error("Executive Control V43 isolated loader failed", error);
         executivePromise = null;
@@ -55,6 +66,7 @@ function hasRealPromoSurface() {
     ".promo30-tool-stage",
     ".promo32-archive",
     ".promo33-metric",
+    "[data-signal44-page]",
     "[data-executive-v43-page]"
   ].join(",")));
 }
@@ -139,7 +151,11 @@ async function renderPromoRoute(expectedRoute, force = false) {
       return true;
     }
 
-    await withTimeout(renderFeaturePageV35(feature), `${feature.name} took too long to load.`);
+    if (feature.id === "signal_zero") {
+      await withTimeout(renderSignalZeroV44(feature), "Signal Zero took too long to establish its secure environment.");
+    } else {
+      await withTimeout(renderFeaturePageV35(feature), `${feature.name} took too long to load.`);
+    }
     if (myGeneration === generation && route() === expectedRoute) announce(expectedRoute);
     return true;
   } catch (error) {
@@ -166,8 +182,9 @@ function claimRoute(force = false) {
   }
 
   if (!force && busy) return;
-  if (!force && hasRealPromoSurface() && !C.root?.querySelector("[data-promo-v38-handoff], [data-promo-v43-loading]")) return;
-  renderPromoRoute(expectedRoute, force);
+  const missingSignalV44 = expectedRoute === SIGNAL_ZERO_ROUTE && !C.root?.querySelector("[data-signal44-page]");
+  if (!force && !missingSignalV44 && hasRealPromoSurface() && !C.root?.querySelector("[data-promo-v38-handoff], [data-promo-v43-loading]")) return;
+  renderPromoRoute(expectedRoute, force || missingSignalV44);
 }
 
 function installObserver() {
@@ -181,9 +198,10 @@ function installObserver() {
       }
       return;
     }
-    if (C.root.querySelector("[data-promo-v38-handoff]") || (!hasRealPromoSurface() && !busy)) {
+    const missingSignalV44 = current === SIGNAL_ZERO_ROUTE && !C.root.querySelector("[data-signal44-page]");
+    if (missingSignalV44 || C.root.querySelector("[data-promo-v38-handoff]") || (!hasRealPromoSurface() && !busy)) {
       clearTimeout(retryTimer);
-      retryTimer = setTimeout(() => claimRoute(false), 0);
+      retryTimer = setTimeout(() => claimRoute(missingSignalV44), 0);
     }
   });
   observer.observe(C.root, { childList: true, subtree: false });

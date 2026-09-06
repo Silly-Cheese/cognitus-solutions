@@ -15,7 +15,8 @@ import { startProfessionalFinishV35 } from "./professionalFinishV35.js";
 import { startProfessionalContrastV40 } from "./professionalContrastV40.js";
 import { startProfessionalRefineV41 } from "./professionalRefineV41.js";
 import { startFrenzyV35 } from "./frenzyV35.js";
-import { startPromoRuntimeV43 } from "./promoRuntimeV43.js";
+import { startPromoRuntimeV43 } from "./promoRuntimeV43.js?v=20260906-v44-signal-maintenance";
+import "./maintenanceV44.js?v=20260906-v44-site-gate";
 import "./executiveRouteShieldV43.js";
 import "./frenzySignalOverrideV35.js";
 
