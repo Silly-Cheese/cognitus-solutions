@@ -1,0 +1,43 @@
+name: Validate Executive Visual V41
+
+on:
+  pull_request:
+    paths:
+      - "src/executiveControlV41.js"
+      - "src/executiveControlV41.css"
+      - "src/professionalRefineV41.js"
+      - "src/professionalRefineV41.css"
+      - "src/promotionalAccessV26.js"
+      - "src/navigationEnhancements.js"
+      - "scripts/validate-executive-visual-v41.mjs"
+      - ".github/workflows/validate-executive-visual-v41.yml"
+  push:
+    branches: [main]
+    paths:
+      - "src/executiveControlV41.js"
+      - "src/executiveControlV41.css"
+      - "src/professionalRefineV41.js"
+      - "src/professionalRefineV41.css"
+      - "src/promotionalAccessV26.js"
+      - "src/navigationEnhancements.js"
+      - "scripts/validate-executive-visual-v41.mjs"
+      - ".github/workflows/validate-executive-visual-v41.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        run: |
+          node --check src/executiveControlV41.js
+          node --check src/professionalRefineV41.js
+          node --check src/promotionalAccessV26.js
+      - name: Validate Executive and visual contract
+        run: node scripts/validate-executive-visual-v41.mjs

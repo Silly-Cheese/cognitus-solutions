@@ -1,0 +1,509 @@
+/* Cognitus Professional Refine V41
+   Final normal-application presentation layer. It intentionally loads after V40.
+   Goals: readable contrast, consistent spacing, quieter cards, stronger forms, and
+   a businesslike hierarchy. Frenzy and Signal Zero remain deliberately dark. */
+
+html.cognitus-refined-v41 {
+  --c41-bg: #f1f4f8;
+  --c41-surface: #ffffff;
+  --c41-soft: #f8fafc;
+  --c41-text: #0f172a;
+  --c41-body: #334155;
+  --c41-muted: #526173;
+  --c41-subtle: #64748b;
+  --c41-line: #d5dde7;
+  --c41-line-strong: #94a3b8;
+  --c41-primary: #172033;
+  --c41-focus: #2563eb;
+  --c41-radius: 14px;
+  --c41-shadow: 0 8px 24px rgba(15, 23, 42, .05);
+}
+
+html.cognitus-refined-v41 body.cognitus-professional {
+  background: var(--c41-bg) !important;
+  color: var(--c41-text) !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root {
+  width: min(1180px, calc(100% - 32px));
+  margin-inline: auto;
+  padding-top: clamp(1.1rem, 3vw, 2rem);
+  padding-bottom: clamp(2rem, 5vw, 4rem);
+  color: var(--c41-body) !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root > * + * {
+  margin-top: 1rem;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root h1,
+html.cognitus-refined-v41 body.cognitus-professional #page-root h2,
+html.cognitus-refined-v41 body.cognitus-professional #page-root h3,
+html.cognitus-refined-v41 body.cognitus-professional #page-root h4,
+html.cognitus-refined-v41 body.cognitus-professional #page-root strong,
+html.cognitus-refined-v41 body.cognitus-professional #page-root th {
+  color: var(--c41-text) !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root p,
+html.cognitus-refined-v41 body.cognitus-professional #page-root small,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .muted,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .disclaimer {
+  color: var(--c41-muted) !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root .eyebrow {
+  color: #526173 !important;
+  font-size: .72rem;
+  font-weight: 850;
+  letter-spacing: .095em;
+  text-transform: uppercase;
+}
+
+/* Core page composition */
+html.cognitus-refined-v41 body.cognitus-professional #page-root .hero,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .form-card,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .panel,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .feature-card,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .stat-card,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .result-card,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .workflow-card,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .empty-state,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .legal-card {
+  border: 1px solid var(--c41-line) !important;
+  border-radius: var(--c41-radius) !important;
+  background: var(--c41-surface) !important;
+  color: var(--c41-text) !important;
+  box-shadow: var(--c41-shadow) !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root .hero {
+  padding: clamp(1.5rem, 4vw, 2.6rem) !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root .hero h1 {
+  max-width: 900px;
+  margin-top: 0;
+  color: var(--c41-text) !important;
+  letter-spacing: -.045em;
+  line-height: 1.02;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root .hero h1 + p {
+  max-width: 780px;
+  color: var(--c41-muted) !important;
+  line-height: 1.7;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root .hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin-top: 1.1rem;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root .feature-grid,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .stats-grid,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .dashboard-grid,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .workflow-grid {
+  gap: .9rem !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root .feature-card,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .stat-card,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .result-card,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .workflow-card {
+  padding: 1.1rem !important;
+}
+
+/* Records and list rows should read as rows, not floating white boxes everywhere. */
+html.cognitus-refined-v41 body.cognitus-professional #page-root .record-list {
+  display: grid;
+  gap: .55rem;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .record-row {
+  padding: .85rem .95rem !important;
+  border: 1px solid #dde4ec !important;
+  border-radius: 10px !important;
+  background: #fbfcfe !important;
+  color: var(--c41-body) !important;
+  box-shadow: none !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .record-row:hover {
+  border-color: #b8c4d1 !important;
+  background: #ffffff !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .record-row strong {
+  color: var(--c41-text) !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .record-row span,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .record-row small {
+  color: var(--c41-muted) !important;
+}
+
+/* Forms */
+html.cognitus-refined-v41 body.cognitus-professional #page-root .form-stack,
+html.cognitus-refined-v41 body.cognitus-professional #page-root form.form-stack {
+  display: grid;
+  gap: .9rem !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root .form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .85rem !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root label:not(.checkbox-line):not(.exec41-check) {
+  display: grid;
+  gap: .42rem;
+  color: var(--c41-body) !important;
+  font-size: .8rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root input:not([type="checkbox"]):not([type="radio"]),
+html.cognitus-refined-v41 body.cognitus-professional #page-root select,
+html.cognitus-refined-v41 body.cognitus-professional #page-root textarea {
+  width: 100%;
+  min-height: 46px;
+  padding: .7rem .8rem !important;
+  border: 1.5px solid var(--c41-line-strong) !important;
+  border-radius: 9px !important;
+  background: #ffffff !important;
+  color: var(--c41-text) !important;
+  box-shadow: none !important;
+  line-height: 1.4;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root textarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root input::placeholder,
+html.cognitus-refined-v41 body.cognitus-professional #page-root textarea::placeholder {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root input:focus,
+html.cognitus-refined-v41 body.cognitus-professional #page-root select:focus,
+html.cognitus-refined-v41 body.cognitus-professional #page-root textarea:focus {
+  outline: none !important;
+  border-color: var(--c41-focus) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, .14) !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional #page-root .checkbox-line {
+  display: flex;
+  gap: .65rem;
+  align-items: flex-start;
+  padding: .75rem .85rem;
+  border: 1px solid #dbe2ea;
+  border-radius: 9px;
+  background: #fbfcfe;
+  color: var(--c41-body) !important;
+  font-weight: 700;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root input[type="checkbox"],
+html.cognitus-refined-v41 body.cognitus-professional #page-root input[type="radio"] {
+  accent-color: #172033;
+}
+
+/* Buttons */
+html.cognitus-refined-v41 body.cognitus-professional #page-root .button,
+html.cognitus-refined-v41 body.cognitus-professional #page-root button {
+  min-height: 42px;
+  border-radius: 9px !important;
+  font-weight: 800;
+  letter-spacing: -.005em;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .button-dark,
+html.cognitus-refined-v41 body.cognitus-professional #page-root button[type="submit"] {
+  border-color: var(--c41-primary) !important;
+  background: var(--c41-primary) !important;
+  color: #ffffff !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .button-dark:hover,
+html.cognitus-refined-v41 body.cognitus-professional #page-root button[type="submit"]:hover {
+  background: #0f172a !important;
+  color: #ffffff !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .button-light {
+  border-color: #aab6c5 !important;
+  background: #ffffff !important;
+  color: #172033 !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .button-light:hover {
+  border-color: #7f8da0 !important;
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Dashboard summary keeps one intentional dark anchor. */
+html.cognitus-refined-v41 body.cognitus-professional #page-root .dashboard-hero .account-card,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .trust-card,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .report-id-card {
+  border-color: #263247 !important;
+  background: #172033 !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, .13) !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .dashboard-hero .account-card strong,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .trust-card h2,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .report-id-card strong {
+  color: #ffffff !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .dashboard-hero .account-card span,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .dashboard-hero .account-card small,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .trust-card p,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .report-id-card span,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .report-id-card small {
+  color: #d5dbe4 !important;
+}
+
+/* Notices */
+html.cognitus-refined-v41 body.cognitus-professional #page-root .notice,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo26-notice {
+  padding: .78rem .9rem !important;
+  border: 1px solid var(--c41-line) !important;
+  border-radius: 9px !important;
+  background: #f8fafc !important;
+  color: var(--c41-body) !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .notice-error,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo26-notice.is-error {
+  border-color: #e5b8bd !important;
+  background: #fff5f5 !important;
+  color: #842029 !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .notice-success,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo26-notice.is-success {
+  border-color: #acd5bf !important;
+  background: #f3faf6 !important;
+  color: #155e3d !important;
+}
+
+/* Promotional and analysis workspaces: remove the old dark/light collision and
+   give every ordinary workspace the same card rhythm. */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-access-hero,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-hero,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-hero,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-section,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-card,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-card,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-active-access,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-entitlement,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-record-card,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-command-strip,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-tool-stage,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-result-stage,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-comparison-board,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-history-stream article,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-subject-dossier,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-empty-state,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo32-archive,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo32-archive-result,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo32-report-card,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo33-metric,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo33-chart,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo33-overlap-person {
+  border: 1px solid var(--c41-line) !important;
+  border-radius: 13px !important;
+  background: #ffffff !important;
+  color: var(--c41-text) !important;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, .035) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-access-hero,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-hero,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-hero {
+  padding: clamp(1.5rem, 4vw, 2.35rem) !important;
+  border-radius: 18px !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-card,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-card,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-entitlement,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-record-card,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-tool-stage,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo32-report-card {
+  padding: 1rem !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-access-hero h1,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-hero h1,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-hero h1,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-section h2,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-card h3,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-card h3,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-stage-head h2,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo33-metric strong {
+  color: var(--c41-text) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-access-hero p,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-hero p,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-hero p,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-section p,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-card p,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-card p,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-entitlement small,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-stage-head p,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo33-metric span {
+  color: var(--c41-muted) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-mini-badge,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-status,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-status-chip,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-pills span,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-record-meta span,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-stage-status,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo32-security-pill,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo33-overlap-tags span {
+  border: 1px solid #d3dce6 !important;
+  background: #eef2f6 !important;
+  color: #334155 !important;
+}
+
+/* Desktop operations/navigation dropdown readability. */
+html.cognitus-refined-v41 body.cognitus-professional .nav20-operations-panel {
+  border-color: var(--c41-line) !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, .14) !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional .nav20-primary-link,
+html.cognitus-refined-v41 body.cognitus-professional .nav20-operations-button,
+html.cognitus-refined-v41 body.cognitus-professional .nav20-icon-button,
+html.cognitus-refined-v41 body.cognitus-professional .nav20-ops-links a {
+  color: #334155 !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional .nav20-ops-links a small,
+html.cognitus-refined-v41 body.cognitus-professional .nav20-operations-panel p {
+  color: #5c6b7c !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional .nav20-primary-link.is-active,
+html.cognitus-refined-v41 body.cognitus-professional .nav20-operations-button.is-active,
+html.cognitus-refined-v41 body.cognitus-professional .nav20-icon-button.is-active,
+html.cognitus-refined-v41 body.cognitus-professional .nav20-ops-links a.is-active,
+html.cognitus-refined-v41 body.cognitus-professional .nav20-ops-links a.is-current {
+  background: #e9eef4 !important;
+  color: #0f172a !important;
+}
+
+/* Mobile drawer */
+html.cognitus-refined-v41 body.cognitus-professional.nav25-ready .nav25-drawer {
+  background: #f4f7fa !important;
+  color: #172033 !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional .nav25-primary-link,
+html.cognitus-refined-v41 body.cognitus-professional .nav25-group-links a,
+html.cognitus-refined-v41 body.cognitus-professional .nav25-directory,
+html.cognitus-refined-v41 body.cognitus-professional .nav25-utility {
+  color: #172033 !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional .nav25-primary-link small,
+html.cognitus-refined-v41 body.cognitus-professional .nav25-group-links small,
+html.cognitus-refined-v41 body.cognitus-professional .nav25-directory-title span,
+html.cognitus-refined-v41 body.cognitus-professional .nav25-group > p {
+  color: #5c6b7c !important;
+}
+
+/* Executive V41 owns its own more specific styling. Keep it free from generic
+   card margin assumptions while still inheriting the global font/contrast. */
+html.cognitus-refined-v41 body.cognitus-professional #page-root .exec41-shell > * + * {
+  margin-top: 0;
+}
+
+/* Intentional dark exceptions. Frenzy and Signal Zero should look distinct,
+   but all of their text and controls remain high contrast. */
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-network-result,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-graph-canvas,
+html.cognitus-refined-v41 body.cognitus-professional #page-root [data-promo30-feature="intelligence_center"] .promo30-primary-control,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-hero,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-panel,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-result,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-metric,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-anomaly {
+  border-color: #3a4658 !important;
+  background: #172033 !important;
+  color: #ffffff !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-network-result h1,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-network-result h2,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-network-result h3,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-network-result strong,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-graph-canvas h1,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-graph-canvas h2,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-graph-canvas h3,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-graph-canvas strong,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-hero h1,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-panel h2,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-result h2,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-result h3,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-metric strong,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-anomaly strong {
+  color: #ffffff !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-network-result p,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-network-result small,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-graph-canvas p,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .promo30-graph-canvas small,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-hero p,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-panel p,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-result p,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-anomaly p,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-metric span {
+  color: #d5dbe4 !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-panel label {
+  color: #e7ebf0 !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-panel input,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-panel select,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-panel textarea {
+  border-color: #66758a !important;
+  background: #101722 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-panel input::placeholder,
+html.cognitus-refined-v41 body.cognitus-professional #page-root .signal35-panel textarea::placeholder {
+  color: #b8c1cd !important;
+}
+
+html.cognitus-refined-v41 body.cognitus-professional .frenzy35-banner,
+html.cognitus-refined-v41 body.cognitus-professional .frenzy35-activation-card {
+  color: #ffffff !important;
+}
+html.cognitus-refined-v41 body.cognitus-professional .frenzy35-banner p,
+html.cognitus-refined-v41 body.cognitus-professional .frenzy35-banner small,
+html.cognitus-refined-v41 body.cognitus-professional .frenzy35-copy span,
+html.cognitus-refined-v41 body.cognitus-professional .frenzy35-countdown span,
+html.cognitus-refined-v41 body.cognitus-professional .frenzy35-activation-card p {
+  color: #d5dbe4 !important;
+}
+
+/* Focus is visible without turning every control into a dark block. */
+html.cognitus-refined-v41 body.cognitus-professional :focus-visible {
+  outline: 3px solid rgba(37, 99, 235, .62) !important;
+  outline-offset: 2px !important;
+}
+
+@media (max-width: 760px) {
+  html.cognitus-refined-v41 body.cognitus-professional #page-root {
+    width: min(100% - 20px, 1180px);
+    padding-top: .75rem;
+  }
+  html.cognitus-refined-v41 body.cognitus-professional #page-root .form-row {
+    grid-template-columns: 1fr;
+  }
+  html.cognitus-refined-v41 body.cognitus-professional #page-root .hero {
+    padding: 1.2rem !important;
+    border-radius: 12px !important;
+  }
+}

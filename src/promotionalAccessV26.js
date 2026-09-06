@@ -13,6 +13,8 @@ import { startLegalPoliciesV34 } from "./legalPoliciesV34.js";
 import { startProfessionalCoreV35 } from "./professionalCoreV35.js";
 import { startProfessionalFinishV35 } from "./professionalFinishV35.js";
 import { startProfessionalContrastV40 } from "./professionalContrastV40.js";
+import { startExecutiveControlV41 } from "./executiveControlV41.js";
+import { startProfessionalRefineV41 } from "./professionalRefineV41.js";
 import { startFrenzyV35 } from "./frenzyV35.js";
 import "./frenzySignalOverrideV35.js";
 
@@ -22,7 +24,8 @@ const ROUTE_BRIDGE_KEY = "__COGNITUS_PROMOTIONAL_ROUTE_BRIDGE_V38__";
 
 function safeStartV38(label, starter) {
   try {
-    starter();
+    const result = starter();
+    result?.catch?.((error) => console.error(`Promotional V38 optional layer failed: ${label}`, error));
   } catch (error) {
     console.error(`Promotional V38 optional layer failed: ${label}`, error);
   }
@@ -50,16 +53,22 @@ if (!window[BOOTSTRAP_KEY]) {
   safeStartV38("professional-core-v35", startProfessionalCoreV35);
   safeStartV38("professional-finish-v35", startProfessionalFinishV35);
   safeStartV38("legal-policies-v34", startLegalPoliciesV34);
+
+  // V41 claims /executive synchronously before the older Frenzy initializer does any network work.
+  // This prevents the V38 handoff placeholder from remaining on screen indefinitely.
+  safeStartV38("executive-control-v41", startExecutiveControlV41);
   safeStartV38("frenzy-v35", startFrenzyV35);
+
   safeStartV38("navigation-v27", startPromotionalNavigationV27);
   safeStartV38("enhancements-v28", startPromotionalEnhancementsV28);
   safeStartV38("mobile-v29", startPromotionalMobileV29);
   safeStartV38("workspaces-v30", startPromotionalWorkspacesV30);
   safeStartV38("investigations-v32", startPromotionalInvestigationsV32);
 
-  // V40 is intentionally last. It resolves the V33 dark-surface assumptions that
-  // conflict with the V35 professional light workspace redesign.
+  // V40 resolves old promo dark-surface assumptions. V41 is the final spacing,
+  // form, hierarchy, and readability authority for normal Cognitus surfaces.
   safeStartV38("professional-contrast-v40", startProfessionalContrastV40);
+  safeStartV38("professional-refine-v41", startProfessionalRefineV41);
 
   document.dispatchEvent(new CustomEvent("cognitus:promotional-v37-ready"));
   document.dispatchEvent(new CustomEvent("cognitus:promotional-v38-ready"));
