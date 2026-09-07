@@ -2106,7 +2106,7 @@ allow create: if activeStaff()
 && request.resource.data.id == meetingId
 && request.resource.data.endsAt > request.resource.data.startsAt
 && (request.resource.data.url == null
-|| (shortString(request.resource.data.url, 1000)
+|| shortString(request.resource.data.url, 1000))
 && commandG2ValidVisibility(request.resource.data.visibility)
 && request.resource.data.organizerUid == request.auth.uid
 && (
