@@ -1,0 +1,43 @@
+name: Integrate Staff Command Generation 2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-staff-command-generation-2.yml'
+      - 'scripts/apply-staff-command-generation-2.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply Generation 2 rules
+        run: python scripts/apply-staff-command-generation-2.py
+
+      - name: Verify markers
+        run: |
+          grep -q 'COMMAND_GENERATION_2_BEGIN' firestore.rules
+          grep -q 'match /commandTasks/{taskId}' firestore.rules
+          grep -q 'match /commandPayroll/{statementId}' firestore.rules
+          grep -q 'match /commandTickets/{ticketId}' firestore.rules
+
+      - name: Commit integration
+        run: |
+          if git diff --quiet; then
+            echo 'No Generation 2 integration changes required.'
+            exit 0
+          fi
+          git config user.name 'Cognitus Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add firestore.rules
+          git commit -m 'Integrate Staff Command generation 2 Firestore rules'
+          git push
