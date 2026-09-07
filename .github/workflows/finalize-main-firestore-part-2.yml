@@ -1,0 +1,36 @@
+name: Finalize Main Cognitus Firestore — Part 2 of 3
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'scripts/finalize-firestore-part2-staff-company.py'
+      - '.github/workflows/finalize-main-firestore-part-2.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Finalize Staff and Company rules
+        run: python scripts/finalize-firestore-part2-staff-company.py
+
+      - name: Commit Part 2 rules and audit
+        run: |
+          git config user.name "Cognitus Rules Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add firestore.rules docs/FIRESTORE_PART2_STAFF_COMPANY_AUDIT.md
+          if git diff --cached --quiet; then
+            echo "No Part 2 changes to commit."
+            exit 0
+          fi
+          git commit -m "Finalize Staff and Company Firestore Part 2"
+          git push
