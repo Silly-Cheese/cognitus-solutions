@@ -1,0 +1,63 @@
+name: Finalize Main Cognitus Firestore — Part 1 of 3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/finalize-main-firestore-part1.py'
+      - '.github/workflows/finalize-main-firestore-part-1.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Finalize all Main Cognitus rules
+        run: python scripts/finalize-main-firestore-part1.py
+
+      - name: Audit complete Main Cognitus coverage
+        run: python scripts/audit-main-firestore-part1.py
+
+      - name: Verify Main security boundaries
+        run: |
+          grep -q 'MAIN COGNITUS — PART 1 COMPLETION' firestore.rules
+          grep -q 'match /notifications/{notificationId}' firestore.rules
+          grep -q 'match /savedCandidates/{savedId}' firestore.rules
+          grep -q 'match /savedOrganizations/{savedId}' firestore.rules
+          grep -q 'match /privateNotes/{noteId}' firestore.rules
+          grep -q 'match /candidatePipelines/{pipelineId}' firestore.rules
+          grep -q 'match /duplicateReviews/{reviewId}' firestore.rules
+          grep -q 'match /employmentHistory/{historyId}' firestore.rules
+          grep -q 'match /certifications/{certificationId}' firestore.rules
+          grep -q 'match /{document=\*\*}' firestore.rules
+          grep -q 'allow read, write: if false;' firestore.rules
+
+      - name: Enforce no-composite-index and source-size policy
+        run: |
+          if [ -f firestore.indexes.json ]; then
+            echo 'Composite-index configuration is not allowed in Cognitus.'
+            exit 1
+          fi
+          bytes=$(wc -c < firestore.rules)
+          echo "firestore.rules source bytes: $bytes"
+          test "$bytes" -lt 220000
+
+      - name: Commit authoritative Part 1 rules
+        run: |
+          if [ -z "$(git status --porcelain firestore.rules docs/FIRESTORE_PART1_MAIN_AUDIT.md)" ]; then
+            echo 'Main Cognitus Part 1 is already finalized.'
+            exit 0
+          fi
+          git config user.name 'Cognitus Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add firestore.rules docs/FIRESTORE_PART1_MAIN_AUDIT.md
+          git commit -m 'Finalize all Main Cognitus Firestore rules part 1'
+          git push
