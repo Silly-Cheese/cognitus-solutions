@@ -58,22 +58,21 @@ while i < len(lines):
             i += 1
             continue
 
-    # Strip comments and blank lines. This does not change compiled semantics,
-    # but keeps the authoritative production file well below the source limit.
+    # Strip comments, blank lines, and indentation. Firestore Rules syntax does
+    # not depend on indentation, so removing leading whitespace gives us extra
+    # source-size headroom without altering the AST or permissions.
     stripped = line.strip()
     if not stripped or stripped.startswith('//'):
         i += 1
         continue
 
-    out.append(line.rstrip())
+    out.append(stripped)
     i += 1
 
 compacted = '\n'.join(out) + '\n'
 
 # Remove user-defined functions that are no longer reachable after dropping
 # payload validators. This lowers compiled AST size, not just source bytes.
-# Function blocks are discovered with brace balancing; call graph reachability
-# is then computed from the non-function rules body.
 def function_blocks(src: str):
     result = []
     rx = re.compile(r'(?m)^(\s*)function\s+([A-Za-z_][A-Za-z0-9_]*)\s*\([^\n]*\)\s*\{')
@@ -109,8 +108,6 @@ def function_blocks(src: str):
             pos += 1
         else:
             raise RuntimeError(f'Unbalanced function {m.group(2)}')
-    # Only keep non-overlapping outer blocks. Rules functions are siblings in
-    # this project, but this also avoids double-counting if that changes.
     filtered = []
     last_end = -1
     for item in sorted(result):
@@ -123,7 +120,6 @@ blocks = function_blocks(compacted)
 defined = {name for _, _, name, _ in blocks}
 call_rx = re.compile(r'\b([A-Za-z_][A-Za-z0-9_]*)\s*\(')
 
-# Build non-function body and call graph.
 parts = []
 cursor = 0
 block_by_name = {}
@@ -159,7 +155,6 @@ if unused:
     chunks.append(compacted[cursor:])
     compacted = ''.join(chunks)
 
-# Conservative whitespace cleanup only; do not minify tokens.
 compacted = re.sub(r'\n{2,}', '\n', compacted).strip() + '\n'
 
 required_matches = [
@@ -209,15 +204,15 @@ RULES.write_text(compacted, encoding='utf-8')
 after_bytes = len(compacted.encode('utf-8'))
 after_lines = compacted.count('\n')
 
-# Hard repository budget leaves substantial room below Firebase's documented
-# 256 KiB source limit and reduces compiled-rule complexity as well.
-if after_bytes >= 150_000:
+# Keep a large safety margin below Firebase's source ruleset ceiling. The
+# semantic validation removals above also reduce compiled AST size.
+if after_bytes >= 140_000:
     raise RuntimeError(f'Compacted rules are still too large: {after_bytes} bytes')
 
 AUDIT.write_text(
     '# Firestore Rules Compaction\n\n'
-    'This pass preserves authorization/ownership/transition boundaries while '\
-    'removing non-authoritative payload-shape validation and unreachable helper '\
+    'This pass preserves authorization/ownership/transition boundaries while '
+    'removing non-authoritative payload-shape validation and unreachable helper '
     'functions. The Firestore emulator compiler is run by CI after this script.\n\n'
     f'- Before: **{before_bytes:,} bytes**, **{before_lines:,} lines**\n'
     f'- After: **{after_bytes:,} bytes**, **{after_lines:,} lines**\n'
@@ -225,9 +220,9 @@ AUDIT.write_text(
     f'- Removed format/type/length validation conjuncts: **{removed_validation_lines}**\n'
     f'- Removed unreachable helper functions: **{len(unused)}**\n'
     f'- Required collection matches checked: **{len(required_matches)}**\n\n'
-    'Security-critical role, ownership, organization/department scope, immutable '\
-    'field transition, approval separation, staff permission, cross-document, '\
-    'and default-deny checks remain in the ruleset. Background checks remain '\
+    'Security-critical role, ownership, organization/department scope, immutable '
+    'field transition, approval separation, staff permission, cross-document, '
+    'and default-deny checks remain in the ruleset. Background checks remain '
     'self-service and no staff approval collection is introduced.\n',
     encoding='utf-8'
 )
