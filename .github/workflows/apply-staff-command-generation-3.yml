@@ -1,0 +1,59 @@
+name: Apply Staff Command Generation 3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-staff-command-generation-3.yml'
+      - 'scripts/apply-staff-command-generation-3.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply Generation 3
+        run: python scripts/apply-staff-command-generation-3.py
+
+      - name: Verify main application syntax
+        run: node --check src/app.js
+
+      - name: Verify integrated rules markers and migration
+        run: |
+          grep -q 'COMMAND_GENERATION_3_BEGIN' firestore.rules
+          grep -q 'match /commandCases/{caseId}' firestore.rules
+          grep -q "staffPermission('reports.review')" firestore.rules
+          grep -q "staffPermission('claims.review')" firestore.rules
+          grep -q "staffPermission('appeals.review')" firestore.rules
+          grep -q "staffPermission('organizations.review')" firestore.rules
+          grep -q "staffPermission('audit.read')" firestore.rules
+          grep -q 'function commandStaff()' src/app.js
+          grep -q 'Staff Command</a>' src/app.js
+          grep -q 'commandMigrationPage("Review Queue")' src/app.js
+          grep -q 'commandMigrationPage("Administration")' src/app.js
+
+      - name: Enforce rules source ceiling
+        run: |
+          bytes=$(wc -c < firestore.rules)
+          echo "firestore.rules source bytes: $bytes"
+          test "$bytes" -lt 220000
+
+      - name: Commit integration
+        run: |
+          if git diff --quiet; then
+            echo 'Generation 3 is already integrated.'
+            exit 0
+          fi
+          git config user.name 'Cognitus Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add firestore.rules src/app.js
+          git commit -m 'Integrate Staff Command generation 3'
+          git push
