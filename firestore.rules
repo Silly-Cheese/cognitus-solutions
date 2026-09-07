@@ -2163,7 +2163,7 @@ service cloud.firestore {
     function validStaffPermissions(value) {
       return value is list
         && value.size() >= 1
-        && value.size() <= 40
+        && value.size() <= 41
         && value.hasOnly([
           'portal.access', 'directory.read', 'profile.read', 'department.read',
           'department.manage', 'staff.provision', 'staff.manage', 'staff.private.read',
