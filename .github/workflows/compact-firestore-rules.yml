@@ -41,7 +41,7 @@ jobs:
           bytes=$(wc -c < firestore.rules)
           lines=$(wc -l < firestore.rules)
           echo "firestore.rules: ${bytes} bytes, ${lines} lines"
-          test "$bytes" -lt 150000
+          test "$bytes" -lt 140000
           test ! -f firestore.indexes.json
 
       - name: Verify critical security boundaries
