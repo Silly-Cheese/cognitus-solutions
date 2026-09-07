@@ -682,7 +682,7 @@ service cloud.firestore {
         && request.resource.data.robloxUsernamesNormalized.size() <= 10
         && request.resource.data.updatedAt == request.time;
 
-      allow update: if (isReviewer() || staffPermission('reports.review') || staffPermission('claims.review') || staffPermission('verification.review'))
+      allow update: if isReviewer()
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'claimedByUid', 'identityStatus', 'identityConfidence', 'professionalStanding',
           'riskLevel', 'knownAliases', 'reportCount', 'appealCount', 'lastReviewedAt', 'updatedAt'
@@ -690,6 +690,22 @@ service cloud.firestore {
         && request.resource.data.cognitusId == resource.data.cognitusId
         && request.resource.data.linkedUserId == resource.data.linkedUserId
         && request.resource.data.discordIds == resource.data.discordIds
+        && request.resource.data.updatedAt == request.time;
+
+
+      // Standard Staff / Command claim approval: link only to an active user
+      // whose immutable Cognitus Discord ID is already present on the profile.
+      // Claim reviewers do not receive risk, standing, alias, or report-edit authority.
+      allow update: if staffPermission('claims.review')
+        && resource.data.claimedByUid == null
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'claimedByUid', 'identityStatus', 'updatedAt'
+        ])
+        && request.resource.data.claimedByUid is string
+        && request.resource.data.identityStatus == 'claimed_unverified'
+        && exists(userPath(request.resource.data.claimedByUid))
+        && get(userPath(request.resource.data.claimedByUid)).data.status == 'active'
+        && get(userPath(request.resource.data.claimedByUid)).data.discordId in resource.data.discordIds
         && request.resource.data.updatedAt == request.time;
 
       allow update: if (isReviewer() || staffPermission('claims.review') || staffPermission('verification.review'))
@@ -855,7 +871,7 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
-      allow update: if (isReviewer() || staffPermission('reports.review') || staffPermission('appeals.review'))
+      allow update: if (isReviewer() || staffPermission('reports.review'))
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'status', 'visibility', 'reviewedByUid', 'reviewedAt', 'decisionNotes',
           'publishedAt', 'appealStatus', 'updatedAt'
@@ -872,6 +888,22 @@ service cloud.firestore {
         ]
         && request.resource.data.visibility in ['private_review', 'screening', 'public']
         && request.resource.data.reviewedByUid == request.auth.uid
+        && request.resource.data.updatedAt == request.time;
+
+
+      // Staff appeal authority is deliberately narrower than report-review
+      // authority. It can only move an already reviewed report into the
+      // disputed/private-review state used after an accepted appeal.
+      allow update: if staffPermission('appeals.review')
+        && resource.data.status in ['approved', 'published']
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'visibility', 'appealStatus', 'reviewedByUid', 'reviewedAt', 'updatedAt'
+        ])
+        && request.resource.data.status == 'disputed'
+        && request.resource.data.visibility == 'private_review'
+        && request.resource.data.appealStatus == 'accepted'
+        && request.resource.data.reviewedByUid == request.auth.uid
+        && request.resource.data.reviewedAt == request.time
         && request.resource.data.updatedAt == request.time;
 
       allow delete: if isOwner()
@@ -2692,6 +2724,15 @@ service cloud.firestore {
         || (staffPermission('tickets.manage') && currentStaff().departmentId == departmentId);
     }
 
+    function commandG2CanReviewRequest(value) {
+      return isOwner()
+        || (value.type == 'hr' && staffPermission('hr.records.manage'))
+        || ((value.type == 'finance' || value.type == 'purchase') && staffPermission('finance.manage'))
+        || (value.type == 'access' && (staffPermission('permissions.manage') || staffPermission('system.manage')))
+        || ((value.type == 'general' || value.type == 'scheduling')
+          && commandG2CanManageDepartment(value.departmentId));
+    }
+
     function commandG2VisibilityRead(value) {
       return activeStaff()
         && (
@@ -2780,8 +2821,8 @@ service cloud.firestore {
         && (
           isOwner()
           || resource.data.requestorUid == request.auth.uid
-          || commandG2CanManageDepartment(resource.data.departmentId)
-        );
+          || commandG2CanReviewRequest(resource.data)
+    );
 
       allow create: if activeStaff()
         && request.resource.data.keys().hasOnly([
@@ -2805,7 +2846,7 @@ service cloud.firestore {
         && request.resource.data.updatedAt == request.time;
 
       allow update: if activeStaff()
-        && commandG2CanManageDepartment(resource.data.departmentId)
+        && commandG2CanReviewRequest(resource.data)
         && resource.data.requestorUid != request.auth.uid
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'status', 'reviewedByUid', 'reviewedAt', 'resolutionNote', 'updatedAt'
@@ -3025,12 +3066,25 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
+      allow update: if activeStaff()
+        && resource.data.requestorUid == request.auth.uid
+        && resource.data.status == 'pending'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'updatedAt'
+        ])
+        && request.resource.data.status == 'cancelled'
+        && request.resource.data.reviewerUid == null
+        && request.resource.data.reviewedAt == null
+        && request.resource.data.reviewNote == ''
+        && request.resource.data.updatedAt == request.time;
+
       allow update: if commandG2CanManageHr()
         && resource.data.requestorUid != request.auth.uid
+        && resource.data.status == 'pending'
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'status', 'reviewerUid', 'reviewedAt', 'reviewNote', 'updatedAt'
         ])
-        && request.resource.data.status in ['approved', 'declined', 'cancelled']
+        && request.resource.data.status in ['approved', 'declined']
         && request.resource.data.reviewerUid == request.auth.uid
         && request.resource.data.reviewedAt == request.time
         && shortString(request.resource.data.reviewNote, 1500)
@@ -3105,31 +3159,33 @@ service cloud.firestore {
         && shortString(request.resource.data.memo, 180)
         && request.resource.data.memo.size() > 0
         && validStaffDepartment(request.resource.data.departmentId)
-        && request.resource.data.status in ['pending', 'approved']
+        && request.resource.data.status == 'pending'
         && request.resource.data.submittedByUid == request.auth.uid
-        && (
-          (
-            request.resource.data.status == 'approved'
-            && request.resource.data.approvedByUid == request.auth.uid
-            && request.resource.data.approvedAt == request.time
-          )
-          || (
-            request.resource.data.status == 'pending'
-            && request.resource.data.approvedByUid == null
-            && request.resource.data.approvedAt == null
-          )
-        )
+        && request.resource.data.approvedByUid == null
+        && request.resource.data.approvedAt == null
         && request.resource.data.occurredAt is timestamp
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
       allow update: if commandG2CanManageFinance()
+        && resource.data.status == 'pending'
+        && resource.data.submittedByUid != request.auth.uid
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'status', 'approvedByUid', 'approvedAt', 'updatedAt'
         ])
-        && request.resource.data.status in ['approved', 'declined', 'posted']
+        && request.resource.data.status in ['approved', 'declined']
         && request.resource.data.approvedByUid == request.auth.uid
         && request.resource.data.approvedAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if commandG2CanManageFinance()
+        && resource.data.status == 'approved'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'updatedAt'
+        ])
+        && request.resource.data.status == 'posted'
+        && request.resource.data.approvedByUid == resource.data.approvedByUid
+        && request.resource.data.approvedAt == resource.data.approvedAt
         && request.resource.data.updatedAt == request.time;
 
       allow delete: if false;
@@ -3172,16 +3228,25 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
-      allow update: if commandG2CanManagePayroll()
+      allow update: if (isOwner() || staffPermission('payroll.approve'))
+        && resource.data.status == 'draft'
+        && resource.data.createdByUid != request.auth.uid
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
-          'status', 'approvedByUid', 'paidAt', 'updatedAt'
+          'status', 'approvedByUid', 'updatedAt'
         ])
-        && request.resource.data.status in ['approved', 'paid', 'void']
+        && request.resource.data.status in ['approved', 'void']
         && request.resource.data.approvedByUid == request.auth.uid
-        && (
-          (request.resource.data.status == 'paid' && request.resource.data.paidAt == request.time)
-          || (request.resource.data.status != 'paid' && request.resource.data.paidAt == null)
-        )
+        && request.resource.data.paidAt == null
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if commandG2CanManagePayroll()
+        && resource.data.status == 'approved'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'paidAt', 'updatedAt'
+        ])
+        && request.resource.data.status == 'paid'
+        && request.resource.data.approvedByUid == resource.data.approvedByUid
+        && request.resource.data.paidAt == request.time
         && request.resource.data.updatedAt == request.time;
 
       allow delete: if false;
@@ -3236,6 +3301,304 @@ service cloud.firestore {
     }
 
     // COMMAND_GENERATION_2_END
+
+    // ============================================================
+    // COGNITUS STAFF / COMPANY — FIRESTORE PART 2 COMPLETION
+    // ============================================================
+
+    // Staff availability is directory-safe operational presence, not invasive
+    // activity monitoring. Employees own their availability record.
+    match /commandAvailability/{uid} {
+      allow read: if activeStaff();
+
+      allow create: if activeStaff()
+        && uid == request.auth.uid
+        && request.resource.data.keys().hasOnly([
+          'uid', 'employeeId', 'status', 'note', 'availableUntil',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.employeeId == currentStaff().employeeId
+        && request.resource.data.status in ['available', 'working', 'busy', 'on_leave', 'unavailable']
+        && shortString(request.resource.data.note, 240)
+        && (request.resource.data.availableUntil == null || request.resource.data.availableUntil is timestamp)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if activeStaff()
+        && uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.employeeId == resource.data.employeeId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'note', 'availableUntil', 'updatedAt'
+        ])
+        && request.resource.data.status in ['available', 'working', 'busy', 'on_leave', 'unavailable']
+        && shortString(request.resource.data.note, 240)
+        && (request.resource.data.availableUntil == null || request.resource.data.availableUntil is timestamp)
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    // Internal Affairs is separate from public/product misconduct reports.
+    // Reporters can see their own submission; IA/Owner controls case handling.
+    match /commandInternalAffairs/{caseId} {
+      allow read: if activeStaff()
+        && (
+          resource.data.reporterUid == request.auth.uid
+          || isOwner()
+          || staffPermission('internalAffairs.read')
+          || staffPermission('internalAffairs.manage')
+        );
+
+      allow create: if activeStaff()
+        && request.resource.data.keys().hasOnly([
+          'id', 'reporterUid', 'subjectUid', 'category', 'summary', 'details',
+          'confidentiality', 'status', 'assignedToUid', 'outcome', 'openedAt',
+          'closedAt', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == caseId
+        && request.resource.data.reporterUid == request.auth.uid
+        && (request.resource.data.subjectUid == null || request.resource.data.subjectUid is string)
+        && request.resource.data.category in [
+          'policy_violation', 'staff_misconduct', 'abuse_of_authority',
+          'conflict', 'harassment', 'security_concern', 'other'
+        ]
+        && shortString(request.resource.data.summary, 180)
+        && request.resource.data.summary.size() > 0
+        && shortString(request.resource.data.details, 6000)
+        && request.resource.data.details.size() > 0
+        && request.resource.data.confidentiality in ['standard', 'restricted']
+        && request.resource.data.status == 'submitted'
+        && request.resource.data.assignedToUid == null
+        && request.resource.data.outcome == ''
+        && request.resource.data.openedAt == request.time
+        && request.resource.data.closedAt == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if (isOwner() || staffPermission('internalAffairs.manage'))
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.reporterUid == resource.data.reporterUid
+        && request.resource.data.subjectUid == resource.data.subjectUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.openedAt == resource.data.openedAt
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'assignedToUid', 'outcome', 'closedAt', 'updatedAt'
+        ])
+        && request.resource.data.status in [
+          'submitted', 'triaged', 'under_review', 'substantiated',
+          'unsubstantiated', 'closed'
+        ]
+        && (request.resource.data.assignedToUid == null || request.resource.data.assignedToUid is string)
+        && shortString(request.resource.data.outcome, 4000)
+        && (
+          (request.resource.data.status == 'closed' && request.resource.data.closedAt == request.time)
+          || (request.resource.data.status != 'closed' && request.resource.data.closedAt == null)
+        )
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    // Performance records are employee-visible but authored/finalized only by
+    // HR or same-department leadership.
+    match /commandPerformance/{reviewId} {
+      allow read: if activeStaff()
+        && (
+          resource.data.employeeUid == request.auth.uid
+          || isOwner()
+          || staffPermission('hr.records.read')
+          || staffPermission('hr.records.manage')
+          || (staffPermission('department.manage')
+            && resource.data.departmentId == currentStaff().departmentId)
+        );
+
+      allow create: if activeStaff()
+        && (
+          isOwner()
+          || staffPermission('hr.records.manage')
+          || (staffPermission('department.manage')
+            && request.resource.data.departmentId == currentStaff().departmentId)
+        )
+        && request.resource.data.keys().hasOnly([
+          'id', 'employeeUid', 'departmentId', 'periodLabel', 'score', 'summary',
+          'strengths', 'improvements', 'reviewerUid', 'status', 'finalizedAt',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == reviewId
+        && request.resource.data.employeeUid is string
+        && exists(staffAccessPath(request.resource.data.employeeUid))
+        && request.resource.data.departmentId == get(staffAccessPath(request.resource.data.employeeUid)).data.departmentId
+        && shortString(request.resource.data.periodLabel, 100)
+        && request.resource.data.periodLabel.size() > 0
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 100
+        && shortString(request.resource.data.summary, 2500)
+        && shortString(request.resource.data.strengths, 2500)
+        && shortString(request.resource.data.improvements, 2500)
+        && request.resource.data.reviewerUid == request.auth.uid
+        && request.resource.data.status == 'draft'
+        && request.resource.data.finalizedAt == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if activeStaff()
+        && resource.data.status == 'draft'
+        && (
+          isOwner()
+          || staffPermission('hr.records.manage')
+          || (staffPermission('department.manage')
+            && resource.data.departmentId == currentStaff().departmentId)
+        )
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'score', 'summary', 'strengths', 'improvements', 'status',
+          'finalizedAt', 'updatedAt'
+        ])
+        && request.resource.data.score is int
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 100
+        && shortString(request.resource.data.summary, 2500)
+        && shortString(request.resource.data.strengths, 2500)
+        && shortString(request.resource.data.improvements, 2500)
+        && request.resource.data.status in ['draft', 'final']
+        && (
+          (request.resource.data.status == 'final' && request.resource.data.finalizedAt == request.time)
+          || (request.resource.data.status == 'draft' && request.resource.data.finalizedAt == null)
+        )
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+    // Acknowledgements attach to policy documents in commandDocuments.
+    // They are immutable after the employee acknowledges the policy/version.
+    match /commandPolicyAcknowledgements/{ackId} {
+      allow read: if activeStaff()
+        && (
+          resource.data.employeeUid == request.auth.uid
+          || isOwner()
+          || staffPermission('hr.records.read')
+          || staffPermission('hr.records.manage')
+          || staffPermission('system.manage')
+        );
+
+      allow create: if activeStaff()
+        && request.resource.data.keys().hasOnly([
+          'id', 'policyDocumentId', 'employeeUid', 'employeeId', 'policyTitle',
+          'policyVersion', 'acknowledgedAt', 'createdAt'
+        ])
+        && request.resource.data.id == ackId
+        && request.resource.data.employeeUid == request.auth.uid
+        && request.resource.data.employeeId == currentStaff().employeeId
+        && request.resource.data.policyDocumentId is string
+        && exists(/databases/$(database)/documents/commandDocuments/$(request.resource.data.policyDocumentId))
+        && get(/databases/$(database)/documents/commandDocuments/$(request.resource.data.policyDocumentId)).data.category == 'policy'
+        && shortString(request.resource.data.policyTitle, 180)
+        && request.resource.data.policyTitle.size() > 0
+        && shortString(request.resource.data.policyVersion, 60)
+        && request.resource.data.policyVersion.size() > 0
+        && request.resource.data.acknowledgedAt == request.time
+        && request.resource.data.createdAt == request.time;
+
+      allow update, delete: if false;
+    }
+
+    // Recognition is internal company history. Department leadership may issue
+    // department recognition; Owner/System may issue company-wide recognition.
+    match /commandRecognition/{recognitionId} {
+      allow read: if activeStaff();
+
+      allow create: if activeStaff()
+        && request.resource.data.keys().hasOnly([
+          'id', 'employeeUid', 'employeeId', 'departmentId', 'type', 'title',
+          'message', 'issuedByUid', 'issuedAt', 'createdAt'
+        ])
+        && request.resource.data.id == recognitionId
+        && request.resource.data.employeeUid is string
+        && exists(staffAccessPath(request.resource.data.employeeUid))
+        && request.resource.data.employeeId == get(staffAccessPath(request.resource.data.employeeUid)).data.employeeId
+        && request.resource.data.departmentId == get(staffAccessPath(request.resource.data.employeeUid)).data.departmentId
+        && request.resource.data.type in [
+          'commendation', 'department', 'service', 'operational_excellence',
+          'case_excellence', 'leadership'
+        ]
+        && shortString(request.resource.data.title, 140)
+        && request.resource.data.title.size() > 0
+        && shortString(request.resource.data.message, 2000)
+        && request.resource.data.message.size() > 0
+        && request.resource.data.issuedByUid == request.auth.uid
+        && (
+          isOwner()
+          || staffPermission('system.manage')
+          || (staffPermission('department.manage')
+            && request.resource.data.departmentId == currentStaff().departmentId)
+        )
+        && request.resource.data.issuedAt == request.time
+        && request.resource.data.createdAt == request.time;
+
+      allow update, delete: if false;
+    }
+
+    // Employee suggestions/feedback are author-private unless routed to
+    // leadership. This avoids making candid internal feedback company-readable.
+    match /commandSuggestions/{suggestionId} {
+      allow read: if activeStaff()
+        && (
+          resource.data.submittedByUid == request.auth.uid
+          || isOwner()
+          || staffPermission('system.manage')
+          || (staffPermission('department.manage')
+            && resource.data.departmentId == currentStaff().departmentId
+            && resource.data.visibility == 'department')
+        );
+
+      allow create: if activeStaff()
+        && request.resource.data.keys().hasOnly([
+          'id', 'submittedByUid', 'departmentId', 'category', 'title', 'details',
+          'visibility', 'status', 'response', 'respondedByUid', 'respondedAt',
+          'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.id == suggestionId
+        && request.resource.data.submittedByUid == request.auth.uid
+        && request.resource.data.departmentId == currentStaff().departmentId
+        && request.resource.data.category in ['suggestion', 'feedback', 'process', 'culture', 'other']
+        && shortString(request.resource.data.title, 140)
+        && request.resource.data.title.size() > 0
+        && shortString(request.resource.data.details, 4000)
+        && request.resource.data.details.size() > 0
+        && request.resource.data.visibility in ['leadership', 'department']
+        && request.resource.data.status == 'submitted'
+        && request.resource.data.response == ''
+        && request.resource.data.respondedByUid == null
+        && request.resource.data.respondedAt == null
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if activeStaff()
+        && resource.data.submittedByUid != request.auth.uid
+        && (
+          isOwner()
+          || staffPermission('system.manage')
+          || (resource.data.visibility == 'department'
+            && staffPermission('department.manage')
+            && resource.data.departmentId == currentStaff().departmentId)
+        )
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'status', 'response', 'respondedByUid', 'respondedAt', 'updatedAt'
+        ])
+        && request.resource.data.status in ['reviewing', 'accepted', 'declined', 'closed']
+        && shortString(request.resource.data.response, 2500)
+        && request.resource.data.respondedByUid == request.auth.uid
+        && request.resource.data.respondedAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if false;
+    }
+
+// FIRESTORE_PART2_STAFF_COMPANY_COMPLETE
 
     // COMMAND_GENERATION_3_BEGIN
 
@@ -3347,6 +3710,7 @@ service cloud.firestore {
       allow create: if commandG3EvidenceManage()
         && commandG3ValidEvidence(request.resource.data, evidenceId)
         && request.resource.data.createdByUid == request.auth.uid
+        && exists(/databases/$(database)/documents/commandCases/$(request.resource.data.caseId))
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
@@ -3534,6 +3898,11 @@ service cloud.firestore {
         && commandG3ValidQaReview(request.resource.data, reviewId)
         && request.resource.data.id == resource.data.id
         && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.subjectType == resource.data.subjectType
+        && request.resource.data.subjectId == resource.data.subjectId
+        && request.resource.data.departmentId == resource.data.departmentId
+        && request.resource.data.employeeUid == resource.data.employeeUid
+        && request.resource.data.reviewerUid == resource.data.reviewerUid
         && request.resource.data.createdByUid == resource.data.createdByUid
         && request.resource.data.createdAt == resource.data.createdAt
         && request.resource.data.updatedAt == request.time;
@@ -3571,6 +3940,7 @@ service cloud.firestore {
       allow create: if commandG3QaManage()
         && commandG3ValidCorrectiveAction(request.resource.data, actionId)
         && request.resource.data.createdByUid == request.auth.uid
+        && exists(/databases/$(database)/documents/commandQaReviews/$(request.resource.data.qaReviewId))
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
@@ -3667,13 +4037,15 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
+      // Pre-approval work may be edited or submitted, never published directly.
       allow update: if (isOwner() || staffPermission('pr.manage'))
         && commandG3ValidPrItem(request.resource.data, itemId)
         && request.resource.data.id == resource.data.id
         && request.resource.data.cognitusId == resource.data.cognitusId
         && request.resource.data.createdByUid == resource.data.createdByUid
         && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.status in ['draft', 'pending_approval', 'published', 'closed']
+        && resource.data.status in ['draft', 'pending_approval']
+        && request.resource.data.status in ['draft', 'pending_approval']
         && request.resource.data.approvedByUid == resource.data.approvedByUid
         && request.resource.data.approvedAt == resource.data.approvedAt
         && request.resource.data.updatedAt == request.time
@@ -3681,7 +4053,27 @@ service cloud.firestore {
           'type', 'title', 'status', 'body', 'url', 'ownerUid', 'updatedAt'
         ]);
 
-      allow update: if (isOwner() || staffPermission('pr.approve'))
+      // Once approved, PR management may publish or close while preserving
+      // the independent approval identity and timestamp.
+      allow update: if (isOwner() || staffPermission('pr.manage'))
+        && commandG3ValidPrItem(request.resource.data, itemId)
+        && request.resource.data.id == resource.data.id
+        && request.resource.data.cognitusId == resource.data.cognitusId
+        && request.resource.data.createdByUid == resource.data.createdByUid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && resource.data.status in ['approved', 'published']
+        && request.resource.data.status in ['published', 'closed']
+        && request.resource.data.approvedByUid == resource.data.approvedByUid
+        && request.resource.data.approvedAt == resource.data.approvedAt
+        && resource.data.approvedByUid != null
+        && resource.data.approvedAt != null
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'type', 'title', 'status', 'body', 'url', 'ownerUid', 'updatedAt'
+        ]);
+
+      allow update: if (isOwner() || (staffPermission('pr.approve') && resource.data.createdByUid != request.auth.uid))
+        && resource.data.status == 'pending_approval'
         && commandG3ValidPrItem(request.resource.data, itemId)
         && request.resource.data.id == resource.data.id
         && request.resource.data.cognitusId == resource.data.cognitusId
@@ -3775,7 +4167,8 @@ service cloud.firestore {
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time;
 
-      allow update: if (isOwner() || staffPermission('system.manage'))
+      allow update: if (isOwner() || (staffPermission('system.manage') && resource.data.requestedByUid != request.auth.uid))
+        && resource.data.status == 'pending'
         && commandG3ValidExecutiveApproval(request.resource.data, approvalId)
         && request.resource.data.id == resource.data.id
         && request.resource.data.cognitusId == resource.data.cognitusId
@@ -3792,6 +4185,8 @@ service cloud.firestore {
 
       allow delete: if false;
     }
+
+    // FIRESTORE_PART3_OPERATIONS_SECURITY_COMPLETE
 
     // COMMAND_GENERATION_3_END
 
