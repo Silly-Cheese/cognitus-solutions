@@ -6,12 +6,18 @@ text = RULES.read_text(encoding='utf-8')
 broken = """&& (request.resource.data.url == null
 || (shortString(request.resource.data.url, 1000)
 && commandG2ValidVisibility(request.resource.data.visibility)"""
-fixed = """&& (request.resource.data.url == null
+weak_fixed = """&& (request.resource.data.url == null
 || shortString(request.resource.data.url, 1000))
+&& commandG2ValidVisibility(request.resource.data.visibility)"""
+fixed = """&& (request.resource.data.url == null
+|| (shortString(request.resource.data.url, 1000)
+&& request.resource.data.url.matches('^https://.+')))
 && commandG2ValidVisibility(request.resource.data.visibility)"""
 
 if broken in text:
     text = text.replace(broken, fixed, 1)
+elif weak_fixed in text:
+    text = text.replace(weak_fixed, fixed, 1)
 elif fixed not in text:
     raise RuntimeError('Expected commandMeetings URL guard was not found; refusing blind edit')
 
