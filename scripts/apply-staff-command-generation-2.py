@@ -2,7 +2,7 @@ from pathlib import Path
 from urllib.request import urlopen
 
 RULES_PATH = Path("firestore.rules")
-FRAGMENT_URL = "https://raw.githubusercontent.com/Silly-Cheese/staff-cognitus/2f75517139acf1557ad11f688cff51ee09a80e12/firestore.command.g2.rules.fragment"
+FRAGMENT_URL = "https://raw.githubusercontent.com/Silly-Cheese/staff-cognitus/1605de46d7d92976e6132846b7b1b2afb22d6baa/firestore.command.g2.rules.fragment"
 BEGIN = "// COMMAND_GENERATION_2_BEGIN"
 END = "// COMMAND_GENERATION_2_END"
 ANCHOR = "    // ============================================================\n    // FINAL DEFAULT-DENY BOUNDARY"
