@@ -1,0 +1,53 @@
+name: Narrow Staff Command Generation 3 Product Authority
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/narrow-staff-command-generation-3-product-authority.yml'
+      - 'scripts/narrow-staff-command-generation-3-product-authority.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Narrow product authority
+        run: python scripts/narrow-staff-command-generation-3-product-authority.py
+
+      - name: Verify least-privilege boundaries
+        run: |
+          grep -q 'Staff appeal authority is deliberately narrower' firestore.rules
+          grep -q "request.resource.data.status == 'disputed'" firestore.rules
+          grep -q 'Standard Staff / Command claim approval' firestore.rules
+          grep -q 'data.discordId in resource.data.discordIds' firestore.rules
+          if grep -q "staffPermission('reports.review') || staffPermission('appeals.review')" firestore.rules; then
+            echo 'Appeal staff still inherit full report authority.'
+            exit 1
+          fi
+
+      - name: Enforce rules source ceiling
+        run: |
+          bytes=$(wc -c < firestore.rules)
+          echo "firestore.rules source bytes: $bytes"
+          test "$bytes" -lt 220000
+
+      - name: Commit hardening
+        run: |
+          if git diff --quiet; then
+            echo 'Product authority is already narrowed.'
+            exit 0
+          fi
+          git config user.name 'Cognitus Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add firestore.rules
+          git commit -m 'Narrow Staff Command generation 3 product authority'
+          git push
