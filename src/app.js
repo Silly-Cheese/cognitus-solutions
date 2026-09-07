@@ -11,6 +11,7 @@ let Fire = null;
 let authUser = null;
 let userRecord = null;
 let profileRecord = null;
+let staffAccessRecord = null;
 let authReady = false;
 
 const CHECK_REASONS = Object.freeze([
@@ -160,6 +161,7 @@ function roleAtLeast(role) {
 function reviewer() { return roleAtLeast("reviewer"); }
 function admin() { return roleAtLeast("admin"); }
 function owner() { return activeUser() && userRecord?.role === "owner"; }
+function commandStaff() { return Boolean(activeUser() && staffAccessRecord && ["active", "training", "on_leave"].includes(staffAccessRecord.status) && Array.isArray(staffAccessRecord.permissions) && staffAccessRecord.permissions.includes("portal.access")); }
 function ensureActive() {
   if (!loginRequired() && !activeUser()) {
     hero("Account Restricted", "This account cannot perform operational actions.", `Current status: ${userRecord?.status || "unknown"}. Contact a Cognitus administrator for assistance.`, buttonLink("#/dashboard", "Dashboard", true));
@@ -191,6 +193,7 @@ async function readQuery(collectionName, constraints = []) {
 async function refreshAccount() {
   userRecord = authUser ? await readDoc("users", authUser.uid) : null;
   profileRecord = authUser ? await readDoc("profiles", authUser.uid) : null;
+  staffAccessRecord = authUser ? await readDoc("staffAccess", authUser.uid).catch(() => null) : null;
   if (authUser && userRecord && !profileRecord) await createOwnProfileIfMissing();
   if (authUser && userRecord) await backfillSafeProfileSearchFields();
 }
@@ -267,8 +270,7 @@ function renderNav() {
     <a href="#/claims">Claims</a>
     <a href="#/appeals">Appeals</a>
     <a href="#/organizations">Organizations</a>
-    ${reviewer() ? `<a href="#/review">Review</a>` : ""}
-    ${admin() ? `<a href="#/admin">Admin</a>` : ""}
+    ${commandStaff() ? `<a href="https://silly-cheese.github.io/staff-cognitus/" target="_blank" rel="noopener">Staff Command</a>` : ""}
     <a href="#/settings">Settings</a>
     <button id="logout-button" class="button button-light" type="button">Logout</button>
     <span class="nav-user">${safe(userRecord.displayName || "User")} · ${safe(userRecord.role || "user")}</span>`;
@@ -305,8 +307,8 @@ function featuresPage() {
   const cards = [
     ["Search & Checks", "Search Discord IDs, self-declared usernames, Roblox usernames, and organizations. Checks require a reason."],
     ["Screening Reports", "Generate quick or full views from a logged check and reviewed records that are permitted for screening."],
-    ["Review Queue", "Reviewers can approve or deny reports, claims, and appeals without rewriting original submissions."],
-    ["Administration", "Admins manage user status, non-owner roles, organization verification, and organization membership."],
+    ["Command Operations", "Human review, appeals, claims, investigations, quality, and exceptional operational work are handled in Cognitus Staff / Command."],
+    ["Separate Internal Administration", "Employee, department, finance, payroll, quality, and executive administration are kept out of the customer-facing product."],
     ["Owner Controls", "Only Owners may grant or remove the Owner role. There is no public client-side owner bootstrap."],
     ["Simple Firestore", "The production portal uses automatic Firestore indexing only. No manually maintained composite indexes are required."]
   ];
@@ -905,6 +907,11 @@ function renderActivity(activity) {
   return `<div class="panel-header"><div><p class="eyebrow">Activity</p><h2>Recent client activity</h2></div><span>${activity.length} shown</span></div><div class="notice">These client-authenticated activity events provide operational traceability, but a fully tamper-evident audit trail requires a trusted server environment.</div><div class="record-list">${activity.map((item)=>`<article class="record-row"><div><strong>${safe(item.action || "ACTION")}</strong><span>${safe(item.summary || "")}</span><small>${safe(item.actorCognitusId || item.actorUid || "Unknown")} · ${safe(formatTimestamp(item.createdAt))}</small></div></article>`).join("")}</div>`;
 }
 
+function commandMigrationPage(area) {
+  setTitle(`${area} · Staff Command`);
+  root.innerHTML = `<section class="hero hero-wide"><p class="eyebrow">Internal operations moved</p><h1>${safe(area)} now lives in Cognitus Staff / Command.</h1><p>The main Cognitus site is the customer and product portal. Internal review and administration are handled in the separate staff system using the same Cognitus identity and Firestore database.</p><div class="hero-actions"><a class="button button-dark" href="https://silly-cheese.github.io/staff-cognitus/" target="_blank" rel="noopener">Open Staff Command</a>${buttonLink("#/dashboard", "Return to Dashboard")}</div></section>`;
+}
+
 async function settingsPage() {
   setTitle("Settings");
   if (loginRequired()) return;
@@ -967,9 +974,9 @@ async function render() {
     if (current === "/reports/submit") return submitReportPage();
     if (current === "/claims") return claimsPage();
     if (current === "/appeals") return appealsPage();
-    if (current === "/review") return reviewPage();
+    if (current === "/review") return commandMigrationPage("Review Queue");
     if (current === "/organizations") return organizationsPage();
-    if (current === "/admin") return adminPage();
+    if (current === "/admin") return commandMigrationPage("Administration");
     if (current === "/settings") return settingsPage();
     if (current === "/owner-bootstrap") return hero("Owner Security", "Client-side bootstrap has been retired.", "Owner provisioning must be performed through a trusted Firebase administrative environment. This route can no longer elevate an account.", buttonLink("#/dashboard", "Dashboard", true));
     hero("404", "Page not found.", "The requested Cognitus page does not exist.", buttonLink(userRecord ? "#/dashboard" : "#/", "Return", true));
