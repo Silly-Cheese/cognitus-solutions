@@ -336,6 +336,7 @@ request.auth.uid == uid
 || staffPermission('staff.provision')
 || staffPermission('staff.private.read')
 || staffPermission('hr.records.read')
+|| executiveAccountReader()
 );
 allow update: if signedIn()
 && request.auth.uid == uid
@@ -1662,6 +1663,15 @@ return hasStaffAccess()
 && currentStaff().status in ['active', 'training', 'on_leave']
 && 'portal.access' in currentStaff().permissions;
 }
+function commandOwner() {
+return isOwner()
+|| (activeStaff() && currentStaff().rank == 'co-owner');
+}
+function executiveAccountReader() {
+return commandOwner()
+|| (activeStaff() && currentStaff().rank == 'chief-officer')
+|| staffPermission('accounts.read.all');
+}
 function staffPermission(permission) {
 return activeStaff() && permission in currentStaff().permissions;
 }
@@ -1670,7 +1680,7 @@ return value in ['active', 'training', 'on_leave', 'suspended', 'former'];
 }
 function validStaffRank(value) {
 return value in [
-'owner', 'chief-officer', 'director', 'manager', 'supervisor',
+'owner', 'co-owner', 'chief-officer', 'director', 'manager', 'supervisor',
 'senior-staff', 'staff', 'trainee', 'restricted'
 ];
 }
@@ -1682,6 +1692,7 @@ return value in [
 }
 function staffRankLevel(rank) {
 return rank == 'owner' ? 100
+: rank == 'co-owner' ? 100
 : rank == 'chief-officer' ? 90
 : rank == 'director' ? 75
 : rank == 'manager' ? 60
@@ -1706,7 +1717,7 @@ return value is list
 'qa.read', 'qa.manage', 'qa.audit', 'reports.review', 'claims.review',
 'appeals.review', 'verification.review', 'organizations.review', 'cases.read',
 'cases.manage', 'evidence.read', 'evidence.manage', 'accreditation.manage',
-'escalations.manage', 'incidents.manage', 'audit.read', 'system.manage'
+'escalations.manage', 'incidents.manage', 'accounts.read.all', 'audit.read', 'system.manage'
 ]);
 }
 function validStaffDirectoryDocument(uid, value) {
@@ -1728,6 +1739,26 @@ return value is map
 && validStaffStatus(value.status)
 && validStaffPermissions(value.permissions)
 && 'portal.access' in value.permissions
+&& (
+value.rank != 'co-owner'
+|| (
+value.departmentId == 'executive-office'
+&& value.accessLevel == 100
+&& value.permissions.hasAll([
+'portal.access', 'directory.read', 'profile.read', 'accounts.read.all',
+'department.read', 'department.manage', 'staff.provision', 'staff.manage',
+'staff.private.read', 'permissions.manage', 'tickets.read', 'tickets.manage',
+'tickets.all.read', 'cs.manage', 'pr.manage', 'pr.approve', 'finance.read',
+'finance.manage', 'payroll.read', 'payroll.manage', 'payroll.approve',
+'hr.records.read', 'hr.records.manage', 'internalAffairs.read',
+'internalAffairs.manage', 'qa.read', 'qa.manage', 'qa.audit', 'reports.review',
+'claims.review', 'appeals.review', 'verification.review', 'organizations.review',
+'cases.read', 'cases.manage', 'evidence.read', 'evidence.manage',
+'accreditation.manage', 'escalations.manage', 'incidents.manage', 'audit.read',
+'system.manage'
+])
+)
+)
 && value.updatedAt is timestamp;
 }
 function validStaffEmploymentDocument(uid, value) {
@@ -1739,13 +1770,13 @@ return value is map
 && value.updatedAt is timestamp;
 }
 function canProvisionStaffG1() {
-return isOwner() || staffPermission('staff.provision');
+return commandOwner() || staffPermission('staff.provision');
 }
 function canManageStaffDirectoryG1() {
-return isOwner() || staffPermission('staff.manage');
+return commandOwner() || staffPermission('staff.manage');
 }
 function canReadPrivateStaffG1() {
-return isOwner()
+return commandOwner()
 || staffPermission('staff.private.read')
 || staffPermission('hr.records.read');
 }
@@ -1787,7 +1818,7 @@ allow delete: if false;
 }
 match /staffAccess/{uid} {
 allow read: if (
-isOwner()
+commandOwner()
 || (
 activeStaff()
 && (
@@ -1812,7 +1843,7 @@ allow create: if canProvisionStaffG1()
 && getAfter(staffDirectoryPath(uid)).data.status == request.resource.data.status
 && (
 (
-isOwner()
+commandOwner()
 && (
 request.resource.data.rank != 'owner'
 || (
@@ -1826,7 +1857,7 @@ get(userPath(uid)).data.role == 'owner'
 )
 || safeDelegatedStaffProvisionG1(request.resource.data)
 );
-allow update: if isOwner()
+allow update: if commandOwner()
 && validStaffAccessDocument(uid, request.resource.data)
 && request.resource.data.uid == resource.data.uid
 && request.resource.data.employeeId == resource.data.employeeId
@@ -1856,7 +1887,7 @@ allow create: if canProvisionStaffG1()
 && request.resource.data.employeeId == getAfter(staffDirectoryPath(uid)).data.employeeId
 && request.resource.data.employeeId == getAfter(staffAccessPath(uid)).data.employeeId
 && request.resource.data.employmentStatus == getAfter(staffAccessPath(uid)).data.status;
-allow update: if (isOwner() || staffPermission('hr.records.manage'))
+allow update: if (commandOwner() || staffPermission('hr.records.manage'))
 && validStaffEmploymentDocument(uid, request.resource.data)
 && request.resource.data.uid == resource.data.uid
 && request.resource.data.employeeId == resource.data.employeeId
@@ -1883,7 +1914,7 @@ allow update: if activeStaff()
 allow delete: if false;
 }
 function commandG2CanManageDepartment(departmentId) {
-return isOwner()
+return commandOwner()
 || (activeStaff()
 && currentStaff().departmentId == departmentId
 && staffPermission('department.manage'))
@@ -1892,32 +1923,32 @@ return isOwner()
 || (departmentId == 'customer-service' && staffPermission('tickets.manage'));
 }
 function commandG2CanPublishCompany() {
-return isOwner() || staffPermission('system.manage');
+return commandOwner() || staffPermission('system.manage');
 }
 function commandG2CanManageHr() {
-return isOwner() || staffPermission('hr.records.manage');
+return commandOwner() || staffPermission('hr.records.manage');
 }
 function commandG2CanReadHr() {
-return isOwner() || staffPermission('hr.records.read') || staffPermission('hr.records.manage');
+return commandOwner() || staffPermission('hr.records.read') || staffPermission('hr.records.manage');
 }
 function commandG2CanReadFinance() {
-return isOwner() || staffPermission('finance.read') || staffPermission('finance.manage');
+return commandOwner() || staffPermission('finance.read') || staffPermission('finance.manage');
 }
 function commandG2CanManageFinance() {
-return isOwner() || staffPermission('finance.manage');
+return commandOwner() || staffPermission('finance.manage');
 }
 function commandG2CanReadPayroll() {
-return isOwner() || staffPermission('payroll.read') || staffPermission('payroll.manage');
+return commandOwner() || staffPermission('payroll.read') || staffPermission('payroll.manage');
 }
 function commandG2CanManagePayroll() {
-return isOwner() || staffPermission('payroll.manage');
+return commandOwner() || staffPermission('payroll.manage');
 }
 function commandG2CanManageTicket(departmentId) {
-return isOwner()
+return commandOwner()
 || (staffPermission('tickets.manage') && currentStaff().departmentId == departmentId);
 }
 function commandG2CanReviewRequest(value) {
-return isOwner()
+return commandOwner()
 || (value.type == 'hr' && staffPermission('hr.records.manage'))
 || ((value.type == 'finance' || value.type == 'purchase') && staffPermission('finance.manage'))
 || (value.type == 'access' && (staffPermission('permissions.manage') || staffPermission('system.manage')))
@@ -1940,7 +1971,7 @@ return value in ['low', 'normal', 'high', 'critical'];
 match /commandTasks/{taskId} {
 allow read: if activeStaff()
 && (
-isOwner()
+commandOwner()
 || resource.data.assignedToUid == request.auth.uid
 || resource.data.createdByUid == request.auth.uid
 || (staffPermission('department.manage')
@@ -1968,7 +1999,7 @@ staffPermission('department.manage')
 && request.resource.data.updatedAt == request.time;
 allow update: if activeStaff()
 && (
-isOwner()
+commandOwner()
 || resource.data.assignedToUid == request.auth.uid
 || resource.data.createdByUid == request.auth.uid
 || (staffPermission('department.manage')
@@ -1988,7 +2019,7 @@ allow delete: if false;
 match /commandRequests/{requestId} {
 allow read: if activeStaff()
 && (
-isOwner()
+commandOwner()
 || resource.data.requestorUid == request.auth.uid
 || commandG2CanReviewRequest(resource.data)
 );
@@ -2090,7 +2121,7 @@ staffPermission('department.manage')
 && request.resource.data.updatedAt == request.time;
 allow update: if activeStaff()
 && (
-isOwner()
+commandOwner()
 || resource.data.leadUid == request.auth.uid
 || (staffPermission('department.manage')
 && resource.data.departmentId == currentStaff().departmentId)
@@ -2242,7 +2273,7 @@ allow create: if commandG2CanManagePayroll()
 && request.resource.data.paidAt == null
 && request.resource.data.createdAt == request.time
 && request.resource.data.updatedAt == request.time;
-allow update: if (isOwner() || staffPermission('payroll.approve'))
+allow update: if (commandOwner() || staffPermission('payroll.approve'))
 && resource.data.status == 'draft'
 && resource.data.createdByUid != request.auth.uid
 && request.resource.data.diff(resource.data).changedKeys().hasOnly([
@@ -2267,7 +2298,7 @@ match /commandTickets/{ticketId} {
 allow read: if activeStaff()
 && (
 resource.data.requesterUid == request.auth.uid
-|| isOwner()
+|| commandOwner()
 || staffPermission('tickets.all.read')
 || (staffPermission('tickets.manage')
 && resource.data.departmentId == currentStaff().departmentId)
@@ -2323,7 +2354,7 @@ match /commandInternalAffairs/{caseId} {
 allow read: if activeStaff()
 && (
 resource.data.reporterUid == request.auth.uid
-|| isOwner()
+|| commandOwner()
 || staffPermission('internalAffairs.read')
 || staffPermission('internalAffairs.manage')
 );
@@ -2343,7 +2374,7 @@ allow create: if activeStaff()
 && request.resource.data.closedAt == null
 && request.resource.data.createdAt == request.time
 && request.resource.data.updatedAt == request.time;
-allow update: if (isOwner() || staffPermission('internalAffairs.manage'))
+allow update: if (commandOwner() || staffPermission('internalAffairs.manage'))
 && request.resource.data.id == resource.data.id
 && request.resource.data.reporterUid == resource.data.reporterUid
 && request.resource.data.subjectUid == resource.data.subjectUid
@@ -2368,7 +2399,7 @@ match /commandPerformance/{reviewId} {
 allow read: if activeStaff()
 && (
 resource.data.employeeUid == request.auth.uid
-|| isOwner()
+|| commandOwner()
 || staffPermission('hr.records.read')
 || staffPermission('hr.records.manage')
 || (staffPermission('department.manage')
@@ -2376,7 +2407,7 @@ resource.data.employeeUid == request.auth.uid
 );
 allow create: if activeStaff()
 && (
-isOwner()
+commandOwner()
 || staffPermission('hr.records.manage')
 || (staffPermission('department.manage')
 && request.resource.data.departmentId == currentStaff().departmentId)
@@ -2394,7 +2425,7 @@ isOwner()
 allow update: if activeStaff()
 && resource.data.status == 'draft'
 && (
-isOwner()
+commandOwner()
 || staffPermission('hr.records.manage')
 || (staffPermission('department.manage')
 && resource.data.departmentId == currentStaff().departmentId)
@@ -2417,7 +2448,7 @@ match /commandPolicyAcknowledgements/{ackId} {
 allow read: if activeStaff()
 && (
 resource.data.employeeUid == request.auth.uid
-|| isOwner()
+|| commandOwner()
 || staffPermission('hr.records.read')
 || staffPermission('hr.records.manage')
 || staffPermission('system.manage')
@@ -2445,7 +2476,7 @@ allow create: if activeStaff()
 ]
 && request.resource.data.issuedByUid == request.auth.uid
 && (
-isOwner()
+commandOwner()
 || staffPermission('system.manage')
 || (staffPermission('department.manage')
 && request.resource.data.departmentId == currentStaff().departmentId)
@@ -2458,7 +2489,7 @@ match /commandSuggestions/{suggestionId} {
 allow read: if activeStaff()
 && (
 resource.data.submittedByUid == request.auth.uid
-|| isOwner()
+|| commandOwner()
 || staffPermission('system.manage')
 || (staffPermission('department.manage')
 && resource.data.departmentId == currentStaff().departmentId
@@ -2479,7 +2510,7 @@ allow create: if activeStaff()
 allow update: if activeStaff()
 && resource.data.submittedByUid != request.auth.uid
 && (
-isOwner()
+commandOwner()
 || staffPermission('system.manage')
 || (resource.data.visibility == 'department'
 && staffPermission('department.manage')
@@ -2495,25 +2526,25 @@ isOwner()
 allow delete: if false;
 }
 function commandG3CasesRead() {
-return isOwner() || staffPermission('cases.read') || staffPermission('cases.manage');
+return commandOwner() || staffPermission('cases.read') || staffPermission('cases.manage');
 }
 function commandG3CasesManage() {
-return isOwner() || staffPermission('cases.manage');
+return commandOwner() || staffPermission('cases.manage');
 }
 function commandG3EvidenceRead() {
-return isOwner() || staffPermission('evidence.read') || staffPermission('evidence.manage');
+return commandOwner() || staffPermission('evidence.read') || staffPermission('evidence.manage');
 }
 function commandG3EvidenceManage() {
-return isOwner() || staffPermission('evidence.manage');
+return commandOwner() || staffPermission('evidence.manage');
 }
 function commandG3QaRead() {
-return isOwner() || staffPermission('qa.read') || staffPermission('qa.manage') || staffPermission('qa.audit');
+return commandOwner() || staffPermission('qa.read') || staffPermission('qa.manage') || staffPermission('qa.audit');
 }
 function commandG3QaManage() {
-return isOwner() || staffPermission('qa.manage') || staffPermission('qa.audit');
+return commandOwner() || staffPermission('qa.manage') || staffPermission('qa.audit');
 }
 function commandG3PrRead() {
-return isOwner() || staffPermission('pr.manage') || staffPermission('pr.approve');
+return commandOwner() || staffPermission('pr.manage') || staffPermission('pr.approve');
 }
 function commandG3ValidPriority(value) {
 return value in ['low', 'normal', 'high', 'critical'];
@@ -2586,14 +2617,14 @@ return value is map
 && value.updatedAt is timestamp;
 }
 match /commandAccreditations/{recordId} {
-allow read: if isOwner() || staffPermission('accreditation.manage');
-allow create: if (isOwner() || staffPermission('accreditation.manage'))
+allow read: if commandOwner() || staffPermission('accreditation.manage');
+allow create: if (commandOwner() || staffPermission('accreditation.manage'))
 && commandG3ValidAccreditation(request.resource.data, recordId)
 && request.resource.data.createdByUid == request.auth.uid
 && request.resource.data.reviewerUid == request.auth.uid
 && request.resource.data.createdAt == request.time
 && request.resource.data.updatedAt == request.time;
-allow update: if (isOwner() || staffPermission('accreditation.manage'))
+allow update: if (commandOwner() || staffPermission('accreditation.manage'))
 && commandG3ValidAccreditation(request.resource.data, recordId)
 && request.resource.data.id == resource.data.id
 && request.resource.data.cognitusId == resource.data.cognitusId
@@ -2617,13 +2648,13 @@ return value is map
 && value.updatedAt is timestamp;
 }
 match /commandEscalations/{escalationId} {
-allow read: if isOwner() || staffPermission('escalations.manage');
-allow create: if (isOwner() || staffPermission('escalations.manage'))
+allow read: if commandOwner() || staffPermission('escalations.manage');
+allow create: if (commandOwner() || staffPermission('escalations.manage'))
 && commandG3ValidEscalation(request.resource.data, escalationId)
 && request.resource.data.createdByUid == request.auth.uid
 && request.resource.data.createdAt == request.time
 && request.resource.data.updatedAt == request.time;
-allow update: if (isOwner() || staffPermission('escalations.manage'))
+allow update: if (commandOwner() || staffPermission('escalations.manage'))
 && commandG3ValidEscalation(request.resource.data, escalationId)
 && request.resource.data.id == resource.data.id
 && request.resource.data.cognitusId == resource.data.cognitusId
@@ -2642,13 +2673,13 @@ return value is map
 && value.updatedAt is timestamp;
 }
 match /commandIncidents/{incidentId} {
-allow read: if isOwner() || staffPermission('incidents.manage');
-allow create: if (isOwner() || staffPermission('incidents.manage'))
+allow read: if commandOwner() || staffPermission('incidents.manage');
+allow create: if (commandOwner() || staffPermission('incidents.manage'))
 && commandG3ValidIncident(request.resource.data, incidentId)
 && request.resource.data.createdByUid == request.auth.uid
 && request.resource.data.createdAt == request.time
 && request.resource.data.updatedAt == request.time;
-allow update: if (isOwner() || staffPermission('incidents.manage'))
+allow update: if (commandOwner() || staffPermission('incidents.manage'))
 && commandG3ValidIncident(request.resource.data, incidentId)
 && request.resource.data.id == resource.data.id
 && request.resource.data.cognitusId == resource.data.cognitusId
@@ -2733,12 +2764,12 @@ return value is map
 }
 match /commandPrCampaigns/{campaignId} {
 allow read: if commandG3PrRead();
-allow create: if (isOwner() || staffPermission('pr.manage'))
+allow create: if (commandOwner() || staffPermission('pr.manage'))
 && commandG3ValidPrCampaign(request.resource.data, campaignId)
 && request.resource.data.createdByUid == request.auth.uid
 && request.resource.data.createdAt == request.time
 && request.resource.data.updatedAt == request.time;
-allow update: if (isOwner() || staffPermission('pr.manage'))
+allow update: if (commandOwner() || staffPermission('pr.manage'))
 && commandG3ValidPrCampaign(request.resource.data, campaignId)
 && request.resource.data.id == resource.data.id
 && request.resource.data.cognitusId == resource.data.cognitusId
@@ -2759,7 +2790,7 @@ return value is map
 }
 match /commandPrItems/{itemId} {
 allow read: if commandG3PrRead();
-allow create: if (isOwner() || staffPermission('pr.manage'))
+allow create: if (commandOwner() || staffPermission('pr.manage'))
 && commandG3ValidPrItem(request.resource.data, itemId)
 && request.resource.data.createdByUid == request.auth.uid
 && request.resource.data.status in ['draft', 'pending_approval']
@@ -2767,7 +2798,7 @@ allow create: if (isOwner() || staffPermission('pr.manage'))
 && request.resource.data.approvedAt == null
 && request.resource.data.createdAt == request.time
 && request.resource.data.updatedAt == request.time;
-allow update: if (isOwner() || staffPermission('pr.manage'))
+allow update: if (commandOwner() || staffPermission('pr.manage'))
 && commandG3ValidPrItem(request.resource.data, itemId)
 && request.resource.data.id == resource.data.id
 && request.resource.data.cognitusId == resource.data.cognitusId
@@ -2781,7 +2812,7 @@ allow update: if (isOwner() || staffPermission('pr.manage'))
 && request.resource.data.diff(resource.data).changedKeys().hasOnly([
 'type', 'title', 'status', 'body', 'url', 'ownerUid', 'updatedAt'
 ]);
-allow update: if (isOwner() || staffPermission('pr.manage'))
+allow update: if (commandOwner() || staffPermission('pr.manage'))
 && commandG3ValidPrItem(request.resource.data, itemId)
 && request.resource.data.id == resource.data.id
 && request.resource.data.cognitusId == resource.data.cognitusId
@@ -2797,7 +2828,7 @@ allow update: if (isOwner() || staffPermission('pr.manage'))
 && request.resource.data.diff(resource.data).changedKeys().hasOnly([
 'type', 'title', 'status', 'body', 'url', 'ownerUid', 'updatedAt'
 ]);
-allow update: if (isOwner() || (staffPermission('pr.approve') && resource.data.createdByUid != request.auth.uid))
+allow update: if (commandOwner() || (staffPermission('pr.approve') && resource.data.createdByUid != request.auth.uid))
 && resource.data.status == 'pending_approval'
 && commandG3ValidPrItem(request.resource.data, itemId)
 && request.resource.data.id == resource.data.id
@@ -2821,13 +2852,13 @@ return value is map
 && value.updatedAt is timestamp;
 }
 match /commandCsMacros/{macroId} {
-allow read: if isOwner() || staffPermission('cs.manage') || staffPermission('tickets.manage');
-allow create: if (isOwner() || staffPermission('cs.manage'))
+allow read: if commandOwner() || staffPermission('cs.manage') || staffPermission('tickets.manage');
+allow create: if (commandOwner() || staffPermission('cs.manage'))
 && commandG3ValidCsMacro(request.resource.data, macroId)
 && request.resource.data.createdByUid == request.auth.uid
 && request.resource.data.createdAt == request.time
 && request.resource.data.updatedAt == request.time;
-allow update: if (isOwner() || staffPermission('cs.manage'))
+allow update: if (commandOwner() || staffPermission('cs.manage'))
 && commandG3ValidCsMacro(request.resource.data, macroId)
 && request.resource.data.id == resource.data.id
 && request.resource.data.cognitusId == resource.data.cognitusId
@@ -2847,10 +2878,10 @@ return value is map
 && value.updatedAt is timestamp;
 }
 match /commandExecutiveApprovals/{approvalId} {
-allow read: if isOwner()
+allow read: if commandOwner()
 || staffPermission('system.manage')
 || (activeStaff() && resource.data.requestedByUid == request.auth.uid);
-allow create: if (isOwner() || staffPermission('system.manage'))
+allow create: if (commandOwner() || staffPermission('system.manage'))
 && commandG3ValidExecutiveApproval(request.resource.data, approvalId)
 && request.resource.data.requestedByUid == request.auth.uid
 && request.resource.data.createdByUid == request.auth.uid
@@ -2859,7 +2890,7 @@ allow create: if (isOwner() || staffPermission('system.manage'))
 && request.resource.data.decidedAt == null
 && request.resource.data.createdAt == request.time
 && request.resource.data.updatedAt == request.time;
-allow update: if (isOwner() || (staffPermission('system.manage') && resource.data.requestedByUid != request.auth.uid))
+allow update: if (commandOwner() || (staffPermission('system.manage') && resource.data.requestedByUid != request.auth.uid))
 && resource.data.status == 'pending'
 && commandG3ValidExecutiveApproval(request.resource.data, approvalId)
 && request.resource.data.id == resource.data.id
