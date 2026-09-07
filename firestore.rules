@@ -547,6 +547,28 @@ service cloud.firestore {
         && request.resource.data.identityVerified == resource.data.identityVerified
         && request.resource.data.updatedAt == request.time;
 
+
+      // Staff / Command employer-status approval. This is not general user
+      // administration authority; it only permits the exact user transition
+      // required by an approved employerStatusRequests/{uid} batch.
+      allow update: if (staffPermission('verification.review') || staffPermission('organizations.review'))
+        && resource.data.status == 'active'
+        && resource.data.role == 'user'
+        && request.resource.data.diff(resource.data).changedKeys().hasOnly([
+          'role', 'organizationId', 'updatedAt'
+        ])
+        && request.resource.data.role == 'verified_employer_member'
+        && request.resource.data.organizationId != null
+        && request.resource.data.updatedAt == request.time
+        && exists(/databases/$(database)/documents/employerStatusRequests/$(uid))
+        && get(/databases/$(database)/documents/employerStatusRequests/$(uid)).data.applicantUid == uid
+        && get(/databases/$(database)/documents/employerStatusRequests/$(uid)).data.status == 'pending'
+        && existsAfter(/databases/$(database)/documents/employerStatusRequests/$(uid))
+        && getAfter(/databases/$(database)/documents/employerStatusRequests/$(uid)).data.applicantUid == uid
+        && getAfter(/databases/$(database)/documents/employerStatusRequests/$(uid)).data.organizationId == request.resource.data.organizationId
+        && getAfter(/databases/$(database)/documents/employerStatusRequests/$(uid)).data.status == 'approved'
+        && getAfter(/databases/$(database)/documents/employerStatusRequests/$(uid)).data.reviewedByUid == request.auth.uid;
+
       allow delete: if (signedIn() && request.auth.uid == uid)
         || (isOwner() && resource.data.role != 'owner');
     }
@@ -3401,6 +3423,7 @@ service cloud.firestore {
       allow create: if (isOwner() || staffPermission('pr.manage'))
         && commandG3ValidPrItem(request.resource.data, itemId)
         && request.resource.data.createdByUid == request.auth.uid
+        && request.resource.data.status in ['draft', 'pending_approval']
         && request.resource.data.approvedByUid == null
         && request.resource.data.approvedAt == null
         && request.resource.data.createdAt == request.time
@@ -3412,6 +3435,9 @@ service cloud.firestore {
         && request.resource.data.cognitusId == resource.data.cognitusId
         && request.resource.data.createdByUid == resource.data.createdByUid
         && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status in ['draft', 'pending_approval', 'published', 'closed']
+        && request.resource.data.approvedByUid == resource.data.approvedByUid
+        && request.resource.data.approvedAt == resource.data.approvedAt
         && request.resource.data.updatedAt == request.time
         && request.resource.data.diff(resource.data).changedKeys().hasOnly([
           'type', 'title', 'status', 'body', 'url', 'ownerUid', 'updatedAt'
