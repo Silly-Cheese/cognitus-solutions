@@ -32,4 +32,4 @@ jobs:
           CI: 'true'
         run: firebase emulators:exec --only firestore --project demo-cognitus-solutions "echo FIRESTORE_RULES_COMPILE_OK"
 
-# Diagnostic trigger: 2026-09-06
+# Diagnostic trigger: 2026-09-07T12:20Z
