@@ -1,0 +1,83 @@
+name: Finalize Main Cognitus Firestore — Part 3 of 3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/finalize-main-firestore-part3.py'
+      - '.github/workflows/finalize-main-firestore-part-3.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize-main-firestore:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Complete Part 2 prerequisite
+        run: python scripts/finalize-firestore-part2-staff-company.py
+
+      - name: Finalize operations and security Part 3
+        run: python scripts/finalize-main-firestore-part3.py
+
+      - name: Verify three-part completion
+        run: |
+          grep -q 'MAIN COGNITUS — PART 1 COMPLETION' firestore.rules
+          grep -q 'FIRESTORE_PART2_STAFF_COMPANY_COMPLETE' firestore.rules
+          grep -q 'FIRESTORE_PART3_OPERATIONS_SECURITY_COMPLETE' firestore.rules
+          grep -q 'Staff appeal authority is deliberately narrower' firestore.rules
+          grep -q 'Standard Staff / Command claim approval' firestore.rules
+          grep -q 'Pre-approval work may be edited or submitted' firestore.rules
+          grep -q 'match /commandInternalAffairs/{caseId}' firestore.rules
+          grep -q 'match /commandQaReviews/{reviewId}' firestore.rules
+          grep -q 'match /commandExecutiveApprovals/{approvalId}' firestore.rules
+          grep -q 'match /{document=\*\*}' firestore.rules
+          grep -q 'allow read, write: if false;' firestore.rules
+
+      - name: Verify least-privilege boundaries
+        run: |
+          if grep -Fq "allow update: if (isReviewer() || staffPermission('reports.review') || staffPermission('appeals.review'))" firestore.rules; then
+            echo 'Appeal reviewers still inherit general report-update authority.'
+            exit 1
+          fi
+          if grep -Fq "allow update: if (isReviewer() || staffPermission('reports.review') || staffPermission('claims.review') || staffPermission('verification.review'))" firestore.rules; then
+            echo 'Claim/verification staff still inherit broad profile-review authority.'
+            exit 1
+          fi
+          if grep -Fq "request.resource.data.status in ['draft', 'pending_approval', 'published', 'closed']" firestore.rules; then
+            echo 'PR management can still bypass the approval gate.'
+            exit 1
+          fi
+          if grep -q 'backgroundCheckApprovals' firestore.rules || grep -q 'commandBackgroundChecks' firestore.rules; then
+            echo 'A staff background-check approval workflow was introduced.'
+            exit 1
+          fi
+
+      - name: Enforce no-composite-index and source-size policy
+        run: |
+          if [ -f firestore.indexes.json ]; then
+            echo 'Composite-index configuration is not allowed in Cognitus.'
+            exit 1
+          fi
+          bytes=$(wc -c < firestore.rules)
+          echo "firestore.rules source bytes: $bytes"
+          test "$bytes" -lt 220000
+
+      - name: Commit authoritative final rules and audits
+        run: |
+          if [ -z "$(git status --porcelain firestore.rules docs/FIRESTORE_PART2_STAFF_COMPANY_AUDIT.md docs/FIRESTORE_PART3_OPERATIONS_SECURITY_AUDIT.md)" ]; then
+            echo 'Main Cognitus Firestore is already finalized through Part 3.'
+            exit 0
+          fi
+          git config user.name 'Cognitus Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add firestore.rules docs/FIRESTORE_PART2_STAFF_COMPANY_AUDIT.md docs/FIRESTORE_PART3_OPERATIONS_SECURITY_AUDIT.md
+          git commit -m 'Finalize Main Cognitus Firestore part 3'
+          git push
