@@ -1,0 +1,49 @@
+name: Harden Staff Command Generation 3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/harden-staff-command-generation-3.yml'
+      - 'scripts/harden-staff-command-generation-3.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Harden Generation 3
+        run: python scripts/harden-staff-command-generation-3.py
+
+      - name: Verify rules hardening
+        run: |
+          grep -q 'Staff / Command employer-status approval' firestore.rules
+          grep -q "getAfter(/databases/\$(database)/documents/employerStatusRequests/\$(uid)).data.status == 'approved'" firestore.rules
+          grep -q "request.resource.data.status in \['draft', 'pending_approval'\]" firestore.rules
+          grep -q "request.resource.data.status in \['draft', 'pending_approval', 'published', 'closed'\]" firestore.rules
+
+      - name: Enforce rules source ceiling
+        run: |
+          bytes=$(wc -c < firestore.rules)
+          echo "firestore.rules source bytes: $bytes"
+          test "$bytes" -lt 220000
+
+      - name: Commit hardening
+        run: |
+          if git diff --quiet; then
+            echo 'Generation 3 rules are already hardened.'
+            exit 0
+          fi
+          git config user.name 'Cognitus Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add firestore.rules
+          git commit -m 'Harden Staff Command generation 3 rules'
+          git push
