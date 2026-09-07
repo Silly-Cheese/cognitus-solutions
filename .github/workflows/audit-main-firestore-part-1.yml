@@ -1,0 +1,44 @@
+name: Audit Main Cognitus Firestore — Part 1 of 3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/audit-main-firestore-part1.py'
+      - '.github/workflows/audit-main-firestore-part-1.yml'
+      - 'firestore.rules'
+      - 'src/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Audit main-site Firestore coverage
+        run: python scripts/audit-main-firestore-part1.py
+
+      - name: Enforce source ceiling
+        run: |
+          bytes=$(wc -c < firestore.rules)
+          echo "firestore.rules source bytes: $bytes"
+          test "$bytes" -lt 220000
+
+      - name: Commit audit report
+        run: |
+          if git diff --quiet; then
+            echo 'Audit report is already current.'
+            exit 0
+          fi
+          git config user.name 'Cognitus Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add docs/FIRESTORE_PART1_MAIN_AUDIT.md
+          git commit -m 'Audit all main Cognitus Firestore surfaces'
+          git push
