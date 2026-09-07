@@ -1,0 +1,54 @@
+name: Harden Cognitus Command Rules — Part 1 of 3
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/harden-command-rules-part-1.yml'
+      - 'scripts/harden-command-rules-part-1.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  harden-part-1:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Harden staff identity and provisioning rules
+        run: python scripts/harden-command-rules-part-1.py
+
+      - name: Verify Part 1 security invariants
+        run: |
+          grep -q 'value.size() <= 41' firestore.rules
+          grep -q "'portal.access' in currentStaff().permissions" firestore.rules
+          grep -q "value.rank != 'owner'" firestore.rules
+          grep -q "value.permissions.hasOnly(currentStaff().permissions)" firestore.rules
+          grep -q "!value.permissions.hasAny(\['permissions.manage', 'system.manage'\])" firestore.rules
+          grep -q 'match /staffDirectory/{uid}' firestore.rules
+          grep -q 'match /staffAccess/{uid}' firestore.rules
+          grep -q 'match /staffEmployment/{uid}' firestore.rules
+          grep -q 'match /staffInbox/{notificationId}' firestore.rules
+
+      - name: Enforce source-size ceiling
+        run: |
+          bytes=$(wc -c < firestore.rules)
+          echo "firestore.rules source bytes: $bytes"
+          test "$bytes" -lt 220000
+
+      - name: Commit authoritative Part 1 changes
+        run: |
+          if git diff --quiet; then
+            echo 'Part 1 is already applied.'
+            exit 0
+          fi
+          git config user.name 'Cognitus Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add firestore.rules
+          git commit -m 'Harden Cognitus Command rules part 1 of 3'
+          git push
