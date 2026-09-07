@@ -1,0 +1,33 @@
+name: Diagnose Firestore Rules
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'firestore.rules'
+      - 'firebase.json'
+      - '.github/workflows/diagnose-firestore-rules.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@latest
+      - name: Report source size
+        run: |
+          wc -c firestore.rules
+          wc -l firestore.rules
+      - name: Compile rules with Firestore emulator
+        env:
+          CI: 'true'
+        run: firebase emulators:exec --only firestore --project demo-cognitus-solutions "echo FIRESTORE_RULES_COMPILE_OK"
