@@ -33,7 +33,7 @@ jobs:
 
       - name: Commit audit report
         run: |
-          if git diff --quiet; then
+          if [ -z "$(git status --porcelain docs/FIRESTORE_PART1_MAIN_AUDIT.md)" ]; then
             echo 'Audit report is already current.'
             exit 0
           fi
