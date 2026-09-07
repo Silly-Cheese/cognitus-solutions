@@ -1,0 +1,44 @@
+name: Apply Staff Command Generation 1
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/apply-staff-command-g1.py"
+      - "src/staffCommandLinkG1.js"
+      - ".github/workflows/apply-staff-command-g1.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply Command integration
+        run: python scripts/apply-staff-command-g1.py
+
+      - name: Validate patch
+        run: |
+          git diff --check
+          grep -q "COGNITUS STAFF / COMMAND — GENERATION 1" firestore.rules
+          grep -q "staffCommandLinkG1.js" index.html
+          test ! -f firestore.indexes.json
+
+      - name: Commit generated integration
+        run: |
+          if git diff --quiet; then
+            echo "Integration already applied."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add firestore.rules index.html
+          git commit -m "Integrate Cognitus Staff Command generation 1"
+          git push
