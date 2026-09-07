@@ -1,5 +1,7 @@
 from pathlib import Path
 
+# One-time Generation 3 least-privilege hardening. Kept idempotent so the
+# workflow can be re-run safely while the shared ruleset is being finalized.
 RULES_PATH = Path("firestore.rules")
 rules = RULES_PATH.read_text(encoding="utf-8")
 
