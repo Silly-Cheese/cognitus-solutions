@@ -1,0 +1,54 @@
+name: Finalize Main Cognitus Firestore — Part 3 Recovery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/prepare-firestore-part2-current-rules.py'
+      - '.github/workflows/finalize-main-firestore-part-3-recovery.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  finalize-main-firestore:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Normalize current Part 2 anchor
+        run: python scripts/prepare-firestore-part2-current-rules.py
+
+      - name: Complete Part 2 prerequisite
+        run: python scripts/finalize-firestore-part2-staff-company.py
+
+      - name: Finalize operations and security Part 3
+        run: python scripts/finalize-main-firestore-part3.py
+
+      - name: Verify final state
+        run: |
+          grep -q 'FIRESTORE_PART2_STAFF_COMPANY_COMPLETE' firestore.rules
+          grep -q 'FIRESTORE_PART3_OPERATIONS_SECURITY_COMPLETE' firestore.rules
+          grep -q 'Staff appeal authority is deliberately narrower' firestore.rules
+          grep -q 'Standard Staff / Command claim approval' firestore.rules
+          grep -q 'Pre-approval work may be edited or submitted' firestore.rules
+          grep -q 'match /commandInternalAffairs/{caseId}' firestore.rules
+          grep -q 'match /commandExecutiveApprovals/{approvalId}' firestore.rules
+          grep -q 'allow read, write: if false;' firestore.rules
+          test ! -f firestore.indexes.json
+
+      - name: Commit finalized authoritative rules
+        run: |
+          git config user.name 'Cognitus Automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git add firestore.rules docs/FIRESTORE_PART2_STAFF_COMPANY_AUDIT.md docs/FIRESTORE_PART3_OPERATIONS_SECURITY_AUDIT.md
+          if git diff --cached --quiet; then
+            echo 'Firestore is already finalized.'
+            exit 0
+          fi
+          git commit -m 'Finalize Main Cognitus Firestore through part 3'
+          git push
