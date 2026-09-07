@@ -371,6 +371,27 @@ request.resource.data.role == 'owner'
 && request.resource.data.status == resource.data.status
 )
 );
+// EXECUTIVE_REGISTRY_MANAGEMENT_V2
+allow update: if commandOwner()
+&& resource.data.role != 'owner'
+&& request.resource.data.role != 'owner'
+&& request.resource.data.diff(resource.data).changedKeys().hasOnly([
+'displayName', 'discordUsername', 'role', 'status', 'organizationId',
+'identityVerified', 'updatedAt'
+])
+&& validUserRole(request.resource.data.role)
+&& validUserStatus(request.resource.data.status)
+&& shortString(request.resource.data.displayName, 120)
+&& shortString(request.resource.data.discordUsername, 100)
+&& request.resource.data.identityVerified is bool
+&& request.resource.data.uid == resource.data.uid
+&& request.resource.data.cognitusId == resource.data.cognitusId
+&& request.resource.data.profileId == resource.data.profileId
+&& request.resource.data.discordId == resource.data.discordId
+&& request.resource.data.syntheticEmail == resource.data.syntheticEmail
+&& request.resource.data.accountType == resource.data.accountType
+&& request.resource.data.realEmailCollected == resource.data.realEmailCollected
+&& request.resource.data.updatedAt == request.time;
 allow update: if role() == 'admin'
 && resource.data.role != 'owner'
 && request.resource.data.role != 'owner'
@@ -402,7 +423,10 @@ allow update: if (staffPermission('verification.review') || staffPermission('org
 && getAfter(/databases/$(database)/documents/employerStatusRequests/$(uid)).data.status == 'approved'
 && getAfter(/databases/$(database)/documents/employerStatusRequests/$(uid)).data.reviewedByUid == request.auth.uid;
 allow delete: if (signedIn() && request.auth.uid == uid)
-|| (isOwner() && resource.data.role != 'owner');
+|| (commandOwner()
+&& resource.data.role != 'owner'
+&& uid != request.auth.uid
+&& !exists(staffAccessPath(uid)));
 }
 match /profiles/{profileId} {
 allow read: if activeAccount() || (signedIn() && profileId == request.auth.uid);
@@ -463,6 +487,33 @@ allow update: if activeAccount()
 && request.resource.data.identityConfidence == resource.data.identityConfidence
 && request.resource.data.professionalStanding == resource.data.professionalStanding
 && request.resource.data.riskLevel == resource.data.riskLevel
+&& request.resource.data.updatedAt == request.time;
+allow update: if commandOwner()
+&& (
+resource.data.linkedUserId == null
+|| (exists(userPath(resource.data.linkedUserId))
+&& get(userPath(resource.data.linkedUserId)).data.role != 'owner')
+)
+&& request.resource.data.diff(resource.data).changedKeys().hasOnly([
+'displayName', 'identityStatus', 'identityConfidence', 'professionalStanding',
+'riskLevel', 'lastReviewedAt', 'updatedAt'
+])
+&& shortString(request.resource.data.displayName, 120)
+&& request.resource.data.identityStatus in [
+'self_declared', 'claimed_unverified', 'claimed', 'employer_supplied',
+'verified', 'unverified', 'disputed'
+]
+&& request.resource.data.identityConfidence >= 0
+&& request.resource.data.identityConfidence <= 100
+&& request.resource.data.professionalStanding in [
+'unreviewed', 'good_standing', 'watch', 'concern', 'restricted', 'disqualified'
+]
+&& request.resource.data.riskLevel in [
+'unreviewed', 'low', 'moderate', 'high', 'critical'
+]
+&& request.resource.data.cognitusId == resource.data.cognitusId
+&& request.resource.data.linkedUserId == resource.data.linkedUserId
+&& request.resource.data.discordIds == resource.data.discordIds
 && request.resource.data.updatedAt == request.time;
 allow update: if isReviewer()
 && request.resource.data.diff(resource.data).changedKeys().hasOnly([
@@ -533,7 +584,7 @@ allow update: if (isAdmin() || staffPermission('organizations.review'))
 ]
 && request.resource.data.trustLevel in ['unreviewed', 'good', 'watch', 'concern', 'high_risk']
 && request.resource.data.updatedAt == request.time;
-allow delete: if isOwner();
+allow delete: if commandOwner();
 }
 match /checkLogs/{checkId} {
 allow read: if isReviewer()
