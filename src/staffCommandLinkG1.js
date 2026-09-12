@@ -1,16 +1,41 @@
-// Cognitus Staff / Command bridge — Generation 1
-// Adds a Staff Command link for authenticated Cognitus employees without
-// mixing staff workflows back into the customer-facing application.
+// Cognitus external portal bridges — Generation 1
+// Keeps the public Careers / Talent Gateway visible from the main site and
+// adds Staff Command for authenticated Cognitus employees.
 
 import { FIREBASE_CDN_BASE, initializeFirebaseServices } from "./firebase/firebaseApp.js";
 
+const CAREERS_URL = "https://careers.cognitus-solutions.org/";
 const COMMAND_URL = "https://silly-cheese.github.io/staff-cognitus/";
 const ACTIVE_STAFF_STATUSES = new Set(["active", "training", "on_leave"]);
 
 let eligible = false;
 let started = false;
 
+function syncTalentGatewayLink() {
+  const nav = document.querySelector(".topnav");
+  if (!nav) return;
+
+  let link = nav.querySelector("[data-cognitus-careers-link]");
+  if (!link) {
+    link = document.createElement("a");
+    link.href = CAREERS_URL;
+    link.dataset.cognitusCareersLink = "g1";
+    link.textContent = "Careers";
+    link.setAttribute("aria-label", "Open Cognitus Talent Gateway");
+  }
+
+  const loginLink = Array.from(nav.querySelectorAll("a")).find((item) => item.getAttribute("href") === "#/login");
+  const settingsLink = Array.from(nav.querySelectorAll("a")).find((item) => item.getAttribute("href") === "#/settings");
+  const createAccountLink = Array.from(nav.querySelectorAll("a")).find((item) => item.getAttribute("href") === "#/register");
+  const anchor = settingsLink || loginLink || createAccountLink;
+
+  if (anchor && link.nextElementSibling !== anchor) nav.insertBefore(link, anchor);
+  else if (!anchor && !link.isConnected) nav.appendChild(link);
+}
+
 function syncCommandLink() {
+  syncTalentGatewayLink();
+
   const nav = document.querySelector(".topnav");
   if (!nav) return;
   const existing = nav.querySelector("[data-cognitus-command-link]");
@@ -51,6 +76,15 @@ async function resolveStaffEligibility(user, db, Fire) {
 async function start() {
   if (started) return;
   started = true;
+
+  // Careers is public and should be available even if Firebase is unavailable.
+  syncTalentGatewayLink();
+  const nav = document.querySelector(".topnav");
+  if (nav) {
+    const observer = new MutationObserver(() => syncCommandLink());
+    observer.observe(nav, { childList: true });
+  }
+
   try {
     const services = await initializeFirebaseServices();
     if (!services.ready) return;
@@ -63,12 +97,8 @@ async function start() {
       eligible = await resolveStaffEligibility(user, services.db, Fire);
       syncCommandLink();
     });
-
-    const observer = new MutationObserver(() => syncCommandLink());
-    const nav = document.querySelector(".topnav");
-    if (nav) observer.observe(nav, { childList: true });
   } catch (error) {
-    console.warn("Cognitus Staff / Command bridge did not initialize", error);
+    console.warn("Cognitus external portal bridge did not initialize", error);
   }
 }
 
