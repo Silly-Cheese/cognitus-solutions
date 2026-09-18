@@ -1946,6 +1946,77 @@ allow update: if (commandOwner() || staffPermission('hr.records.manage'))
 && request.resource.data.updatedAt == request.time;
 allow delete: if false;
 }
+match /staffDiscipline/{writeupId} {
+allow read: if activeStaff()
+&& (resource.data.recipientUid == request.auth.uid || commandOwner() || staffPermission('hr.records.read') || staffPermission('internalAffairs.read'));
+allow create: if activeStaff()
+&& (commandOwner() || staffPermission('hr.records.manage') || staffPermission('internalAffairs.manage'))
+&& request.resource.data.id == writeupId
+&& request.resource.data.recipientUid is string
+&& exists(staffAccessPath(request.resource.data.recipientUid))
+&& request.resource.data.subject is string
+&& request.resource.data.details is string
+&& request.resource.data.level in ['verbal', 'written', 'final']
+&& request.resource.data.status == 'active'
+&& request.resource.data.appealStatus == 'eligible'
+&& request.resource.data.issuedByUid == request.auth.uid
+&& request.resource.data.issuedAt == request.time
+&& request.resource.data.updatedAt == request.time
+&& request.resource.data.appealDeadline > request.time;
+allow update: if isOwner()
+&& request.resource.data.id == resource.data.id
+&& request.resource.data.recipientUid == resource.data.recipientUid
+&& request.resource.data.issuedByUid == resource.data.issuedByUid
+&& request.resource.data.issuedAt == resource.data.issuedAt
+&& request.resource.data.appealDeadline == resource.data.appealDeadline
+&& request.resource.data.status in ['active', 'amended', 'removed']
+&& request.resource.data.appealStatus == 'decided'
+&& request.resource.data.updatedAt == request.time;
+allow delete: if false;
+}
+match /staffDisciplineAppeals/{appealId} {
+allow read: if activeStaff()
+&& (resource.data.recipientUid == request.auth.uid || isOwner());
+allow create: if activeStaff()
+&& request.resource.data.id == appealId
+&& request.resource.data.recipientUid == request.auth.uid
+&& request.resource.data.writeupId is string
+&& appealId == request.resource.data.writeupId + '_' + request.auth.uid
+&& exists(/databases/$(database)/documents/staffDiscipline/$(request.resource.data.writeupId))
+&& get(/databases/$(database)/documents/staffDiscipline/$(request.resource.data.writeupId)).data.recipientUid == request.auth.uid
+&& get(/databases/$(database)/documents/staffDiscipline/$(request.resource.data.writeupId)).data.status != 'removed'
+&& get(/databases/$(database)/documents/staffDiscipline/$(request.resource.data.writeupId)).data.appealDeadline >= request.time
+&& request.resource.data.requestedResolution in ['keep', 'amend', 'remove']
+&& request.resource.data.status == 'pending'
+&& request.resource.data.reviewedAt == null
+&& request.resource.data.reviewedByUid == null
+&& request.resource.data.decision == null
+&& request.resource.data.decisionNotes == ''
+&& request.resource.data.submittedAt == request.time
+&& request.resource.data.updatedAt == request.time;
+allow update: if isOwner()
+&& request.resource.data.id == resource.data.id
+&& request.resource.data.writeupId == resource.data.writeupId
+&& request.resource.data.recipientUid == resource.data.recipientUid
+&& request.resource.data.statement == resource.data.statement
+&& request.resource.data.requestedResolution == resource.data.requestedResolution
+&& request.resource.data.submittedAt == resource.data.submittedAt
+&& request.resource.data.status == 'decided'
+&& request.resource.data.decision in ['keep', 'amend', 'remove']
+&& request.resource.data.reviewedByUid == request.auth.uid
+&& request.resource.data.reviewedAt == request.time
+&& request.resource.data.updatedAt == request.time;
+allow delete: if false;
+}
+match /staffDisciplineSessions/{uid} {
+allow read: if activeStaff() && uid == request.auth.uid;
+allow create, update: if activeStaff()
+&& uid == request.auth.uid
+&& request.resource.data.uid == request.auth.uid
+&& request.resource.data.lastLoginAt == request.time
+&& request.resource.data.updatedAt == request.time;
+allow delete: if false;
+}
 match /staffInbox/{notificationId} {
 allow read: if activeStaff()
 && resource.data.recipientUid == request.auth.uid;
