@@ -67,6 +67,7 @@ jobs:
           node --check scripts/validate-promotional-investigation-v32.mjs
           node --check scripts/validate-promotional-contrast-v33.mjs
           node --check scripts/validate-foundation-v19.mjs
+          node --check scripts/validate-discipline-rules-v45.mjs
           node --check scripts/validate-navigation-v20.mjs
 
       - name: Run Profile V5 regression checks
@@ -104,6 +105,9 @@ jobs:
 
       - name: Run Foundation V19 checks
         run: node scripts/validate-foundation-v19.mjs
+
+      - name: Run Staff Discipline rules checks
+        run: node scripts/validate-discipline-rules-v45.mjs
 
       - name: Run Navigation V20 checks
         run: node scripts/validate-navigation-v20.mjs

@@ -169,12 +169,33 @@ return value is map
 }
 function validFrenzyState(value) {
 return value is map
+&& value.keys().hasOnly([
+'active', 'eventId', 'title', 'message', 'announcement', 'level', 'audience',
+'signalZeroEnabled', 'startedAt', 'endsAt', 'endedAt', 'dropActive',
+'dropLabel', 'dropCode', 'activatedByUid', 'activatedByCognitusId', 'updatedAt'
+])
+&& value.keys().hasAll([
+'active', 'eventId', 'title', 'message', 'announcement', 'level', 'audience',
+'signalZeroEnabled', 'startedAt', 'endsAt', 'endedAt', 'dropActive',
+'dropLabel', 'dropCode', 'activatedByUid', 'activatedByCognitusId', 'updatedAt'
+])
+&& value.active is bool
+&& shortString(value.eventId, 80)
+&& shortString(value.title, 80)
+&& shortString(value.message, 240)
+&& shortString(value.announcement, 240)
 && value.level >= 0
 && value.level <= 100
 && value.audience == 'all_active_accounts'
+&& value.signalZeroEnabled is bool
 && validNullableTimestamp(value.startedAt)
 && validNullableTimestamp(value.endsAt)
 && validNullableTimestamp(value.endedAt)
+&& value.dropActive is bool
+&& shortString(value.dropLabel, 80)
+&& shortString(value.dropCode, 80)
+&& shortString(value.activatedByUid, 128)
+&& shortString(value.activatedByCognitusId, 128)
 && validNullableTimestamp(value.updatedAt)
 && (
 value.active == false
@@ -203,8 +224,10 @@ return value is map
 || validFrenzyState(value.frenzy)
 );
 }
+// V36: PROMOTIONAL ENTITLEMENT CATALOG VALIDATION
 function validPromoFeatureList(value) {
 return value is list
+&& value.size() <= 18
 && value.hasOnly([
 'intelligence_center',
 'relationship_mapping',
@@ -1397,6 +1420,7 @@ allow update: if isOwner()
 && validPipelineStatus(request.resource.data.pipelineStatus)
 && request.resource.data.updatedAt == request.time;
 }
+// PROMOTIONAL / FEATURE ACCESS — V36
 match /promotionalCodes/{code} {
 allow get: if activeAccount();
 allow list: if isAdmin();
@@ -1820,6 +1844,100 @@ return value is map
 && (value.managerUid == null || value.managerUid is string)
 && value.updatedAt is timestamp;
 }
+function staffDisciplinePath(writeupId) {
+return /databases/$(database)/documents/staffDiscipline/$(writeupId);
+}
+function staffDisciplineAppealPath(writeupId, uid) {
+return /databases/$(database)/documents/staffDisciplineAppeals/$(writeupId + '_' + uid);
+}
+function validDisciplineWriteupCreate(writeupId, value) {
+return value is map
+&& value.keys().hasOnly([
+'id', 'cognitusId', 'recipientUid', 'recipientName', 'employeeId',
+'subject', 'details', 'correctiveAction', 'level', 'incidentDate',
+'status', 'appealDeadline', 'appealStatus', 'issuedByUid', 'issuedByName',
+'issuedAt', 'updatedAt', 'amendedAt', 'amendedByUid', 'amendmentNote',
+'removedAt', 'removedByUid', 'removalReason'
+])
+&& value.keys().hasAll([
+'id', 'cognitusId', 'recipientUid', 'recipientName', 'employeeId',
+'subject', 'details', 'correctiveAction', 'level', 'incidentDate',
+'status', 'appealDeadline', 'appealStatus', 'issuedByUid', 'issuedByName',
+'issuedAt', 'updatedAt', 'amendedAt', 'amendedByUid', 'amendmentNote',
+'removedAt', 'removedByUid', 'removalReason'
+])
+&& value.id == writeupId
+&& value.cognitusId is string
+&& value.cognitusId.matches('^WU-[0-9]{4}-[A-Z0-9]{7}$')
+&& value.recipientUid is string
+&& shortString(value.recipientName, 160) && value.recipientName.size() > 0
+&& validStaffEmployeeId(value.employeeId)
+&& shortString(value.subject, 120) && value.subject.size() > 0
+&& shortString(value.details, 4000) && value.details.size() >= 20
+&& shortString(value.correctiveAction, 2000)
+&& value.level in ['verbal', 'written', 'final']
+&& value.incidentDate is string
+&& value.incidentDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+&& value.status == 'active'
+&& value.appealDeadline is timestamp
+&& value.appealDeadline > request.time
+&& value.appealDeadline <= request.time + duration.value(30, 'd')
+&& value.appealStatus == 'eligible'
+&& value.issuedByUid == request.auth.uid
+&& shortString(value.issuedByName, 160) && value.issuedByName.size() > 0
+&& value.issuedAt == request.time
+&& value.updatedAt == request.time
+&& value.amendedAt == null && value.amendedByUid == null
+&& value.amendmentNote == ''
+&& value.removedAt == null && value.removedByUid == null
+&& value.removalReason == '';
+}
+function validDisciplineAppealCreate(appealId, value) {
+return value is map
+&& value.keys().hasOnly([
+'id', 'writeupId', 'recipientUid', 'statement', 'requestedResolution',
+'status', 'submittedAt', 'reviewedAt', 'reviewedByUid', 'decision',
+'decisionNotes', 'updatedAt'
+])
+&& value.keys().hasAll([
+'id', 'writeupId', 'recipientUid', 'statement', 'requestedResolution',
+'status', 'submittedAt', 'reviewedAt', 'reviewedByUid', 'decision',
+'decisionNotes', 'updatedAt'
+])
+&& value.id == appealId
+&& value.writeupId is string
+&& value.recipientUid == request.auth.uid
+&& appealId == value.writeupId + '_' + request.auth.uid
+&& shortString(value.statement, 3000) && value.statement.size() >= 25
+&& value.requestedResolution in ['keep', 'amend', 'remove']
+&& value.status == 'pending'
+&& value.submittedAt == request.time
+&& value.reviewedAt == null && value.reviewedByUid == null
+&& value.decision == null && value.decisionNotes == ''
+&& value.updatedAt == request.time;
+}
+function validStaffInboxCreate(notificationId, value) {
+return value is map
+&& value.keys().hasOnly([
+'id', 'recipientUid', 'senderUid', 'kind', 'title', 'message', 'href',
+'readAt', 'createdAt', 'updatedAt'
+])
+&& value.keys().hasAll([
+'id', 'recipientUid', 'senderUid', 'kind', 'title', 'message', 'href',
+'readAt', 'createdAt', 'updatedAt'
+])
+&& value.id == notificationId
+&& value.senderUid == request.auth.uid
+&& value.recipientUid is string
+&& value.recipientUid != request.auth.uid
+&& value.kind in ['task', 'request', 'project', 'leave', 'hr', 'ticket', 'case', 'incident', 'pr']
+&& shortString(value.title, 120) && value.title.size() > 0
+&& shortString(value.message, 1000) && value.message.size() > 0
+&& (value.href == null || (shortString(value.href, 300) && value.href.matches('^#/[A-Za-z0-9_/?=&.%+-]*$')))
+&& value.readAt == null
+&& value.createdAt == request.time
+&& value.updatedAt == request.time;
+}
 function canProvisionStaffG1() {
 return commandOwner() || staffPermission('staff.provision');
 }
@@ -1951,49 +2069,61 @@ allow read: if activeStaff()
 && (resource.data.recipientUid == request.auth.uid || commandOwner() || staffPermission('hr.records.read') || staffPermission('internalAffairs.read'));
 allow create: if activeStaff()
 && (commandOwner() || staffPermission('hr.records.manage') || staffPermission('internalAffairs.manage'))
-&& request.resource.data.id == writeupId
-&& request.resource.data.recipientUid is string
+&& validDisciplineWriteupCreate(writeupId, request.resource.data)
 && exists(staffAccessPath(request.resource.data.recipientUid))
-&& request.resource.data.subject is string
-&& request.resource.data.details is string
-&& request.resource.data.level in ['verbal', 'written', 'final']
-&& request.resource.data.status == 'active'
-&& request.resource.data.appealStatus == 'eligible'
-&& request.resource.data.issuedByUid == request.auth.uid
-&& request.resource.data.issuedAt == request.time
-&& request.resource.data.updatedAt == request.time
-&& request.resource.data.appealDeadline > request.time;
+&& get(staffAccessPath(request.resource.data.recipientUid)).data.employeeId == request.resource.data.employeeId;
 allow update: if isOwner()
 && request.resource.data.id == resource.data.id
 && request.resource.data.recipientUid == resource.data.recipientUid
+&& request.resource.data.cognitusId == resource.data.cognitusId
+&& request.resource.data.employeeId == resource.data.employeeId
 && request.resource.data.issuedByUid == resource.data.issuedByUid
 && request.resource.data.issuedAt == resource.data.issuedAt
 && request.resource.data.appealDeadline == resource.data.appealDeadline
-&& request.resource.data.status in ['active', 'amended', 'removed']
 && request.resource.data.appealStatus == 'decided'
-&& request.resource.data.updatedAt == request.time;
+&& request.resource.data.updatedAt == request.time
+&& existsAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid))
+&& getAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid)).data.status == 'decided'
+&& getAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid)).data.reviewedByUid == request.auth.uid
+&& (
+(getAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid)).data.decision == 'keep'
+&& request.resource.data.diff(resource.data).changedKeys().hasOnly(['appealStatus', 'updatedAt'])
+&& request.resource.data.status == resource.data.status)
+||
+(getAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid)).data.decision == 'amend'
+&& request.resource.data.diff(resource.data).changedKeys().hasOnly([
+'appealStatus', 'status', 'subject', 'details', 'correctiveAction',
+'amendedAt', 'amendedByUid', 'amendmentNote', 'updatedAt'
+])
+&& request.resource.data.status == 'amended'
+&& shortString(request.resource.data.subject, 120) && request.resource.data.subject.size() > 0
+&& shortString(request.resource.data.details, 4000) && request.resource.data.details.size() >= 20
+&& shortString(request.resource.data.correctiveAction, 2000)
+&& request.resource.data.amendedAt == request.time
+&& request.resource.data.amendedByUid == request.auth.uid
+&& shortString(request.resource.data.amendmentNote, 2000) && request.resource.data.amendmentNote.size() >= 10)
+||
+(getAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid)).data.decision == 'remove'
+&& request.resource.data.diff(resource.data).changedKeys().hasOnly([
+'appealStatus', 'status', 'removedAt', 'removedByUid', 'removalReason', 'updatedAt'
+])
+&& request.resource.data.status == 'removed'
+&& request.resource.data.removedAt == request.time
+&& request.resource.data.removedByUid == request.auth.uid
+&& shortString(request.resource.data.removalReason, 2000) && request.resource.data.removalReason.size() >= 10)
+);
 allow delete: if false;
 }
 match /staffDisciplineAppeals/{appealId} {
 allow read: if activeStaff()
 && (resource.data.recipientUid == request.auth.uid || isOwner());
 allow create: if activeStaff()
-&& request.resource.data.id == appealId
-&& request.resource.data.recipientUid == request.auth.uid
-&& request.resource.data.writeupId is string
-&& appealId == request.resource.data.writeupId + '_' + request.auth.uid
-&& exists(/databases/$(database)/documents/staffDiscipline/$(request.resource.data.writeupId))
-&& get(/databases/$(database)/documents/staffDiscipline/$(request.resource.data.writeupId)).data.recipientUid == request.auth.uid
-&& get(/databases/$(database)/documents/staffDiscipline/$(request.resource.data.writeupId)).data.status != 'removed'
-&& get(/databases/$(database)/documents/staffDiscipline/$(request.resource.data.writeupId)).data.appealDeadline >= request.time
-&& request.resource.data.requestedResolution in ['keep', 'amend', 'remove']
-&& request.resource.data.status == 'pending'
-&& request.resource.data.reviewedAt == null
-&& request.resource.data.reviewedByUid == null
-&& request.resource.data.decision == null
-&& request.resource.data.decisionNotes == ''
-&& request.resource.data.submittedAt == request.time
-&& request.resource.data.updatedAt == request.time;
+&& validDisciplineAppealCreate(appealId, request.resource.data)
+&& exists(staffDisciplinePath(request.resource.data.writeupId))
+&& get(staffDisciplinePath(request.resource.data.writeupId)).data.recipientUid == request.auth.uid
+&& get(staffDisciplinePath(request.resource.data.writeupId)).data.status != 'removed'
+&& get(staffDisciplinePath(request.resource.data.writeupId)).data.appealStatus == 'eligible'
+&& get(staffDisciplinePath(request.resource.data.writeupId)).data.appealDeadline >= request.time;
 allow update: if isOwner()
 && request.resource.data.id == resource.data.id
 && request.resource.data.writeupId == resource.data.writeupId
@@ -2001,17 +2131,34 @@ allow update: if isOwner()
 && request.resource.data.statement == resource.data.statement
 && request.resource.data.requestedResolution == resource.data.requestedResolution
 && request.resource.data.submittedAt == resource.data.submittedAt
+&& request.resource.data.diff(resource.data).changedKeys().hasOnly([
+'status', 'decision', 'decisionNotes', 'reviewedAt', 'reviewedByUid', 'updatedAt'
+])
 && request.resource.data.status == 'decided'
 && request.resource.data.decision in ['keep', 'amend', 'remove']
+&& shortString(request.resource.data.decisionNotes, 2000)
+&& request.resource.data.decisionNotes.size() >= 10
 && request.resource.data.reviewedByUid == request.auth.uid
 && request.resource.data.reviewedAt == request.time
-&& request.resource.data.updatedAt == request.time;
+&& request.resource.data.updatedAt == request.time
+&& existsAfter(staffDisciplinePath(resource.data.writeupId))
+&& getAfter(staffDisciplinePath(resource.data.writeupId)).data.appealStatus == 'decided'
+&& (
+(request.resource.data.decision == 'keep'
+&& getAfter(staffDisciplinePath(resource.data.writeupId)).data.status == get(staffDisciplinePath(resource.data.writeupId)).data.status)
+|| (request.resource.data.decision == 'amend'
+&& getAfter(staffDisciplinePath(resource.data.writeupId)).data.status == 'amended')
+|| (request.resource.data.decision == 'remove'
+&& getAfter(staffDisciplinePath(resource.data.writeupId)).data.status == 'removed')
+);
 allow delete: if false;
 }
 match /staffDisciplineSessions/{uid} {
 allow read: if activeStaff() && uid == request.auth.uid;
 allow create, update: if activeStaff()
 && uid == request.auth.uid
+&& request.resource.data.keys().hasOnly(['uid', 'lastLoginAt', 'updatedAt'])
+&& request.resource.data.keys().hasAll(['uid', 'lastLoginAt', 'updatedAt'])
 && request.resource.data.uid == request.auth.uid
 && request.resource.data.lastLoginAt == request.time
 && request.resource.data.updatedAt == request.time;
@@ -2021,13 +2168,9 @@ match /staffInbox/{notificationId} {
 allow read: if activeStaff()
 && resource.data.recipientUid == request.auth.uid;
 allow create: if activeStaff()
-&& request.resource.data.id == notificationId
-&& request.resource.data.senderUid == request.auth.uid
+&& validStaffInboxCreate(notificationId, request.resource.data)
 && exists(staffAccessPath(request.resource.data.recipientUid))
-&& (request.resource.data.href == null || shortString(request.resource.data.href, 300))
-&& request.resource.data.readAt == null
-&& request.resource.data.createdAt == request.time
-&& request.resource.data.updatedAt == request.time;
+&& get(staffAccessPath(request.resource.data.recipientUid)).data.status in ['active', 'training', 'on_leave'];
 allow update: if activeStaff()
 && resource.data.recipientUid == request.auth.uid
 && request.resource.data.diff(resource.data).changedKeys().hasOnly(['readAt', 'updatedAt'])
@@ -3029,6 +3172,7 @@ allow update: if (commandOwner() || (staffPermission('system.manage') && resourc
 && request.resource.data.updatedAt == request.time;
 allow delete: if false;
 }
+// FINAL DEFAULT-DENY BOUNDARY
 match /{document=**} {
 allow read, write: if false;
 }
