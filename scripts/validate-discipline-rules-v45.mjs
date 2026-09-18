@@ -14,6 +14,9 @@ requireText("existsAfter(staffDisciplineAppealPath(writeupId, resource.data.reci
 requireText("existsAfter(staffDisciplinePath(resource.data.writeupId))", "atomic appeal decision check");
 requireText("request.resource.data.diff(resource.data).changedKeys().hasOnly([", "field-level mutation restriction");
 requireText("value.href.matches('^#/[A-Za-z0-9_/?=&.%+-]*$')", "internal-only inbox link restriction");
+requireText("function canTerminateStaff(uid)", "Owner-only staff termination authorization");
+requireText("getAfter(staffDirectoryPath(uid)).data.status == 'former'", "preserved former-staff directory record");
+requireText("getAfter(staffEmploymentPath(uid)).data.employmentStatus == 'former'", "preserved former-staff employment record");
 requireText("match /{document=**}", "default-deny boundary");
 
 console.log("Discipline and staff inbox rules validation passed.");

@@ -1949,6 +1949,11 @@ return commandOwner()
 || staffPermission('staff.private.read')
 || staffPermission('hr.records.read');
 }
+function canTerminateStaff(uid) {
+return isOwner()
+&& uid != request.auth.uid
+&& resource.data.rank != 'owner';
+}
 function safeDelegatedStaffProvisionG1(value) {
 return staffPermission('staff.provision')
 && value.rank != 'owner'
@@ -1980,9 +1985,17 @@ allow update: if canManageStaffDirectoryG1()
 && request.resource.data.employeeId == resource.data.employeeId
 && request.resource.data.createdAt == resource.data.createdAt
 && request.resource.data.updatedAt == request.time
+&& (
+(existsAfter(staffAccessPath(uid))
 && getAfter(staffAccessPath(uid)).data.departmentId == request.resource.data.departmentId
 && getAfter(staffAccessPath(uid)).data.rank == request.resource.data.rank
-&& getAfter(staffAccessPath(uid)).data.status == request.resource.data.status;
+&& getAfter(staffAccessPath(uid)).data.status == request.resource.data.status)
+||
+(isOwner()
+&& !existsAfter(staffAccessPath(uid))
+&& request.resource.data.diff(resource.data).changedKeys().hasOnly(['status', 'updatedAt'])
+&& request.resource.data.status == 'former')
+);
 allow delete: if false;
 }
 match /staffAccess/{uid} {
@@ -2042,7 +2055,11 @@ request.resource.data.rank == 'owner'
 && 'system.manage' in request.resource.data.permissions
 )
 );
-allow delete: if false;
+allow delete: if canTerminateStaff(uid)
+&& existsAfter(staffDirectoryPath(uid))
+&& getAfter(staffDirectoryPath(uid)).data.status == 'former'
+&& existsAfter(staffEmploymentPath(uid))
+&& getAfter(staffEmploymentPath(uid)).data.employmentStatus == 'former';
 }
 match /staffEmployment/{uid} {
 allow read: if activeStaff()
