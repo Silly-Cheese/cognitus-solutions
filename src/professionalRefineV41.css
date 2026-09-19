@@ -488,6 +488,602 @@ html.cognitus-refined-v41 body.cognitus-professional .frenzy35-activation-card p
   color: #d5dbe4 !important;
 }
 
+/* Promotional workspace overhaul V42
+   This is the final cascade layer for every promotional route. */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root {
+  --px-ink: #0b1220;
+  --px-copy: #465469;
+  --px-muted: #5f6e82;
+  --px-line: #d8e0eb;
+  --px-soft: #f5f7fa;
+  --px-blue: #3157d5;
+  --px-blue-dark: #203ea8;
+  --px-green: #17683a;
+  --px-red: #9b2f3e;
+  --px-shadow: 0 18px 45px rgba(15, 23, 42, .08);
+  --px-shadow-soft: 0 8px 24px rgba(15, 23, 42, .055);
+}
+
+/* All promotional heroes now have one deliberate identity. */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-access-hero,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-hero,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-hero {
+  isolation: isolate;
+  min-height: 260px !important;
+  display: flex !important;
+  justify-content: center !important;
+  padding: clamp(2rem, 5vw, 3.75rem) !important;
+  border: 1px solid #263653 !important;
+  border-radius: 22px !important;
+  background: linear-gradient(128deg, #080d18 0%, #111c31 58%, #1c3260 100%) !important;
+  color: #fff !important;
+  box-shadow: 0 24px 60px rgba(8, 13, 24, .2) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-access-hero::before,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-hero::before,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-hero::before {
+  background: linear-gradient(rgba(255,255,255,.038) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.038) 1px, transparent 1px) !important;
+  background-size: 42px 42px !important;
+  opacity: .72 !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-access-hero h1,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-hero h1,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-hero h1 {
+  max-width: 15ch !important;
+  margin: .25rem 0 .8rem !important;
+  color: #fff !important;
+  font-size: clamp(2.65rem, 6vw, 4.75rem) !important;
+  line-height: .98 !important;
+  letter-spacing: -.055em !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-access-hero p,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-hero p,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-hero p {
+  max-width: 68ch !important;
+  color: #cbd5e1 !important;
+  font-size: clamp(.94rem, 1.5vw, 1.08rem) !important;
+  line-height: 1.65 !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-access-hero .eyebrow,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-hero .eyebrow,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-hero .eyebrow,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo28-backlink,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo28-console-label {
+  color: #bdcaff !important;
+}
+
+/* Compact command bar and professional tool shell. */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-command-strip {
+  min-height: 58px !important;
+  margin: .75rem 0 1rem !important;
+  padding: .7rem .8rem !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 13px !important;
+  background: #fff !important;
+  box-shadow: var(--px-shadow-soft) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-command-brand strong {
+  color: var(--px-ink) !important;
+  font-size: 1rem !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-command-brand span,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-command-signals span {
+  color: var(--px-muted) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-command-actions a {
+  color: #334155 !important;
+  border-radius: 8px !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-command-actions a:hover {
+  background: #edf1f7 !important;
+  color: var(--px-blue-dark) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-tool-stage {
+  overflow: hidden !important;
+  padding: 0 !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  box-shadow: var(--px-shadow) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-stage-head {
+  min-height: 118px !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  padding: 1.45rem 1.55rem 1.25rem !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--px-line) !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-stage-head h2 {
+  color: var(--px-ink) !important;
+  font-size: clamp(1.55rem, 3vw, 2.25rem) !important;
+  line-height: 1.04 !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-stage-head p {
+  color: var(--px-copy) !important;
+  line-height: 1.58 !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-stage-status {
+  border-color: #acd4ba !important;
+  background: #ecf8f0 !important;
+  color: var(--px-green) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-tool-stage > .promo30-primary-control {
+  margin: 0 !important;
+  padding: 1rem 1.25rem !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--px-line) !important;
+  border-radius: 0 !important;
+  background: var(--px-soft) !important;
+  box-shadow: none !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-tool-stage > .promo30-result-stage {
+  min-height: 220px !important;
+  margin: 0 !important;
+  padding: 1.25rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+/* Forms read as one control bar, not scattered boxes. */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-searchbar,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-filter-console {
+  gap: .75rem !important;
+  padding: 1rem !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 13px !important;
+  background: var(--px-soft) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root input,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root select,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root textarea {
+  min-height: 44px !important;
+  border-color: #b8c3d2 !important;
+  border-radius: 9px !important;
+  background: #fff !important;
+  color: var(--px-ink) !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root textarea {
+  min-height: 108px !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .button {
+  min-height: 42px !important;
+  border-radius: 9px !important;
+  font-weight: 800 !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .button-dark {
+  border-color: var(--px-ink) !important;
+  background: var(--px-ink) !important;
+  color: #fff !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .button-dark:hover {
+  border-color: var(--px-blue-dark) !important;
+  background: var(--px-blue-dark) !important;
+}
+
+/* Empty and loaded results use the same restrained surface. */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-empty-state {
+  min-height: 230px !important;
+  border: 1px dashed #c8d2df !important;
+  border-radius: 14px !important;
+  background: #f8fafc !important;
+  color: var(--px-ink) !important;
+  box-shadow: none !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-empty-state p {
+  color: var(--px-muted) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-empty-visual span {
+  border-color: #cbd5e1 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 7px 18px rgba(15, 23, 42, .07) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-record-grid,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-discovery-results,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-labs-grid {
+  gap: .8rem !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-record-card,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-record-card {
+  min-height: 170px !important;
+  padding: 1rem !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  color: var(--px-ink) !important;
+  box-shadow: var(--px-shadow-soft) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-record-card::before,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-record-card::before {
+  width: 3px !important;
+  background: var(--px-blue) !important;
+  opacity: 1 !important;
+}
+
+/* Intelligence Center: clean case-file layout. */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root[data-promo30-feature="intelligence_center"] .promo30-tool-stage {
+  background: #fff !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root[data-promo30-feature="intelligence_center"] .promo30-stage-head,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root[data-promo30-feature="intelligence_center"] .promo30-primary-control {
+  border-color: var(--px-line) !important;
+  background: #fff !important;
+  color: var(--px-ink) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root[data-promo30-feature="intelligence_center"] .promo30-primary-control {
+  background: var(--px-soft) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root[data-promo30-feature="intelligence_center"] .promo30-stage-head p,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root[data-promo30-feature="intelligence_center"] .promo30-primary-control label {
+  color: var(--px-copy) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-subject-dossier {
+  padding: 1.5rem !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 15px !important;
+  background: linear-gradient(135deg, #fff, #f5f8fc) !important;
+  box-shadow: none !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-subject-dossier::after {
+  color: #e5eaf1 !important;
+  font-size: clamp(1.8rem, 5vw, 4rem) !important;
+}
+
+/* Relationship map and network explorer retain a visualization canvas. */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-graph-canvas,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-network-result {
+  border: 1px solid #2b3a51 !important;
+  border-radius: 14px !important;
+  background: radial-gradient(circle at center, #20314d 0%, #111b2d 50%, #080e19 100%) !important;
+  color: #fff !important;
+  box-shadow: inset 0 1px rgba(255,255,255,.06) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-graph-canvas {
+  min-height: 540px !important;
+  border-radius: 0 !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-graph-canvas .promo26-network-node {
+  border-color: rgba(255,255,255,.2) !important;
+  border-radius: 11px !important;
+  background: rgba(255,255,255,.11) !important;
+  color: #fff !important;
+}
+
+/* Deep history */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-history-stream {
+  max-width: 960px !important;
+  padding-left: 2.7rem !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-history-stream article {
+  min-height: 0 !important;
+  padding: 1rem 1.15rem !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  box-shadow: var(--px-shadow-soft) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-history-stream article::before {
+  width: 14px !important;
+  height: 14px !important;
+  left: -2.05rem !important;
+  border: 4px solid #fff !important;
+  background: var(--px-blue) !important;
+  box-shadow: 0 0 0 1px #aeb9c8 !important;
+}
+
+/* Search and comparison */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-results-summary,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-compare-note {
+  padding: .8rem 1.1rem !important;
+  border-color: var(--px-line) !important;
+  background: #f8fafc !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-comparison-board {
+  padding: 1rem !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-comparison-board > .promo26-compare-head {
+  border-radius: 10px !important;
+  background: var(--px-ink) !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-comparison-board .is-different {
+  background: #fff2ce !important;
+  color: #6c4710 !important;
+}
+
+/* Saved workspaces: practical split pane rather than a dark poster. */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-saved-workspace {
+  grid-template-columns: minmax(300px, .7fr) minmax(0, 1.3fr) !important;
+  gap: 1rem !important;
+  align-items: start !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-workspace-composer,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-workspace-vault {
+  margin-top: 0 !important;
+  padding: 1.25rem !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 15px !important;
+  background: #fff !important;
+  color: var(--px-ink) !important;
+  box-shadow: var(--px-shadow-soft) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-workspace-composer {
+  top: 88px !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-workspace-composer label,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-workspace-composer .eyebrow {
+  color: var(--px-copy) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-vault-card {
+  padding: 1rem !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 11px !important;
+  background: #f9fbfd !important;
+  box-shadow: none !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-vault-card::before {
+  background: var(--px-blue) !important;
+}
+
+/* Reports */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root[data-promo30-feature="intelligence_reports"] .promo30-result-stage {
+  background: #e9edf3 !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-report-toolbar {
+  border-color: var(--px-line) !important;
+  border-radius: 11px !important;
+  background: rgba(255,255,255,.96) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-report-document {
+  max-width: 900px !important;
+  padding: clamp(1.5rem, 5vw, 3.5rem) !important;
+  border: 1px solid #cbd4e0 !important;
+  border-radius: 4px !important;
+  background: #fff !important;
+  box-shadow: 0 24px 60px rgba(15,23,42,.16) !important;
+}
+
+/* Labs and profile studio */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-labs-deck {
+  padding: 0 !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 20px !important;
+  background: #fff !important;
+  color: var(--px-ink) !important;
+  box-shadow: var(--px-shadow) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-labs-deck .promo30-stage-head {
+  margin: 0 !important;
+  background: #fff !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-lab-card {
+  min-height: 220px !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 12px !important;
+  background: #f8fafc !important;
+  color: var(--px-ink) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-lab-card h3 {
+  color: var(--px-ink) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-lab-card p {
+  color: var(--px-copy) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-profile-controls {
+  margin-top: 0 !important;
+  background: #fff !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-profile-card-preview {
+  min-height: 420px !important;
+  margin-top: 0 !important;
+  border: 1px solid #2a3b58 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(140deg, #0b1322, #1c3155) !important;
+  color: #fff !important;
+  box-shadow: 0 20px 50px rgba(8,13,24,.2) !important;
+}
+
+/* Analytics and release board */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-analytics-detail > .promo26-feature-section {
+  margin-top: 0 !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-analytics-bars i,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo33-chart-row i {
+  background: linear-gradient(90deg, var(--px-blue-dark), #6280e8) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-release-board {
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-release-track > article::before {
+  background: var(--px-blue) !important;
+}
+
+/* Risk matrix, organization overlap and archive extensions. */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo33-metric {
+  min-height: 120px !important;
+  padding: 1rem !important;
+  border: 1px solid #263754 !important;
+  border-radius: 13px !important;
+  background: linear-gradient(145deg, #0b1322, #1a2943) !important;
+  color: #fff !important;
+  box-shadow: var(--px-shadow-soft) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo33-metric strong {
+  color: #fff !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo33-metric span {
+  color: #bec9d9 !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo33-overlap-person,
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo32-report-card {
+  padding: 1rem !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 12px !important;
+  background: #fff !important;
+  color: var(--px-ink) !important;
+  box-shadow: var(--px-shadow-soft) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo32-archive {
+  padding: clamp(1.25rem, 3vw, 2rem) !important;
+  border: 1px solid #2c3d59 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(145deg, #0a111e, #192944) !important;
+  color: #fff !important;
+  box-shadow: var(--px-shadow) !important;
+}
+
+/* Promotional catalog cards retain the compact redesign. */
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-card {
+  min-height: 260px !important;
+  padding: 1.15rem !important;
+  border: 1px solid var(--px-line) !important;
+  border-radius: 14px !important;
+  background: #fff !important;
+  box-shadow: none !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-card.is-unlocked {
+  border-color: #b5d7c0 !important;
+  background: linear-gradient(180deg, #fff, #f7fcf8) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: #aeb9c8 !important;
+  box-shadow: 0 16px 36px rgba(15,23,42,.1) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-card h3 {
+  color: var(--px-ink) !important;
+}
+
+html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-card p {
+  color: var(--px-copy) !important;
+}
+
+@media (max-width: 1000px) {
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-saved-workspace {
+    grid-template-columns: 1fr !important;
+  }
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-workspace-composer {
+    position: relative !important;
+    top: auto !important;
+  }
+}
+
+@media (max-width: 720px) {
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-access-hero,
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-hero,
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-hero {
+    min-height: 0 !important;
+    padding: 1.6rem 1.25rem !important;
+    border-radius: 16px !important;
+  }
+
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-access-hero h1,
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-admin-hero h1,
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo26-feature-hero h1 {
+    font-size: clamp(2.25rem, 12vw, 3.3rem) !important;
+  }
+
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-command-strip {
+    grid-template-columns: 1fr !important;
+  }
+
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-command-actions {
+    justify-content: flex-start !important;
+  }
+
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-stage-head {
+    min-height: 0 !important;
+    display: grid !important;
+    padding: 1.1rem !important;
+  }
+
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-tool-stage > .promo30-primary-control,
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-tool-stage > .promo30-result-stage {
+    padding: .85rem !important;
+  }
+
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-discovery-results,
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-labs-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  html.cognitus-refined-v41.promo33-active body.cognitus-professional #page-root .promo30-graph-canvas {
+    min-height: 480px !important;
+  }
+}
+
 /* Focus is visible without turning every control into a dark block. */
 html.cognitus-refined-v41 body.cognitus-professional :focus-visible {
   outline: 3px solid rgba(37, 99, 235, .62) !important;
