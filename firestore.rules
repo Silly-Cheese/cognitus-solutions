@@ -1772,18 +1772,13 @@ return value is list
 ]);
 }
 function validStaffDirectoryDocument(uid, value) {
-return value is map
-&& value.uid == uid
-&& validStaffEmployeeId(value.employeeId)
+return value.uid == uid
 && validStaffDepartment(value.departmentId)
 && validStaffRank(value.rank)
-&& validStaffStatus(value.status)
-&& value.updatedAt is timestamp;
+&& validStaffStatus(value.status);
 }
 function validStaffAccessDocument(uid, value) {
-return value is map
-&& value.uid == uid
-&& validStaffEmployeeId(value.employeeId)
+return value.uid == uid
 && validStaffDepartment(value.departmentId)
 && validStaffRank(value.rank)
 && value.accessLevel == staffRankLevel(value.rank)
@@ -1796,29 +1791,14 @@ value.rank != 'co-owner'
 value.departmentId == 'executive-office'
 && value.accessLevel == 100
 && value.permissions.hasAll([
-'portal.access', 'directory.read', 'profile.read', 'accounts.read.all',
-'department.read', 'department.manage', 'staff.provision', 'staff.manage',
-'staff.private.read', 'permissions.manage', 'tickets.read', 'tickets.manage',
-'tickets.all.read', 'cs.manage', 'pr.manage', 'pr.approve', 'finance.read',
-'finance.manage', 'payroll.read', 'payroll.manage', 'payroll.approve',
-'hr.records.read', 'hr.records.manage', 'internalAffairs.read',
-'internalAffairs.manage', 'qa.read', 'qa.manage', 'qa.audit', 'reports.review',
-'claims.review', 'appeals.review', 'verification.review', 'organizations.review',
-'cases.read', 'cases.manage', 'evidence.read', 'evidence.manage',
-'accreditation.manage', 'escalations.manage', 'incidents.manage', 'audit.read',
-'system.manage'
+'portal.access', 'permissions.manage', 'accounts.read.all', 'system.manage'
 ])
 )
-)
-&& value.updatedAt is timestamp;
+);
 }
 function validStaffEmploymentDocument(uid, value) {
-return value is map
-&& value.uid == uid
-&& validStaffEmployeeId(value.employeeId)
-&& validStaffStatus(value.employmentStatus)
-&& (value.managerUid == null || value.managerUid is string)
-&& value.updatedAt is timestamp;
+return value.uid == uid
+&& validStaffStatus(value.employmentStatus);
 }
 function staffDisciplinePath(writeupId) {
 return /databases/$(database)/documents/staffDiscipline/$(writeupId);
@@ -2001,8 +1981,8 @@ allow delete: if canTerminateStaff(uid)
 && getAfter(staffEmploymentPath(uid)).data.employmentStatus == 'former';
 }
 match /staffEmployment/{uid} {
-allow read: if activeStaff()
-&& (uid == request.auth.uid || canReadPrivateStaffG1());
+allow read: if (signedIn() && uid == request.auth.uid)
+|| (activeStaff() && canReadPrivateStaffG1());
 allow create: if canProvisionStaffG1()
 && validStaffEmploymentDocument(uid, request.resource.data)
 && request.resource.data.createdAt == request.time
@@ -2017,32 +1997,11 @@ allow update: if (commandOwner() || staffPermission('hr.records.manage'))
 && request.resource.data.uid == resource.data.uid
 && request.resource.data.employeeId == resource.data.employeeId
 && request.resource.data.createdAt == resource.data.createdAt
+&& (!request.resource.data.diff(resource.data).changedKeys().hasAny([
+'terminationReason', 'terminatedByUid', 'terminatedAt'
+]) || isOwner())
 && request.resource.data.updatedAt == request.time;
 allow delete: if false;
-}
-match /staffTerminations/{uid} {
-allow read: if signedIn() && (request.auth.uid == uid || isOwner());
-allow create: if isOwner()
-&& uid != request.auth.uid
-&& request.resource.data.keys().hasOnly([
-'uid', 'employeeId', 'reason', 'terminatedByUid', 'terminatedAt', 'createdAt'
-])
-&& request.resource.data.uid == uid
-&& request.resource.data.employeeId is string
-&& request.resource.data.employeeId.size() > 0
-&& request.resource.data.employeeId.size() <= 40
-&& request.resource.data.reason is string
-&& request.resource.data.reason.size() >= 10
-&& request.resource.data.reason.size() <= 500
-&& request.resource.data.terminatedByUid == request.auth.uid
-&& request.resource.data.terminatedAt == request.time
-&& request.resource.data.createdAt == request.time
-&& !existsAfter(staffAccessPath(uid))
-&& existsAfter(staffDirectoryPath(uid))
-&& getAfter(staffDirectoryPath(uid)).data.status == 'former'
-&& existsAfter(staffEmploymentPath(uid))
-&& getAfter(staffEmploymentPath(uid)).data.employmentStatus == 'former';
-allow update, delete: if false;
 }
 match /staffDiscipline/{writeupId} {
 allow read: if activeStaff()
