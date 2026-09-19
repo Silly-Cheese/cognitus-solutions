@@ -14,7 +14,7 @@ function createLink(className, withText = false) {
   link.rel = "noopener noreferrer";
   link.title = "Join the Cognitus Discord";
   link.setAttribute("aria-label", "Join the Cognitus Discord (opens in a new tab)");
-  link.innerHTML = `${discordIcon}${withText ? "<span>Join Discord</span>" : ""}`;
+  link.innerHTML = `${discordIcon}${withText ? "<span>Join the Server!</span>" : ""}`;
   return link;
 }
 
@@ -26,11 +26,13 @@ function mountStyles() {
     .${LINK_CLASS} { color: inherit; text-decoration: none; }
     .${LINK_CLASS} svg { width: 20px; height: 20px; display: block; fill: currentColor; }
     .topnav > .${LINK_CLASS}.discord-nav-public {
-      display: inline-grid; place-items: center; width: 42px; height: 42px; padding: 0;
+      display: inline-flex; align-items: center; gap: .5rem; width: auto; height: 42px; padding: 0 .8rem;
       border: 1px solid #d5dbe4; border-radius: 12px; background: #fff; color: #5865f2;
     }
+    .topnav > .${LINK_CLASS}.discord-nav-public span { white-space: nowrap; font-size: .8rem; font-weight: 850; }
     .topnav > .${LINK_CLASS}.discord-nav-public:hover { background: #eef0ff; border-color: #aeb5fa; color: #4752c4; }
-    .nav20-shell .${LINK_CLASS}.discord-nav-desktop { color: #5865f2 !important; }
+    .nav20-shell .${LINK_CLASS}.discord-nav-desktop { width: auto; padding: 0 .65rem; gap: .45rem; color: #5865f2 !important; }
+    .nav20-shell .${LINK_CLASS}.discord-nav-desktop span { white-space: nowrap; font-size: .72rem; font-weight: 850; }
     .nav20-shell .${LINK_CLASS}.discord-nav-desktop:hover { background: #eef0ff !important; color: #4752c4 !important; }
     .nav25-utilities .${LINK_CLASS}.discord-nav-mobile {
       display: flex; align-items: center; gap: .65rem; color: #4752c4 !important;
@@ -51,7 +53,7 @@ function syncPublicNavigation() {
     return;
   }
   if (nav.querySelector(`:scope > .${LINK_CLASS}.discord-nav-public`)) return;
-  const link = createLink("discord-nav-public");
+  const link = createLink("discord-nav-public", true);
   const register = nav.querySelector(':scope > a[href="#/register"]');
   if (register) nav.insertBefore(link, register);
   else nav.appendChild(link);
@@ -60,7 +62,7 @@ function syncPublicNavigation() {
 function syncDesktopNavigation() {
   const shell = document.querySelector(".nav20-shell");
   if (!shell || shell.querySelector(`.${LINK_CLASS}.discord-nav-desktop`)) return;
-  const link = createLink("nav20-icon-button discord-nav-desktop");
+  const link = createLink("nav20-icon-button discord-nav-desktop", true);
   const settings = shell.querySelector("[data-nav20-settings]");
   if (settings) shell.insertBefore(link, settings);
   else shell.appendChild(link);
