@@ -11,7 +11,7 @@ function mountStyles() {
     link.id = STYLE_ID;
     link.rel = "stylesheet";
   }
-  link.href = "./src/professionalRefineV41.css?v=20260905-v41";
+  link.href = "./src/professionalRefineV41.css?v=20260919-v42-promo-overhaul";
   document.head.appendChild(link);
 }
 
