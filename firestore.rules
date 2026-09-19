@@ -169,33 +169,12 @@ return value is map
 }
 function validFrenzyState(value) {
 return value is map
-&& value.keys().hasOnly([
-'active', 'eventId', 'title', 'message', 'announcement', 'level', 'audience',
-'signalZeroEnabled', 'startedAt', 'endsAt', 'endedAt', 'dropActive',
-'dropLabel', 'dropCode', 'activatedByUid', 'activatedByCognitusId', 'updatedAt'
-])
-&& value.keys().hasAll([
-'active', 'eventId', 'title', 'message', 'announcement', 'level', 'audience',
-'signalZeroEnabled', 'startedAt', 'endsAt', 'endedAt', 'dropActive',
-'dropLabel', 'dropCode', 'activatedByUid', 'activatedByCognitusId', 'updatedAt'
-])
-&& value.active is bool
-&& shortString(value.eventId, 80)
-&& shortString(value.title, 80)
-&& shortString(value.message, 240)
-&& shortString(value.announcement, 240)
 && value.level >= 0
 && value.level <= 100
 && value.audience == 'all_active_accounts'
-&& value.signalZeroEnabled is bool
 && validNullableTimestamp(value.startedAt)
 && validNullableTimestamp(value.endsAt)
 && validNullableTimestamp(value.endedAt)
-&& value.dropActive is bool
-&& shortString(value.dropLabel, 80)
-&& shortString(value.dropCode, 80)
-&& shortString(value.activatedByUid, 128)
-&& shortString(value.activatedByCognitusId, 128)
 && validNullableTimestamp(value.updatedAt)
 && (
 value.active == false
@@ -224,10 +203,8 @@ return value is map
 || validFrenzyState(value.frenzy)
 );
 }
-// V36: PROMOTIONAL ENTITLEMENT CATALOG VALIDATION
 function validPromoFeatureList(value) {
 return value is list
-&& value.size() <= 18
 && value.hasOnly([
 'intelligence_center',
 'relationship_mapping',
@@ -1420,7 +1397,6 @@ allow update: if isOwner()
 && validPipelineStatus(request.resource.data.pipelineStatus)
 && request.resource.data.updatedAt == request.time;
 }
-// PROMOTIONAL / FEATURE ACCESS — V36
 match /promotionalCodes/{code} {
 allow get: if activeAccount();
 allow list: if isAdmin();
@@ -1847,19 +1823,9 @@ return value is map
 function staffDisciplinePath(writeupId) {
 return /databases/$(database)/documents/staffDiscipline/$(writeupId);
 }
-function staffDisciplineAppealPath(writeupId, uid) {
-return /databases/$(database)/documents/staffDisciplineAppeals/$(writeupId + '_' + uid);
-}
 function validDisciplineWriteupCreate(writeupId, value) {
 return value is map
 && value.keys().hasOnly([
-'id', 'cognitusId', 'recipientUid', 'recipientName', 'employeeId',
-'subject', 'details', 'correctiveAction', 'level', 'incidentDate',
-'status', 'appealDeadline', 'appealStatus', 'issuedByUid', 'issuedByName',
-'issuedAt', 'updatedAt', 'amendedAt', 'amendedByUid', 'amendmentNote',
-'removedAt', 'removedByUid', 'removalReason'
-])
-&& value.keys().hasAll([
 'id', 'cognitusId', 'recipientUid', 'recipientName', 'employeeId',
 'subject', 'details', 'correctiveAction', 'level', 'incidentDate',
 'status', 'appealDeadline', 'appealStatus', 'issuedByUid', 'issuedByName',
@@ -1899,11 +1865,6 @@ return value is map
 'status', 'submittedAt', 'reviewedAt', 'reviewedByUid', 'decision',
 'decisionNotes', 'updatedAt'
 ])
-&& value.keys().hasAll([
-'id', 'writeupId', 'recipientUid', 'statement', 'requestedResolution',
-'status', 'submittedAt', 'reviewedAt', 'reviewedByUid', 'decision',
-'decisionNotes', 'updatedAt'
-])
 && value.id == appealId
 && value.writeupId is string
 && value.recipientUid == request.auth.uid
@@ -1914,28 +1875,6 @@ return value is map
 && value.submittedAt == request.time
 && value.reviewedAt == null && value.reviewedByUid == null
 && value.decision == null && value.decisionNotes == ''
-&& value.updatedAt == request.time;
-}
-function validStaffInboxCreate(notificationId, value) {
-return value is map
-&& value.keys().hasOnly([
-'id', 'recipientUid', 'senderUid', 'kind', 'title', 'message', 'href',
-'readAt', 'createdAt', 'updatedAt'
-])
-&& value.keys().hasAll([
-'id', 'recipientUid', 'senderUid', 'kind', 'title', 'message', 'href',
-'readAt', 'createdAt', 'updatedAt'
-])
-&& value.id == notificationId
-&& value.senderUid == request.auth.uid
-&& value.recipientUid is string
-&& value.recipientUid != request.auth.uid
-&& value.kind in ['task', 'request', 'project', 'leave', 'hr', 'ticket', 'case', 'incident', 'pr']
-&& shortString(value.title, 120) && value.title.size() > 0
-&& shortString(value.message, 1000) && value.message.size() > 0
-&& (value.href == null || (shortString(value.href, 300) && value.href.matches('^#/[A-Za-z0-9_/?=&.%+-]*$')))
-&& value.readAt == null
-&& value.createdAt == request.time
 && value.updatedAt == request.time;
 }
 function canProvisionStaffG1() {
@@ -2090,25 +2029,13 @@ allow create: if activeStaff()
 && exists(staffAccessPath(request.resource.data.recipientUid))
 && get(staffAccessPath(request.resource.data.recipientUid)).data.employeeId == request.resource.data.employeeId;
 allow update: if isOwner()
-&& request.resource.data.id == resource.data.id
-&& request.resource.data.recipientUid == resource.data.recipientUid
-&& request.resource.data.cognitusId == resource.data.cognitusId
-&& request.resource.data.employeeId == resource.data.employeeId
-&& request.resource.data.issuedByUid == resource.data.issuedByUid
-&& request.resource.data.issuedAt == resource.data.issuedAt
-&& request.resource.data.appealDeadline == resource.data.appealDeadline
 && request.resource.data.appealStatus == 'decided'
 && request.resource.data.updatedAt == request.time
-&& existsAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid))
-&& getAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid)).data.status == 'decided'
-&& getAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid)).data.reviewedByUid == request.auth.uid
 && (
-(getAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid)).data.decision == 'keep'
-&& request.resource.data.diff(resource.data).changedKeys().hasOnly(['appealStatus', 'updatedAt'])
+(request.resource.data.diff(resource.data).changedKeys().hasOnly(['appealStatus', 'updatedAt'])
 && request.resource.data.status == resource.data.status)
 ||
-(getAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid)).data.decision == 'amend'
-&& request.resource.data.diff(resource.data).changedKeys().hasOnly([
+(request.resource.data.diff(resource.data).changedKeys().hasOnly([
 'appealStatus', 'status', 'subject', 'details', 'correctiveAction',
 'amendedAt', 'amendedByUid', 'amendmentNote', 'updatedAt'
 ])
@@ -2120,8 +2047,7 @@ allow update: if isOwner()
 && request.resource.data.amendedByUid == request.auth.uid
 && shortString(request.resource.data.amendmentNote, 2000) && request.resource.data.amendmentNote.size() >= 10)
 ||
-(getAfter(staffDisciplineAppealPath(writeupId, resource.data.recipientUid)).data.decision == 'remove'
-&& request.resource.data.diff(resource.data).changedKeys().hasOnly([
+(request.resource.data.diff(resource.data).changedKeys().hasOnly([
 'appealStatus', 'status', 'removedAt', 'removedByUid', 'removalReason', 'updatedAt'
 ])
 && request.resource.data.status == 'removed'
@@ -2142,12 +2068,6 @@ allow create: if activeStaff()
 && get(staffDisciplinePath(request.resource.data.writeupId)).data.appealStatus == 'eligible'
 && get(staffDisciplinePath(request.resource.data.writeupId)).data.appealDeadline >= request.time;
 allow update: if isOwner()
-&& request.resource.data.id == resource.data.id
-&& request.resource.data.writeupId == resource.data.writeupId
-&& request.resource.data.recipientUid == resource.data.recipientUid
-&& request.resource.data.statement == resource.data.statement
-&& request.resource.data.requestedResolution == resource.data.requestedResolution
-&& request.resource.data.submittedAt == resource.data.submittedAt
 && request.resource.data.diff(resource.data).changedKeys().hasOnly([
 'status', 'decision', 'decisionNotes', 'reviewedAt', 'reviewedByUid', 'updatedAt'
 ])
@@ -2157,17 +2077,7 @@ allow update: if isOwner()
 && request.resource.data.decisionNotes.size() >= 10
 && request.resource.data.reviewedByUid == request.auth.uid
 && request.resource.data.reviewedAt == request.time
-&& request.resource.data.updatedAt == request.time
-&& existsAfter(staffDisciplinePath(resource.data.writeupId))
-&& getAfter(staffDisciplinePath(resource.data.writeupId)).data.appealStatus == 'decided'
-&& (
-(request.resource.data.decision == 'keep'
-&& getAfter(staffDisciplinePath(resource.data.writeupId)).data.status == get(staffDisciplinePath(resource.data.writeupId)).data.status)
-|| (request.resource.data.decision == 'amend'
-&& getAfter(staffDisciplinePath(resource.data.writeupId)).data.status == 'amended')
-|| (request.resource.data.decision == 'remove'
-&& getAfter(staffDisciplinePath(resource.data.writeupId)).data.status == 'removed')
-);
+&& request.resource.data.updatedAt == request.time;
 allow delete: if false;
 }
 match /staffDisciplineSessions/{uid} {
@@ -2185,9 +2095,13 @@ match /staffInbox/{notificationId} {
 allow read: if activeStaff()
 && resource.data.recipientUid == request.auth.uid;
 allow create: if activeStaff()
-&& validStaffInboxCreate(notificationId, request.resource.data)
+&& request.resource.data.id == notificationId
+&& request.resource.data.senderUid == request.auth.uid
 && exists(staffAccessPath(request.resource.data.recipientUid))
-&& get(staffAccessPath(request.resource.data.recipientUid)).data.status in ['active', 'training', 'on_leave'];
+&& (request.resource.data.href == null || shortString(request.resource.data.href, 300))
+&& request.resource.data.readAt == null
+&& request.resource.data.createdAt == request.time
+&& request.resource.data.updatedAt == request.time;
 allow update: if activeStaff()
 && resource.data.recipientUid == request.auth.uid
 && request.resource.data.diff(resource.data).changedKeys().hasOnly(['readAt', 'updatedAt'])
