@@ -3,6 +3,7 @@ import { FIREBASE_CDN_BASE, initializeFirebaseServices } from "./firebase/fireba
 const root = document.querySelector("#page-root");
 const nav = document.querySelector(".topnav");
 const BUILD = "secure-v2-no-composite-indexes-2026-08-12";
+const DISCORD_INVITE_URL = "https://discord.gg/VYZShtXfKp";
 
 let auth = null;
 let db = null;
@@ -286,14 +287,14 @@ function renderFooter() {
     footer.className = "site-footer";
     document.querySelector("#app")?.appendChild(footer);
   }
-  footer.innerHTML = `<span>© ${nowYear()} Cognitus Solutions</span><a href="#/terms">Terms</a><a href="#/privacy">Privacy</a><a href="#/about">About</a><span class="build">${safe(BUILD)}</span>`;
+  footer.innerHTML = `<span>© ${nowYear()} Cognitus Solutions</span><a href="#/terms">Terms</a><a href="#/privacy">Privacy</a><a href="#/about">About</a><a href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener noreferrer">Join our Discord</a><span class="build">${safe(BUILD)}</span>`;
 }
 
 function homePage() {
   setTitle("Home");
   root.innerHTML = `
     <section class="hero hero-home">
-      <div><p class="eyebrow">Employment intelligence, rebuilt</p><h1>Better records. Better decisions.</h1><p>Cognitus gives Roblox and Discord communities a structured place to run accountable checks, review submitted information, document decisions, and manage corrections.</p><div class="hero-actions">${userRecord ? buttonLink("#/dashboard", "Open Dashboard", true) + buttonLink("#/search", "Run a Check") : buttonLink("#/register", "Create Account", true) + buttonLink("#/login", "Login")}</div></div>
+      <div><p class="eyebrow">Employment intelligence, rebuilt</p><h1>Better records. Better decisions.</h1><p>Cognitus gives Roblox and Discord communities a structured place to run accountable checks, review submitted information, document decisions, and manage corrections.</p><div class="hero-actions">${userRecord ? buttonLink("#/dashboard", "Open Dashboard", true) + buttonLink("#/search", "Run a Check") : buttonLink("#/register", "Create Account", true) + buttonLink("#/login", "Login")}<a class="button button-light" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener noreferrer">Join Discord</a></div></div>
       <aside class="trust-card"><span class="trust-icon">CS</span><h2>Designed for accountability</h2><p>Every operational check requires a reason. Reviewed records are separated from self-declared identity information, and privileged actions are enforced by Firestore rules—not only by the interface.</p></aside>
     </section>
     <section class="feature-grid">
