@@ -5,7 +5,7 @@ function mount(){
   const link=document.createElement('link');
   link.id='cognitus-promotional-contrast-v33';
   link.rel='stylesheet';
-  link.href='./src/promotionalContrastV33.css?v=20260904-v33';
+  link.href='./src/promotionalContrastV33.css?v=20260919-v34';
   document.head.appendChild(link);
 }
 
