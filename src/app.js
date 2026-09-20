@@ -4,6 +4,8 @@ const root = document.querySelector("#page-root");
 const nav = document.querySelector(".topnav");
 const BUILD = "secure-v2-no-composite-indexes-2026-08-12";
 const DISCORD_INVITE_URL = "https://discord.gg/VYZShtXfKp";
+const COGNITUS_AUTH_BASE = "https://auth.cognitus-solutions.org";
+const COGNITUS_PORTAL_KEY = "main";
 
 let auth = null;
 let db = null;
@@ -49,6 +51,35 @@ function normalizeDiscordId(value) {
   return /^\d{15,25}$/.test(id) ? id : "";
 }
 function authEmail(discordId) { return `${normalizeDiscordId(discordId)}@cognitus.local`; }
+function discordOAuthUrl() {
+  return `${COGNITUS_AUTH_BASE}/discord/start?portal=${COGNITUS_PORTAL_KEY}`;
+}
+async function completeDiscordOAuthIfPresent() {
+  const params = new URLSearchParams(location.search);
+  if (params.get("cognitus_oauth") !== "1") return false;
+  try {
+    const response = await fetch(
+      `${COGNITUS_AUTH_BASE}/session/exchange?portal=${COGNITUS_PORTAL_KEY}`,
+      { credentials: "include", headers: { Accept: "application/json" } }
+    );
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.customToken) {
+      throw new Error(payload.error || "Discord sign-in could not be completed.");
+    }
+    await Auth.setPersistence(auth, Auth.browserLocalPersistence);
+    await Auth.signInWithCustomToken(auth, payload.customToken);
+    sessionStorage.removeItem("cognitusDiscordOAuthError");
+    history.replaceState(null, "", `${location.pathname}#/dashboard`);
+    return true;
+  } catch (error) {
+    sessionStorage.setItem(
+      "cognitusDiscordOAuthError",
+      error?.message || "Discord sign-in could not be completed."
+    );
+    history.replaceState(null, "", `${location.pathname}#/login`);
+    return false;
+  }
+}
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -331,7 +362,12 @@ function privacyPage() {
 function loginPage() {
   setTitle("Login");
   if (userRecord) return hero("Already signed in", `Welcome back, ${userRecord.displayName || "User"}.`, "Your Cognitus session is active.", buttonLink("#/dashboard", "Dashboard", true));
-  root.innerHTML = `<section class="form-card auth-card"><p class="eyebrow">Login</p><h1>Welcome back.</h1><p>Use the Discord ID attached to your Cognitus account and your password.</p><div id="auth-message" class="notice" hidden></div><form id="login-form" class="form-stack"><label>Discord ID<input name="discordId" inputmode="numeric" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><label class="checkbox-line"><input name="remember" type="checkbox" checked> Remember this device</label><button class="button button-dark" type="submit">Login</button><a href="#/account-recovery">Can't access your account?</a></form></section>`;
+  root.innerHTML = `<section class="form-card auth-card"><p class="eyebrow">Login</p><h1>Welcome back.</h1><p>Use Discord for verified sign-in, or use your existing Cognitus credentials.</p><div id="auth-message" class="notice" hidden></div><div class="form-stack"><a class="button button-dark" href="${safe(discordOAuthUrl())}">Continue with Discord</a><div class="notice">Discord sign-in verifies your Discord account, matches your existing Cognitus identity, and keeps your current account history and permissions.</div></div><form id="login-form" class="form-stack" style="margin-top:1rem"><label>Discord ID<input name="discordId" inputmode="numeric" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><label class="checkbox-line"><input name="remember" type="checkbox" checked> Remember this device</label><button class="button button-light" type="submit">Use Cognitus Password</button><a href="#/account-recovery">Can't access your account?</a></form></section>`;
+  const oauthError = sessionStorage.getItem("cognitusDiscordOAuthError");
+  if (oauthError) {
+    sessionStorage.removeItem("cognitusDiscordOAuthError");
+    showNotice(root.querySelector("#auth-message"), oauthError, "error");
+  }
   const form = root.querySelector("#login-form");
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -992,6 +1028,7 @@ window.addEventListener("hashchange", render);
 window.addEventListener("DOMContentLoaded", async () => {
   try {
     await loadFirebase();
+    await completeDiscordOAuthIfPresent();
     Auth.onAuthStateChanged(auth, async (user) => {
       authUser = user;
       authReady = true;
