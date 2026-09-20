@@ -362,112 +362,23 @@ function privacyPage() {
 function loginPage() {
   setTitle("Login");
   if (userRecord) return hero("Already signed in", `Welcome back, ${userRecord.displayName || "User"}.`, "Your Cognitus session is active.", buttonLink("#/dashboard", "Dashboard", true));
-  root.innerHTML = `<section class="form-card auth-card"><p class="eyebrow">Login</p><h1>Welcome back.</h1><p>Use Discord for verified sign-in, or use your existing Cognitus credentials.</p><div id="auth-message" class="notice" hidden></div><div class="form-stack"><a class="button button-dark" href="${safe(discordOAuthUrl())}">Continue with Discord</a><div class="notice">Discord sign-in verifies your Discord account, matches your existing Cognitus identity, and keeps your current account history and permissions.</div></div><form id="login-form" class="form-stack" style="margin-top:1rem"><label>Discord ID<input name="discordId" inputmode="numeric" autocomplete="username" required></label><label>Password<input name="password" type="password" autocomplete="current-password" required></label><label class="checkbox-line"><input name="remember" type="checkbox" checked> Remember this device</label><button class="button button-light" type="submit">Use Cognitus Password</button><a href="#/account-recovery">Can't access your account?</a></form></section>`;
+  root.innerHTML = `<section class="form-card auth-card"><p class="eyebrow">Discord Sign In</p><h1>Welcome back.</h1><p>Cognitus uses verified Discord authentication for sign-in. Password sign-in is no longer offered.</p><div id="auth-message" class="notice" hidden></div><div class="form-stack"><a class="button button-dark" href="${safe(discordOAuthUrl())}">Continue with Discord</a><div class="notice">Discord verifies your identity, matches the correct Cognitus account, and preserves your existing history, permissions, Staff access, and account data.</div><a href="#/register">Need a Cognitus account? Create one with Discord.</a></div></section>`;
   const oauthError = sessionStorage.getItem("cognitusDiscordOAuthError");
   if (oauthError) {
     sessionStorage.removeItem("cognitusDiscordOAuthError");
     showNotice(root.querySelector("#auth-message"), oauthError, "error");
   }
-  const form = root.querySelector("#login-form");
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const data = formObject(form);
-    const id = normalizeDiscordId(data.discordId);
-    const message = root.querySelector("#auth-message");
-    const button = form.querySelector("button[type=submit]");
-    if (!id) return showNotice(message, "Enter a valid Discord ID.", "error");
-    try {
-      setBusy(button, true, "Signing in…", "Login");
-      await Auth.setPersistence(auth, data.remember ? Auth.browserLocalPersistence : Auth.browserSessionPersistence);
-      await Auth.signInWithEmailAndPassword(auth, authEmail(id), data.password);
-      location.hash = "#/dashboard";
-    } catch (error) {
-      const friendly = ["auth/invalid-credential", "auth/user-not-found", "auth/wrong-password"].includes(error?.code)
-        ? "The Discord ID or password is incorrect."
-        : error?.code === "auth/network-request-failed" ? "Network error. Check your connection and try again." : "Login could not be completed.";
-      showNotice(message, friendly, "error");
-    } finally { setBusy(button, false, "Signing in…", "Login"); }
-  });
 }
+
 function registerPage() {
   setTitle("Create Account");
   if (userRecord) return hero("Account active", "You're already registered.", "Open your dashboard to continue.", buttonLink("#/dashboard", "Dashboard", true));
-  root.innerHTML = `<section class="form-card auth-card"><p class="eyebrow">Create Account</p><h1>Start with a self-declared identity.</h1><p>Cognitus does not independently verify Discord ownership during registration. Your identity remains marked self-declared until reviewed through an approved verification process.</p><div id="auth-message" class="notice" hidden></div><form id="register-form" class="form-stack"><label>Discord Username<input name="discordUsername" maxlength="64" autocomplete="nickname" required></label><label>Discord ID<input name="discordId" inputmode="numeric" autocomplete="username" required></label><label>Password<input name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label><label>Confirm Password<input name="confirmPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label><label class="checkbox-line"><input name="terms" type="checkbox" required> I agree to the Cognitus Terms and responsible-use rules.</label><button class="button button-dark" type="submit">Create Account</button></form></section>`;
-  const form = root.querySelector("#register-form");
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const data = formObject(form);
-    const discordId = normalizeDiscordId(data.discordId);
-    const username = clean(data.discordUsername).slice(0,64);
-    const message = root.querySelector("#auth-message");
-    const button = form.querySelector("button[type=submit]");
-    if (!discordId) return showNotice(message, "Enter a valid Discord ID.", "error");
-    if (clean(data.password).length < 8) return showNotice(message, "Password must be at least 8 characters.", "error");
-    if (data.password !== data.confirmPassword) return showNotice(message, "Passwords do not match.", "error");
-    let credential = null;
-    try {
-      setBusy(button, true, "Creating account…", "Create Account");
-      await Auth.setPersistence(auth, Auth.browserLocalPersistence);
-      credential = await Auth.createUserWithEmailAndPassword(auth, authEmail(discordId), data.password);
-      authUser = credential.user;
-      await Auth.updateProfile(credential.user, { displayName: username });
-      const now = Fire.serverTimestamp();
-      const user = {
-        uid: credential.user.uid,
-        cognitusId: createCognitusId("USR"),
-        profileId: credential.user.uid,
-        displayName: username,
-        discordUsername: username,
-        discordId,
-        role: "user",
-        status: "active",
-        accountType: "individual",
-        organizationId: null,
-        syntheticEmail: authEmail(discordId),
-        realEmailCollected: false,
-        identityVerified: false,
-        createdAt: now,
-        updatedAt: now,
-        lastLoginAt: now
-      };
-      const profile = {
-        id: credential.user.uid,
-        cognitusId: createCognitusId("PRF"),
-        linkedUserId: credential.user.uid,
-        type: "person",
-        displayName: username,
-        robloxUsernames: [],
-        robloxUsernamesNormalized: [],
-        discordUsernames: [username],
-        discordUsernamesNormalized: [lower(username)],
-        discordIds: [discordId],
-        knownAliases: [],
-        claimedByUid: credential.user.uid,
-        identityStatus: "self_declared",
-        identityConfidence: 0,
-        professionalStanding: "unreviewed",
-        riskLevel: "unreviewed",
-        reportCount: 0,
-        appealCount: 0,
-        createdAt: now,
-        updatedAt: now
-      };
-      const batch = Fire.writeBatch(db);
-      batch.set(Fire.doc(db, "users", credential.user.uid), user);
-      batch.set(Fire.doc(db, "profiles", credential.user.uid), profile);
-      await batch.commit();
-      location.hash = "#/dashboard";
-    } catch (error) {
-      if (credential?.user && !userRecord) {
-        try { await Auth.deleteUser(credential.user); } catch { /* best effort cleanup */ }
-      }
-      showNotice(message, error?.code === "auth/email-already-in-use" ? "An account already exists for that Discord ID." : "Account creation could not be completed.", "error");
-    } finally { setBusy(button, false, "Creating account…", "Create Account"); }
-  });
+  root.innerHTML = `<section class="form-card auth-card"><p class="eyebrow">Discord Registration</p><h1>Create your Cognitus account.</h1><p>Account creation starts with Discord so Cognitus can verify that the Discord identity belongs to you before creating or linking records.</p><div id="auth-message" class="notice" hidden></div><div class="form-stack"><a class="button button-dark" href="${safe(discordOAuthUrl())}">Create Account with Discord</a><div class="notice">If Cognitus finds an existing account for your verified Discord ID, it will offer to link that account instead of creating a duplicate.</div><a href="#/login">Already have an account? Sign in with Discord.</a></div></section>`;
 }
+
 function accountRecoveryPage() {
-  setTitle("Account Recovery");
-  root.innerHTML = `<section class="legal-card"><p class="eyebrow">Account Recovery</p><h1>No fake reset promises.</h1><p>Cognitus intentionally does not collect real email addresses. In a static Firebase-only deployment, the browser cannot securely perform an administrative password reset for another account.</p><p>If you are still signed in on another device, open <strong>Settings</strong> there and change your password. If you are fully locked out, contact a Cognitus Owner so the account can be handled through Firebase administration.</p>${buttonLink("#/login", "Back to Login", true)}</section>`;
+  setTitle("Account Access");
+  root.innerHTML = `<section class="form-card auth-card"><p class="eyebrow">Account Access</p><h1>Use Discord to continue.</h1><p>Cognitus no longer uses password sign-in. Verify the Discord account attached to your Cognitus identity to sign in, recover access, or finish linking a legacy account.</p><div class="form-stack"><a class="button button-dark" href="${safe(discordOAuthUrl())}">Continue with Discord</a></div></section>`;
 }
 
 async function dashboardPage() {
