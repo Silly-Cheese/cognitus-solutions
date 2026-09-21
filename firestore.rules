@@ -56,7 +56,7 @@ function isReviewer() {
 return role() in ['reviewer', 'admin', 'owner'];
 }
 function isEmployerMember() {
-return role() in ['verified_employer_member', 'org_admin', 'reviewer', 'admin', 'owner'];
+return role() in ['verified_employer_member', 'org_admin', 'admin', 'owner'];
 }
 function sameOrg(orgId) {
 return activeAccount()
@@ -79,7 +79,7 @@ return hasOrganizationMember(orgId)
 function canRunChecks(orgId) {
 return isAdmin()
 || (sameOrg(orgId) && (
-role() in ['org_admin', 'reviewer']
+role() == 'org_admin'
 || !hasOrganizationMember(orgId)
 || (activeOrganizationMember(orgId)
 && get(organizationMemberPath(orgId, request.auth.uid)).data.permissions.runChecks == true)
@@ -88,7 +88,7 @@ role() in ['org_admin', 'reviewer']
 function canManageTalent(orgId) {
 return isAdmin()
 || (sameOrg(orgId) && (
-role() in ['org_admin', 'reviewer']
+role() == 'org_admin'
 || !hasOrganizationMember(orgId)
 || (activeOrganizationMember(orgId)
 && get(organizationMemberPath(orgId, request.auth.uid)).data.permissions.manageTalent == true)
@@ -97,7 +97,7 @@ role() in ['org_admin', 'reviewer']
 function canAddEmploymentRecords(orgId) {
 return isAdmin()
 || (sameOrg(orgId) && (
-role() in ['org_admin', 'reviewer']
+role() == 'org_admin'
 || !hasOrganizationMember(orgId)
 || (activeOrganizationMember(orgId)
 && get(organizationMemberPath(orgId, request.auth.uid)).data.permissions.addEmploymentRecords == true)
@@ -106,7 +106,7 @@ role() in ['org_admin', 'reviewer']
 function canRequestReports(orgId) {
 return isAdmin()
 || (sameOrg(orgId) && (
-role() in ['org_admin', 'reviewer']
+role() == 'org_admin'
 || !hasOrganizationMember(orgId)
 || (activeOrganizationMember(orgId)
 && get(organizationMemberPath(orgId, request.auth.uid)).data.permissions.requestReports == true)
