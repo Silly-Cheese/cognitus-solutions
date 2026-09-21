@@ -70,6 +70,29 @@ function authEmail(discordId) { return `${normalizeDiscordId(discordId)}@cognitu
 function discordOAuthUrl() {
   return `${COGNITUS_AUTH_BASE}/discord/start?portal=${COGNITUS_PORTAL_KEY}`;
 }
+
+async function discordSelfApi() {
+  if (!authUser) throw new Error("Sign in to Cognitus first.");
+  const idToken = await authUser.getIdToken();
+  const response = await fetch(`${COGNITUS_AUTH_BASE}/discord/me`, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      Accept: "application/json",
+      Authorization: `Bearer ${idToken}`
+    }
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || "Discord account information could not be loaded.");
+  return payload;
+}
+
+function accessLabel(value) {
+  return String(value || "")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[._-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
 async function completeDiscordOAuthIfPresent() {
   const params = new URLSearchParams(location.search);
   if (params.get("cognitus_oauth") !== "1") return false;
@@ -321,7 +344,7 @@ function renderNav() {
     <a href="#/appeals">Appeals</a>
     <a href="#/organizations">Organizations</a>
     ${commandStaff() ? `<a href="https://silly-cheese.github.io/staff-cognitus/" target="_blank" rel="noopener">Staff Command</a>` : ""}
-    <a href="#/settings">Settings</a>
+    <a href="#/profile">Profile</a>
     <button id="logout-button" class="button button-light" type="button">Logout</button>
     <span class="nav-user">${safe(userRecord.displayName || "User")} · ${safe(userRecord.role || "user")}</span>`;
   document.querySelector("#logout-button")?.addEventListener("click", async () => {
@@ -879,9 +902,15 @@ function commandMigrationPage(area) {
 }
 
 async function settingsPage() {
-  setTitle("Settings");
+  setTitle("Profile");
   if (loginRequired()) return;
-  root.innerHTML = `<section class="dashboard-grid"><section class="form-card"><p class="eyebrow">Profile Settings</p><h2>Self-declared profile fields</h2><div id="profile-message" class="notice" hidden></div><form id="profile-form" class="form-stack"><label>Display Name<input name="displayName" maxlength="64" value="${safe(profileRecord?.displayName || userRecord.displayName || "")}"></label><label>Roblox Usernames<input name="robloxUsernames" maxlength="300" value="${safe((profileRecord?.robloxUsernames || []).join(", "))}" placeholder="Comma-separated"></label><button class="button button-dark" type="submit">Save Profile</button></form></section><section class="form-card"><p class="eyebrow">Security</p><h2>Change password</h2><div id="password-message" class="notice" hidden></div><form id="password-form" class="form-stack"><label>Current Password<input name="currentPassword" type="password" autocomplete="current-password" required></label><label>New Password<input name="newPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label><button class="button button-dark" type="submit">Change Password</button></form></section></section>`;
+  root.innerHTML = `<section class="hero hero-wide"><p class="eyebrow">Your Cognitus account</p><h1>Profile & access.</h1><p>Manage your self-declared profile information and review the identities, roles, and access currently attached to your Cognitus account.</p></section>
+  <section class="dashboard-grid">
+    <section class="form-card"><p class="eyebrow">Profile Settings</p><h2>Self-declared profile fields</h2><div id="profile-message" class="notice" hidden></div><form id="profile-form" class="form-stack"><label>Display Name<input name="displayName" maxlength="64" value="${safe(profileRecord?.displayName || userRecord.displayName || "")}"></label><label>Roblox Usernames<input name="robloxUsernames" maxlength="300" value="${safe((profileRecord?.robloxUsernames || []).join(", "))}" placeholder="Comma-separated"></label><button class="button button-dark" type="submit">Save Profile</button></form></section>
+    <section class="form-card"><p class="eyebrow">Identity & Access</p><h2>Discord linkage</h2><p>Your Cognitus sign-in identity is verified through Discord. Open the access page to see the Discord account linked to Cognitus, your live server roles, mapped Cognitus permissions, Staff status, and synchronization information.</p><div class="record-meta"><span>${userRecord?.discordOauthVerified ? "Discord verified" : "Discord linked"}</span><span>${safe(mainRoleLabel())}</span>${staffAccessRecord ? `<span>${safe(accessLabel(staffAccessRecord.rank || "staff"))}</span>` : ""}</div><div class="hero-actions"><a class="button button-dark" href="#/profile/discord">View Discord & Access</a></div></section>
+  </section>
+  <section class="panel"><div class="panel-header"><div><p class="eyebrow">Authentication</p><h2>Discord-only sign in</h2></div><span class="record-meta"><span>Enabled</span></span></div><p>Cognitus uses your verified Discord identity for normal sign-in and account creation. Password sign-in is not offered in the portal.</p></section>`;
+
   root.querySelector("#profile-form").addEventListener("submit", async (event)=>{
     event.preventDefault();
     const data = formObject(event.currentTarget);
@@ -898,21 +927,65 @@ async function settingsPage() {
       renderNav();
     } catch (error) { showNotice(root.querySelector("#profile-message"), error?.message || "Profile update failed.", "error"); }
   });
-  root.querySelector("#password-form").addEventListener("submit", async (event)=>{
-    event.preventDefault();
-    const data = formObject(event.currentTarget);
-    const message = root.querySelector("#password-message");
-    if (clean(data.newPassword).length < 8) return showNotice(message, "New password must be at least 8 characters.", "error");
-    try {
-      const credential = Auth.EmailAuthProvider.credential(auth.currentUser.email, data.currentPassword);
-      await Auth.reauthenticateWithCredential(auth.currentUser, credential);
-      await Auth.updatePassword(auth.currentUser, data.newPassword);
-      showNotice(message, "Password changed successfully.", "success");
-      event.currentTarget.reset();
-    } catch (error) { showNotice(message, error?.code === "auth/invalid-credential" ? "Current password is incorrect." : (error?.message || "Password change failed."), "error"); }
-  });
 }
 
+async function discordAccessPage() {
+  setTitle("Discord & Access");
+  if (loginRequired()) return;
+
+  root.innerHTML = `<section class="hero hero-wide"><p class="eyebrow">Profile · Identity & Access</p><h1>Discord & access.</h1><p>See the Discord identity Cognitus trusts, your current Cognitus roles, and how Discord roles affect your access.</p><div class="hero-actions"><a class="button button-light" href="#/profile">Back to Profile</a><button class="button button-dark" id="refresh-discord-access" type="button">Refresh from Discord</button></div></section><section id="discord-access-content"><section class="panel"><div class="empty-state"><p>Loading your Discord linkage and role information…</p></div></section></section>`;
+
+  const content = root.querySelector("#discord-access-content");
+
+  const renderPayload = (data) => {
+    const identity = data?.identity || {};
+    const guild = data?.guild || {};
+    const cognitus = data?.cognitus || {};
+    const staff = cognitus?.staff || null;
+    const roles = Array.isArray(data?.roles) ? data.roles : [];
+    const mapped = roles.filter((role) => role.mapped);
+    const mainCapabilities = Array.isArray(cognitus?.mainCapabilities) ? cognitus.mainCapabilities : [];
+    const effectiveStaffPermissions = Array.isArray(staff?.effectivePermissions) ? staff.effectivePermissions : [];
+    const discordManagedPermissions = Array.isArray(staff?.discordManagedPermissions) ? staff.discordManagedPermissions : [];
+
+    const roleCards = roles.length ? roles.map((role) => `<article class="record-row"><div><strong>${safe(role.name)}</strong><span>${role.mapped ? `Mapped to ${safe(role.templateLabel || "Cognitus access")}` : "Discord server role"}</span><small>${role.mapped ? `${safe(accessLabel(role.direction || "display"))}${(role.permissions || []).length ? ` · ${safe((role.permissions || []).length)} Cognitus permission${(role.permissions || []).length === 1 ? "" : "s"}` : ""}` : "No Cognitus permission mapping"}</small></div><div class="record-meta"><span>${role.mapped ? "Mapped" : "Discord only"}</span>${role.protected ? "<span>Protected</span>" : ""}</div></article>`).join("") : `<div class="empty-state"><p>${guild.member === false ? "Your Discord account is linked, but it is not currently a member of the configured Cognitus Discord server." : "No Discord server roles were returned."}</p></div>`;
+
+    content.innerHTML = `
+      <section class="stats-grid">
+        <article class="stat-card"><span>Discord Link</span><strong>${identity.verified ? "Verified" : identity.linked ? "Linked" : "Not linked"}</strong><small>${safe(identity.username || "No Discord username")}</small></article>
+        <article class="stat-card"><span>Cognitus Role</span><strong style="font-size:18px">${safe(cognitus.mainRoleLabel || mainRoleLabel())}</strong><small>Main Cognitus</small></article>
+        <article class="stat-card"><span>Server Membership</span><strong>${guild.member ? "Active" : guild.configured ? "Not in server" : "Unavailable"}</strong><small>${safe(guild.name || "Cognitus Discord")}</small></article>
+      </section>
+
+      <section class="dashboard-grid">
+        <section class="panel"><div class="panel-header"><div><p class="eyebrow">Verified identity</p><h2>Discord linkage</h2></div><span class="record-meta"><span>${identity.verified ? "Verified OAuth" : "Linked"}</span></span></div><dl class="report-dl"><dt>Discord account</dt><dd><strong>${safe(identity.displayName || identity.username || "Unknown")}</strong>${identity.username ? `<br><small>@${safe(identity.username)}</small>` : ""}</dd><dt>Discord user ID</dt><dd>${safe(identity.id || userRecord?.discordId || "Unavailable")}</dd><dt>Verified</dt><dd>${safe(identity.verifiedAt || "Verified through Cognitus Discord sign-in")}</dd><dt>Server</dt><dd>${safe(guild.name || "Cognitus Discord")}</dd><dt>Member status</dt><dd>${guild.member ? "Member" : guild.configured ? "Not currently a member" : "Discord server integration unavailable"}</dd></dl><div class="hero-actions"><a class="button button-light" href="${DISCORD_INVITE_URL}" target="_blank" rel="noopener noreferrer">Open Cognitus Discord</a><a class="button button-light" href="${safe(discordOAuthUrl())}">Reverify Discord</a></div></section>
+
+        <section class="panel"><div class="panel-header"><div><p class="eyebrow">Cognitus authority</p><h2>Your roles</h2></div></div><div class="record-list"><article class="record-row"><div><strong>${safe(cognitus.mainRoleLabel || mainRoleLabel())}</strong><span>Main Cognitus role</span><small>${mainCapabilities.includes("*") ? "Full Main Cognitus authority" : `${mainCapabilities.length} explicit Main capabilities`}</small></div></article>${staff ? `<article class="record-row"><div><strong>${safe(accessLabel(staff.rank || "staff"))}</strong><span>Staff / Command rank · ${safe(accessLabel(staff.departmentId || "Unassigned department"))}</span><small>Status: ${safe(accessLabel(staff.status || "unknown"))}</small></div></article>` : `<article class="record-row"><div><strong>No Staff role</strong><span>This Cognitus account is not provisioned for Staff / Command.</span></div></article>`}</div></section>
+      </section>
+
+      <section class="panel"><div class="panel-header"><div><p class="eyebrow">Discord server</p><h2>Your Discord roles</h2></div><span>${roles.length} role${roles.length === 1 ? "" : "s"}</span></div><div class="record-list">${roleCards}</div></section>
+
+      <section class="dashboard-grid">
+        <section class="panel"><div class="panel-header"><div><p class="eyebrow">Main Cognitus</p><h2>Role capabilities</h2></div></div><div class="permission-list">${mainCapabilities.map((permission) => `<span class="permission-chip">${safe(permission === "*" ? "Full Main Cognitus authority" : accessLabel(permission))}</span>`).join("") || '<span class="help-text">No additional Main capabilities.</span>'}</div></section>
+        <section class="panel"><div class="panel-header"><div><p class="eyebrow">Staff / Command</p><h2>Effective permissions</h2></div>${staff ? `<span>${effectiveStaffPermissions.length} active</span>` : ""}</div>${staff ? `<div class="permission-list">${effectiveStaffPermissions.map((permission) => `<span class="permission-chip">${safe(accessLabel(permission))}</span>`).join("") || '<span class="help-text">No effective Staff permissions.</span>'}</div>${discordManagedPermissions.length ? `<div class="notice" style="margin-top:16px"><strong>From Discord roles</strong><div class="permission-list" style="margin-top:10px">${discordManagedPermissions.map((permission) => `<span class="permission-chip">${safe(accessLabel(permission))}</span>`).join("")}</div></div>` : ""}` : '<div class="empty-state"><p>No Staff / Command access is attached to this account.</p></div>'}</section>
+      </section>
+
+      ${mapped.length ? `<section class="panel"><div class="panel-header"><div><p class="eyebrow">Role mapping</p><h2>How Discord affects Cognitus</h2></div><span>${mapped.length} mapped</span></div><div class="record-list">${mapped.map((role) => `<article class="record-row"><div><strong>${safe(role.name)}</strong><span>${safe(role.templateLabel || "Cognitus role mapping")}</span><small>${safe(accessLabel(role.direction || "display"))}</small></div><div class="permission-list">${(role.permissions || []).map((permission) => `<span class="permission-chip">${safe(accessLabel(permission))}</span>`).join("") || '<span class="help-text">Display / organizational role only</span>'}</div></article>`).join("")}</div></section>` : ""}
+    `;
+  };
+
+  const load = async () => {
+    content.innerHTML = `<section class="panel"><div class="empty-state"><p>Refreshing your Discord linkage and live server roles…</p></div></section>`;
+    try {
+      renderPayload(await discordSelfApi());
+    } catch (error) {
+      content.innerHTML = `<section class="panel"><div class="panel-header"><div><p class="eyebrow">Discord linkage</p><h2>Live Discord details unavailable</h2></div></div><div class="notice notice-error">${safe(error?.message || "Discord account information could not be loaded.")}</div><div class="record-list" style="margin-top:16px"><article class="record-row"><div><strong>${safe(userRecord?.discordOauthUsername || userRecord?.discordUsername || "Linked Discord account")}</strong><span>Stored Cognitus linkage</span><small>${safe(userRecord?.discordOauthId || userRecord?.discordId || "Discord ID unavailable")}</small></div></article></div></section>`;
+    }
+  };
+
+  root.querySelector("#refresh-discord-access")?.addEventListener("click", load);
+  await load();
+}
 async function render() {
   try {
     await loadFirebase();
@@ -943,7 +1016,8 @@ async function render() {
     if (current === "/review") return commandMigrationPage("Review Queue");
     if (current === "/organizations") return organizationsPage();
     if (current === "/admin") return commandMigrationPage("Administration");
-    if (current === "/settings") return settingsPage();
+    if (current === "/profile" || current === "/settings") return settingsPage();
+    if (current === "/profile/discord" || current === "/settings/discord") return discordAccessPage();
     if (current === "/owner-bootstrap") return hero("Owner Security", "Client-side bootstrap has been retired.", "Owner provisioning must be performed through a trusted Firebase administrative environment. This route can no longer elevate an account.", buttonLink("#/dashboard", "Dashboard", true));
     hero("404", "Page not found.", "The requested Cognitus page does not exist.", buttonLink(userRecord ? "#/dashboard" : "#/", "Return", true));
   } catch (error) {
