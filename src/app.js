@@ -234,7 +234,13 @@ function reviewer() { return hasMainCapability("review.access"); }
 function admin() { return hasMainCapability("admin.access"); }
 function owner() { return activeUser() && userRecord?.role === "owner"; }
 function mainRoleLabel(role = userRecord?.role) { return MAIN_ROLE_LABELS[role] || "User"; }
-function commandStaff() { return Boolean(activeUser() && staffAccessRecord && ["active", "training", "on_leave"].includes(staffAccessRecord.status) && Array.isArray(staffAccessRecord.permissions) && staffAccessRecord.permissions.includes("portal.access")); }
+function effectiveStaffPermissions() {
+  const direct = Array.isArray(staffAccessRecord?.permissions) ? staffAccessRecord.permissions : [];
+  const discordManaged = Array.isArray(staffAccessRecord?.discordRoleSync?.managedPermissions) ? staffAccessRecord.discordRoleSync.managedPermissions : [];
+  const denied = new Set(Array.isArray(staffAccessRecord?.deniedPermissions) ? staffAccessRecord.deniedPermissions : []);
+  return [...new Set([...direct, ...discordManaged])].filter((permission) => !denied.has(permission));
+}
+function commandStaff() { return Boolean(activeUser() && staffAccessRecord && ["active", "training", "on_leave"].includes(staffAccessRecord.status) && effectiveStaffPermissions().includes("portal.access")); }
 function ensureActive() {
   if (!loginRequired() && !activeUser()) {
     hero("Account Restricted", "This account cannot perform operational actions.", `Current status: ${userRecord?.status || "unknown"}. Contact a Cognitus administrator for assistance.`, buttonLink("#/dashboard", "Dashboard", true));
