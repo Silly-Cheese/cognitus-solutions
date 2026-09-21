@@ -1792,7 +1792,8 @@ return value is list
 'qa.read', 'qa.manage', 'qa.audit', 'reports.review', 'claims.review',
 'appeals.review', 'verification.review', 'organizations.review', 'cases.read',
 'cases.manage', 'evidence.read', 'evidence.manage', 'accreditation.manage',
-'escalations.manage', 'incidents.manage', 'accounts.read.all', 'audit.read', 'system.manage'
+'escalations.manage', 'incidents.manage', 'accounts.read.all', 'audit.read', 'system.manage',
+'discord.members.kick'
 ]);
 }
 function validStaffDirectoryDocument(uid, value) {
