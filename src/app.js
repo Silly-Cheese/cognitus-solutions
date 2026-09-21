@@ -42,6 +42,22 @@ const REPORT_CATEGORIES = Object.freeze([
 ]);
 const SEVERITIES = Object.freeze(["Informational", "Low", "Moderate", "High", "Critical"]);
 const ROLES = Object.freeze(["user", "verified_employer_member", "org_admin", "reviewer", "admin", "owner"]);
+const MAIN_ROLE_CAPABILITIES = Object.freeze({
+  user: ["account.use", "profile.self", "search.basic", "reports.submit", "claims.submit", "appeals.submit"],
+  verified_employer_member: ["account.use", "profile.self", "search.basic", "reports.submit", "claims.submit", "appeals.submit", "employer.verified"],
+  org_admin: ["account.use", "profile.self", "search.basic", "reports.submit", "claims.submit", "appeals.submit", "employer.verified", "organization.manage"],
+  reviewer: ["account.use", "profile.self", "search.basic", "reports.submit", "claims.submit", "appeals.submit", "review.access"],
+  admin: ["account.use", "profile.self", "search.basic", "reports.submit", "claims.submit", "appeals.submit", "review.access", "organization.manage", "admin.access"],
+  owner: ["*"]
+});
+const MAIN_ROLE_LABELS = Object.freeze({
+  user: "User",
+  verified_employer_member: "Verified Employer Member",
+  org_admin: "Organization Administrator",
+  reviewer: "Reviewer",
+  admin: "Administrator",
+  owner: "Owner"
+});
 const STATUSES = Object.freeze(["active", "pending_verification", "suspended", "restricted", "banned", "password_reset_required"]);
 
 function clean(value) { return String(value ?? "").trim(); }
@@ -186,13 +202,15 @@ function loginRequired() {
   return true;
 }
 function activeUser() { return userRecord?.status === "active"; }
-function roleAtLeast(role) {
-  const levels = { user: 10, verified_employer_member: 20, org_admin: 30, reviewer: 50, admin: 80, owner: 100 };
-  return activeUser() && (levels[userRecord?.role] || 0) >= (levels[role] || 999);
+function hasMainCapability(capability) {
+  if (!activeUser()) return false;
+  const capabilities = MAIN_ROLE_CAPABILITIES[userRecord?.role] || [];
+  return capabilities.includes("*") || capabilities.includes(capability);
 }
-function reviewer() { return roleAtLeast("reviewer"); }
-function admin() { return roleAtLeast("admin"); }
+function reviewer() { return hasMainCapability("review.access"); }
+function admin() { return hasMainCapability("admin.access"); }
 function owner() { return activeUser() && userRecord?.role === "owner"; }
+function mainRoleLabel(role = userRecord?.role) { return MAIN_ROLE_LABELS[role] || "User"; }
 function commandStaff() { return Boolean(activeUser() && staffAccessRecord && ["active", "training", "on_leave"].includes(staffAccessRecord.status) && Array.isArray(staffAccessRecord.permissions) && staffAccessRecord.permissions.includes("portal.access")); }
 function ensureActive() {
   if (!loginRequired() && !activeUser()) {
