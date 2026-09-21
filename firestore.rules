@@ -78,7 +78,7 @@ return hasOrganizationMember(orgId)
 }
 function canRunChecks(orgId) {
 return isAdmin()
-|| (sameOrg(orgId) && (
+|| (sameOrg(orgId) && isEmployerMember() && (
 role() == 'org_admin'
 || !hasOrganizationMember(orgId)
 || (activeOrganizationMember(orgId)
@@ -87,7 +87,7 @@ role() == 'org_admin'
 }
 function canManageTalent(orgId) {
 return isAdmin()
-|| (sameOrg(orgId) && (
+|| (sameOrg(orgId) && isEmployerMember() && (
 role() == 'org_admin'
 || !hasOrganizationMember(orgId)
 || (activeOrganizationMember(orgId)
@@ -96,7 +96,7 @@ role() == 'org_admin'
 }
 function canAddEmploymentRecords(orgId) {
 return isAdmin()
-|| (sameOrg(orgId) && (
+|| (sameOrg(orgId) && isEmployerMember() && (
 role() == 'org_admin'
 || !hasOrganizationMember(orgId)
 || (activeOrganizationMember(orgId)
@@ -105,7 +105,7 @@ role() == 'org_admin'
 }
 function canRequestReports(orgId) {
 return isAdmin()
-|| (sameOrg(orgId) && (
+|| (sameOrg(orgId) && isEmployerMember() && (
 role() == 'org_admin'
 || !hasOrganizationMember(orgId)
 || (activeOrganizationMember(orgId)
