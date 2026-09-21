@@ -1723,8 +1723,32 @@ return commandOwner()
 || (activeStaff() && currentStaff().rank == 'chief-officer')
 || staffPermission('accounts.read.all');
 }
+function protectedDiscordPermission(permission) {
+return permission in [
+'permissions.manage', 'system.manage', 'staff.provision', 'staff.manage',
+'payroll.approve', 'internalAffairs.manage'
+];
+}
+function staffExplicitlyDenied(permission) {
+return currentStaff().keys().hasAll(['deniedPermissions'])
+&& currentStaff().deniedPermissions is list
+&& permission in currentStaff().deniedPermissions;
+}
+function staffDiscordPermission(permission) {
+return !protectedDiscordPermission(permission)
+&& currentStaff().keys().hasAll(['discordRoleSync'])
+&& currentStaff().discordRoleSync is map
+&& currentStaff().discordRoleSync.keys().hasAll(['managedPermissions'])
+&& currentStaff().discordRoleSync.managedPermissions is list
+&& permission in currentStaff().discordRoleSync.managedPermissions;
+}
 function staffPermission(permission) {
-return activeStaff() && permission in currentStaff().permissions;
+return activeStaff()
+&& !staffExplicitlyDenied(permission)
+&& (
+permission in currentStaff().permissions
+|| staffDiscordPermission(permission)
+);
 }
 function validStaffStatus(value) {
 return value in ['active', 'training', 'on_leave', 'suspended', 'former'];
