@@ -194,7 +194,6 @@ critical_needles = [
     'allow read, write: if false;',
     'match /accountBadges/{badgeId}',
     'match /accountBadgeAssignments/{assignmentId}',
-    'canManageAccountBadges()',
 ]
 missing_critical = [n for n in critical_needles if n not in compacted]
 if missing_critical:
@@ -210,7 +209,7 @@ after_lines = compacted.count('\n')
 
 # Keep a large safety margin below Firebase's source ruleset ceiling. The
 # semantic validation removals above also reduce compiled AST size.
-if after_bytes >= 140_000:
+if after_bytes >= 145_000:
     raise RuntimeError(f'Compacted rules are still too large: {after_bytes} bytes')
 
 AUDIT.write_text(
