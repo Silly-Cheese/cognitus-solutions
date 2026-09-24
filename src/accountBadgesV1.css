@@ -1,0 +1,35 @@
+/* Cognitus Account Badges V1 */
+.cab-profile-markers{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.cab-marker{appearance:none;display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:5px 11px 5px 7px;border:1px solid #d9dde5;border-radius:999px;background:#fff;color:#17181b;font:inherit;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 7px 20px rgba(20,24,33,.06);transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease}
+.cab-marker:hover{transform:translateY(-1px);border-color:#b8bfca;box-shadow:0 10px 24px rgba(20,24,33,.10)}
+.cab-marker.is-compact{padding:2px;border:0;background:transparent;box-shadow:none;min-height:0}
+.cab-marker.is-compact:hover{transform:scale(1.08)}
+.cab-icon{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#f5f6f8;font-size:15px}
+.cab-nav-markers{display:inline-flex;align-items:center;gap:2px;margin-left:6px;vertical-align:middle}
+.cab-more{display:inline-flex;align-items:center;min-height:26px;padding:3px 7px;border-radius:999px;background:#eef0f3;color:#5d6470;font-size:11px;font-weight:800}
+.cab-panel{margin-top:16px}
+.cab-panel-copy{color:#686f79;max-width:760px}
+.cab-gallery{display:grid;gap:10px}
+.cab-card{display:grid;grid-template-columns:50px minmax(0,1fr) auto;gap:14px;align-items:center;padding:13px;border:1px solid #e2e5ea;border-radius:15px;background:#fafbfc}
+.cab-card-icon,.cab-dialog-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:#fff;border:1px solid #e1e4e9;font-size:24px;box-shadow:inset 4px 0 0 #64748b}
+.cab-card strong{font-size:15px}
+.cab-card p{margin:3px 0;color:#5f6670;line-height:1.45}
+.cab-card small{color:#7a8088}
+.cab-accent-violet{box-shadow:inset 4px 0 0 #7c3aed}
+.cab-accent-blue{box-shadow:inset 4px 0 0 #2563eb}
+.cab-accent-green{box-shadow:inset 4px 0 0 #16a34a}
+.cab-accent-gold{box-shadow:inset 4px 0 0 #ca8a04}
+.cab-accent-amber{box-shadow:inset 4px 0 0 #d97706}
+.cab-accent-rose{box-shadow:inset 4px 0 0 #e11d48}
+.cab-accent-red{box-shadow:inset 4px 0 0 #dc2626}
+.cab-accent-slate{box-shadow:inset 4px 0 0 #64748b}
+.cab-dialog-backdrop{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:rgba(6,10,18,.68);backdrop-filter:blur(8px)}
+.cab-dialog{position:relative;width:min(520px,100%);padding:28px;border:1px solid rgba(255,255,255,.10);border-radius:22px;background:#fff;color:#17181b;box-shadow:0 34px 100px rgba(0,0,0,.32)}
+.cab-dialog h2{margin:8px 0;font-size:30px;letter-spacing:-.035em}
+.cab-dialog>p:not(.eyebrow){color:#646b75;line-height:1.6}
+.cab-dialog-close{position:absolute;right:14px;top:14px;width:34px;height:34px;border:0;border-radius:50%;background:#eef0f3;font-size:22px;cursor:pointer}
+.cab-dialog dl{display:grid;gap:0;margin:20px 0 0}
+.cab-dialog dl div{display:grid;grid-template-columns:120px 1fr;gap:14px;padding:10px 0;border-top:1px solid #eceef2}
+.cab-dialog dt{font-weight:800;color:#777e87}
+.cab-dialog dd{margin:0;font-weight:650}
+@media(max-width:700px){.cab-card{grid-template-columns:44px minmax(0,1fr)}.cab-card>.button{grid-column:1/-1}.cab-dialog{padding:24px 18px}.cab-dialog dl div{grid-template-columns:1fr;gap:3px}}
