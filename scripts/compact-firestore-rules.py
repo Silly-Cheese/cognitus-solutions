@@ -174,7 +174,8 @@ required_matches = [
     'commandPolicyAcknowledgements','commandRecognition','commandSuggestions',
     'commandCases','commandEvidence','commandAccreditations','commandEscalations',
     'commandIncidents','commandQaReviews','commandCorrectiveActions',
-    'commandPrCampaigns','commandPrItems','commandCsMacros','commandExecutiveApprovals'
+    'commandPrCampaigns','commandPrItems','commandCsMacros','commandExecutiveApprovals',
+    'accountBadges','accountBadgeAssignments'
 ]
 missing = [name for name in required_matches if f'match /{name}' not in compacted]
 if missing:
@@ -191,6 +192,9 @@ critical_needles = [
     "resource.data.requestedByUid != request.auth.uid",
     'match /{document=**}',
     'allow read, write: if false;',
+    'match /accountBadges/{badgeId}',
+    'match /accountBadgeAssignments/{assignmentId}',
+    'canManageAccountBadges()',
 ]
 missing_critical = [n for n in critical_needles if n not in compacted]
 if missing_critical:
