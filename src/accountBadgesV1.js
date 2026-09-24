@@ -129,7 +129,7 @@ async function enhance(force=false){
   loading=true;
   try{
     const items=await loadBadges(force);
-    removeExisting();
+    if(force) removeExisting();
     renderNavMarkers(items);
     renderProfile(items);
     bindMarkers(items);
@@ -139,7 +139,7 @@ async function enhance(force=false){
 }
 
 function schedule(force=false){
-  [30,220,700].forEach((delay)=>window.setTimeout(()=>enhance(force),delay));
+  [30,220,700].forEach((delay,index)=>window.setTimeout(()=>enhance(force && index===0),delay));
 }
 
 async function init(){
@@ -157,7 +157,7 @@ async function init(){
     cacheAt=0;
     schedule(true);
   });
-  window.addEventListener("hashchange",()=>schedule(false));
+  window.addEventListener("hashchange",()=>{ document.querySelector("[data-cab-dialog]")?.remove(); schedule(false); });
   if(root) new MutationObserver(()=>schedule(false)).observe(root,{childList:true,subtree:false});
   if(nav) new MutationObserver(()=>schedule(false)).observe(nav,{childList:true,subtree:true});
   schedule();
