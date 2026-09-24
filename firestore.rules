@@ -1906,6 +1906,122 @@ return staffPermission('staff.provision')
 && value.permissions.hasOnly(currentStaff().permissions)
 && !value.permissions.hasAny(['permissions.manage', 'system.manage']);
 }
+
+// ACCOUNT_BADGES_V1
+function canManageAccountBadges() {
+return commandOwner() || staffPermission('system.manage');
+}
+function validAccountBadgeDefinition(badgeId, value) {
+return value is map
+&& value.keys().hasOnly([
+'id', 'key', 'name', 'icon', 'description', 'category', 'visibility',
+'accent', 'active', 'createdByUid', 'updatedByUid', 'createdAt', 'updatedAt'
+])
+&& value.id == badgeId
+&& value.key is string && value.key.size() > 0 && value.key.size() <= 48
+&& value.name is string && value.name.size() > 0 && value.name.size() <= 48
+&& value.icon is string && value.icon.size() > 0 && value.icon.size() <= 12
+&& value.description is string && value.description.size() > 0 && value.description.size() <= 300
+&& value.category in ['recognition', 'contributor', 'service', 'legacy', 'other']
+&& value.visibility in ['public', 'staff']
+&& value.accent in ['violet', 'blue', 'green', 'gold', 'amber', 'rose', 'red', 'slate']
+&& value.active is bool
+&& value.createdByUid is string
+&& value.updatedByUid is string;
+}
+match /accountBadges/{badgeId} {
+allow read: if signedIn();
+allow create: if canManageAccountBadges()
+&& validAccountBadgeDefinition(badgeId, request.resource.data)
+&& request.resource.data.createdByUid == request.auth.uid
+&& request.resource.data.updatedByUid == request.auth.uid
+&& request.resource.data.createdAt == request.time
+&& request.resource.data.updatedAt == request.time;
+allow update: if canManageAccountBadges()
+&& validAccountBadgeDefinition(badgeId, request.resource.data)
+&& request.resource.data.id == resource.data.id
+&& request.resource.data.key == resource.data.key
+&& request.resource.data.createdByUid == resource.data.createdByUid
+&& request.resource.data.createdAt == resource.data.createdAt
+&& request.resource.data.updatedByUid == request.auth.uid
+&& request.resource.data.updatedAt == request.time
+&& request.resource.data.diff(resource.data).changedKeys().hasOnly([
+'name', 'icon', 'description', 'category', 'visibility', 'accent',
+'active', 'updatedByUid', 'updatedAt'
+]);
+allow delete: if false;
+}
+match /accountBadgeAssignments/{assignmentId} {
+allow read: if signedIn() && (
+resource.data.userUid == request.auth.uid
+|| activeStaff()
+|| isAdmin()
+);
+allow create: if canManageAccountBadges()
+&& request.resource.data.keys().hasOnly([
+'id', 'userUid', 'userDisplayName', 'userCognitusId',
+'badgeId', 'badgeName', 'badgeIcon', 'reason', 'featured',
+'status', 'expiresAt', 'revoked', 'revokedAt', 'revokedByUid',
+'revocationReason', 'awardedByUid', 'awardedAt', 'createdAt', 'updatedAt'
+])
+&& request.resource.data.id == assignmentId
+&& request.resource.data.userUid is string
+&& exists(userPath(request.resource.data.userUid))
+&& request.resource.data.userDisplayName is string
+&& request.resource.data.userDisplayName.size() <= 160
+&& request.resource.data.userCognitusId is string
+&& request.resource.data.userCognitusId.size() <= 64
+&& request.resource.data.badgeId is string
+&& exists(/databases/$(database)/documents/accountBadges/$(request.resource.data.badgeId))
+&& request.resource.data.badgeName is string
+&& request.resource.data.badgeName.size() > 0
+&& request.resource.data.badgeName.size() <= 48
+&& request.resource.data.badgeIcon is string
+&& request.resource.data.badgeIcon.size() > 0
+&& request.resource.data.badgeIcon.size() <= 12
+&& request.resource.data.reason is string
+&& request.resource.data.reason.size() <= 500
+&& request.resource.data.featured is bool
+&& request.resource.data.status == 'active'
+&& (request.resource.data.expiresAt == null || request.resource.data.expiresAt is timestamp)
+&& request.resource.data.revoked == false
+&& request.resource.data.revokedAt == null
+&& request.resource.data.revokedByUid == null
+&& request.resource.data.revocationReason == ''
+&& request.resource.data.awardedByUid == request.auth.uid
+&& request.resource.data.awardedAt == request.time
+&& request.resource.data.createdAt == request.time
+&& request.resource.data.updatedAt == request.time;
+allow update: if canManageAccountBadges()
+&& request.resource.data.id == resource.data.id
+&& request.resource.data.userUid == resource.data.userUid
+&& request.resource.data.userDisplayName == resource.data.userDisplayName
+&& request.resource.data.userCognitusId == resource.data.userCognitusId
+&& request.resource.data.badgeId == resource.data.badgeId
+&& request.resource.data.badgeName == resource.data.badgeName
+&& request.resource.data.badgeIcon == resource.data.badgeIcon
+&& request.resource.data.reason == resource.data.reason
+&& request.resource.data.featured == resource.data.featured
+&& request.resource.data.expiresAt == resource.data.expiresAt
+&& request.resource.data.awardedByUid == resource.data.awardedByUid
+&& request.resource.data.awardedAt == resource.data.awardedAt
+&& request.resource.data.createdAt == resource.data.createdAt
+&& resource.data.revoked == false
+&& request.resource.data.status == 'revoked'
+&& request.resource.data.revoked == true
+&& request.resource.data.revokedAt == request.time
+&& request.resource.data.revokedByUid == request.auth.uid
+&& request.resource.data.revocationReason is string
+&& request.resource.data.revocationReason.size() > 0
+&& request.resource.data.revocationReason.size() <= 500
+&& request.resource.data.updatedAt == request.time
+&& request.resource.data.diff(resource.data).changedKeys().hasOnly([
+'status', 'revoked', 'revokedAt', 'revokedByUid', 'revocationReason', 'updatedAt'
+]);
+allow delete: if false;
+}
+// END_ACCOUNT_BADGES_V1
+
 match /staffDirectory/{uid} {
 allow read: if activeStaff();
 allow create: if canProvisionStaffG1()
