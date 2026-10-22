@@ -17,7 +17,7 @@ const checks = [
   [app.includes('readWhere("employerStatusRequests", "status", "==", "pending")'), "staff queue uses one automatic single-field equality query"],
   [app.includes("EMPLOYER_STATUS_REQUESTED") && app.includes("EMPLOYER_STATUS_APPROVED") && app.includes("EMPLOYER_STATUS_DENIED"), "application and decisions are audit logged"],
   [rules.includes("match /employerStatusRequests/{requestId}"), "Firestore has dedicated employer request rules"],
-  [rules.includes("requestId == request.auth.uid") && rules.includes("validCognitusId(request.resource.data.cognitusId, 'EMP')"), "applicant request identity is bound to the authenticated account"],
+  [rules.includes("requestId == request.auth.uid") && rules.includes("request.resource.data.applicantUid == request.auth.uid"), "applicant request identity is bound to the authenticated account"],
   [rules.includes("get(organizationPath(request.resource.data.organizationId)).data.verificationStatus == 'verified'"), "rules enforce verified organization selection"],
   [rules.includes("getAfter(userPath(resource.data.applicantUid)).data.role == 'verified_employer_member'") && rules.includes("getAfter(userPath(resource.data.applicantUid)).data.organizationId == resource.data.organizationId"), "approved request requires matching account promotion in the same write"],
   [!app.includes("orderBy("), "Employer Status introduces no ordered/composite query"],
