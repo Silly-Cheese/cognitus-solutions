@@ -17,7 +17,7 @@ const checks = [
   [runtime.includes("renderAccessHub") && runtime.includes("renderPromoAdmin") && runtime.includes("renderFeaturePageV35"), "V43 can render access hub, admin, and feature routes directly"],
   [runtime.includes("C.loadAccess(force)") && runtime.includes("C.renderLockedFeature(feature)"), "V43 preserves entitlement checks and locked states"],
   [!runtime.includes('import { startExecutiveControlV43 }'), "Executive V43 is not statically imported by the shared promotional runtime"],
-  [/import\\("\\.\\/executiveControlV43\\.js\\?v=20260906-v4[45]-executive"\\)/.test(runtime), "Executive V43 is lazy-loaded behind an isolated module boundary"],
+  [/import\("\.\/executiveControlV43\.js\?v=20260906-v4[45]-executive"\)/.test(runtime), "Executive V43 is lazy-loaded behind an isolated module boundary"],
   [runtime.includes("executivePromise = null") && runtime.includes("Executive Control V43 isolated loader failed"), "Executive V43 failure cannot abort ordinary promotional module evaluation"],
   [executive.indexOf("const clean") < executive.indexOf("let frenzyState = normalizeFrenzy(null)"), "Executive V43 has no clean temporal-dead-zone regression"],
   [executive.includes('userRecord?.status === "active"') && executive.includes('userRecord?.role === "owner"'), "Executive V43 preserves Owner-only access"],
