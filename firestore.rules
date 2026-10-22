@@ -2099,6 +2099,9 @@ allow update: if isOwner()
 'status', 'decision', 'decisionNotes', 'reviewedAt', 'reviewedByUid', 'updatedAt'
 ])
 && request.resource.data.status == 'decided'
+&& request.resource.data.decisionNotes is string
+&& request.resource.data.decisionNotes.size() >= 10
+&& request.resource.data.decisionNotes.size() <= 3000
 && request.resource.data.decision in ['keep', 'amend', 'remove']
 && request.resource.data.reviewedByUid == request.auth.uid
 && request.resource.data.reviewedAt == request.time
