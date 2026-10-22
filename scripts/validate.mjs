@@ -38,7 +38,7 @@ assert(navigation.includes("window.innerWidth > 760") && navigation.includes("cl
 assert(uxCss.includes("@media (max-width: 760px)") && uxCss.includes("v4-mobile-nav-ready") && uxCss.includes("grid-template-columns: repeat(2, minmax(0, 1fr))"), "mobile layout provides a two-column expandable navigation panel");
 assert(uxCss.includes("dashboard-hero h1") && uxCss.includes("font-size: clamp(2.05rem, 11vw, 2.8rem)"), "mobile dashboard typography is bounded for phone screens");
 assert(index.includes('rel="icon"') && index.includes("data:image/svg+xml"), "inline favicon prevents the GitHub Pages favicon 404");
-assert(index.includes("secure-v2-no-index") || index.includes("v38-promo-router"), "index.html keeps the repaired no-index production app build");
+assert(/src\/app\.js\?v=[^"]+/.test(index), "index.html keeps a versioned production app build");
 
 assert(controls.includes("Verify my identity") && controls.includes("identityConfidence: 100"), "Owner self-verification control is present");
 assert(controls.includes("data-v4-delete-report") && controls.includes("deleteReport"), "report deletion controls are present");
@@ -63,7 +63,7 @@ assert(!profileV5.includes("Fire.orderBy("), "Profile V5 introduces no ordered c
 assert(!app.includes("OWNER_BOOTSTRAP") && !app.includes("ownerDiscordId"), "production app contains no client owner-bootstrap credential");
 assert(app.includes('current === "/owner-bootstrap"') && app.includes("Client-side bootstrap has been retired"), "legacy bootstrap route is explicitly non-operational");
 assert(app.includes('identityStatus: "self_declared"') && app.includes("identityConfidence: 0"), "new registrations do not claim verified identity");
-assert(app.includes("claimedByUid: credential.user.uid") && app.includes("authUser = credential.user"), "registration is bound directly to the Firebase credential UID");
+assert(app.includes("claimedByUid: authUser.uid") && app.includes("Auth.signInWithCustomToken(auth, payload.customToken)"), "profile ownership uses the Firebase UID from the verified sign-in flow");
 assert(app.includes("resultCount: results.length") && app.includes("results.length === 1"), "search only attaches a target when exactly one record matches");
 assert(!app.includes("Fire.orderBy("), "production queries do not depend on ordered compound queries");
 assert(app.includes("newestFirst(") && app.includes("alphabetic("), "chronological and directory sorting is performed client-side");

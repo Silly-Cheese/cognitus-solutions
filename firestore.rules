@@ -358,6 +358,7 @@ allow update: if isOwner()
 && request.resource.data.diff(resource.data).changedKeys().hasOnly([
 'role', 'status', 'organizationId', 'identityVerified', 'updatedAt'
 ])
+&& (!request.resource.data.keys().hasAny(['identityVerified']) || request.resource.data.identityVerified is bool)
 && validUserRole(request.resource.data.role)
 && validUserStatus(request.resource.data.status)
 && request.resource.data.uid == resource.data.uid
@@ -779,11 +780,15 @@ request.auth.uid in resource.data.approvedUids
 )
 );
 allow create: if (isReviewer() || ownsProfile(request.resource.data.subjectProfileId))
+&& request.resource.data.approvedUids is list
+&& request.resource.data.approvedUids.size() <= 100
 && request.resource.data.reportId == reportId
 && exists(reportPath(reportId))
 && get(reportPath(reportId)).data.subjectProfileId == request.resource.data.subjectProfileId
 && request.resource.data.updatedAt == request.time;
 allow update: if (isReviewer() || ownsProfile(resource.data.subjectProfileId))
+&& request.resource.data.approvedUids is list
+&& request.resource.data.approvedUids.size() <= 100
 && request.resource.data.reportId == resource.data.reportId
 && request.resource.data.subjectProfileId == resource.data.subjectProfileId
 && request.resource.data.updatedAt == request.time;
@@ -2067,6 +2072,7 @@ allow update: if isOwner()
 && request.resource.data.status == 'amended'
 && request.resource.data.amendedAt == request.time
 && request.resource.data.amendedByUid == request.auth.uid
+)
 ||
 (request.resource.data.diff(resource.data).changedKeys().hasOnly([
 'appealStatus', 'status', 'removedAt', 'removedByUid', 'removalReason', 'updatedAt'
@@ -2074,6 +2080,7 @@ allow update: if isOwner()
 && request.resource.data.status == 'removed'
 && request.resource.data.removedAt == request.time
 && request.resource.data.removedByUid == request.auth.uid
+)
 );
 allow delete: if false;
 }
@@ -2092,6 +2099,9 @@ allow update: if isOwner()
 'status', 'decision', 'decisionNotes', 'reviewedAt', 'reviewedByUid', 'updatedAt'
 ])
 && request.resource.data.status == 'decided'
+&& request.resource.data.decisionNotes is string
+&& request.resource.data.decisionNotes.size() >= 10
+&& request.resource.data.decisionNotes.size() <= 3000
 && request.resource.data.decision in ['keep', 'amend', 'remove']
 && request.resource.data.reviewedByUid == request.auth.uid
 && request.resource.data.reviewedAt == request.time
@@ -2350,7 +2360,7 @@ allow create: if activeStaff()
 && request.resource.data.id == meetingId
 && request.resource.data.endsAt > request.resource.data.startsAt
 && (request.resource.data.url == null
-|| (shortString(request.resource.data.url, 1000)
+|| shortString(request.resource.data.url, 1000))
 && commandG2ValidVisibility(request.resource.data.visibility)
 && request.resource.data.organizerUid == request.auth.uid
 && (

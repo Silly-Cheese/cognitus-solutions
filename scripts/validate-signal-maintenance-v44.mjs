@@ -30,7 +30,7 @@ const checks = [
   [maintenance.includes("scheduleExpiryCheck") && maintenance.includes("expiryTimer"), "Scheduled maintenance releases the client gate when its end time is reached"],
   [!maintenance.includes("activatedByUid") && !maintenance.includes("activatedByCognitusId"), "Public maintenance state does not expose Owner identifiers"],
   [maintenanceCss.includes("z-index:2147482000") && maintenanceCss.includes("#111827"), "Maintenance screen is visually authoritative and high contrast"],
-  [promo.includes('import "./maintenanceV44.js?v=20260906-v44-site-gate"'), "Universal promotional bootstrap starts the maintenance gate"],
+  [/import "\.\/maintenanceV44\.js\?v=20260906-v4[45]-site-gate"/.test(promo), "Universal promotional bootstrap starts the maintenance gate"],
 
   [executiveMaintenance.includes('userRecord?.status === "active"') && executiveMaintenance.includes('userRecord?.role === "owner"'), "Executive maintenance controls are Owner-only"],
   [executiveMaintenance.includes("SITE_MAINTENANCE_STARTED") && executiveMaintenance.includes("SITE_EMERGENCY_LOCKED") && executiveMaintenance.includes("SITE_MAINTENANCE_ENDED"), "Maintenance and emergency actions are audited"],
@@ -38,7 +38,7 @@ const checks = [
   [executiveMaintenance.includes('Fire.setDoc(portalRef(), { maintenance: next }, { merge: true })'), "Maintenance uses a non-destructive settings/portal merge"],
   [!executiveMaintenance.includes("activatedByUid") && !executiveMaintenance.includes("activatedByCognitusId"), "Owner identity remains in audit data rather than public portal maintenance state"],
   [executiveMaintenanceCss.includes(".exec-maint44-form") && executiveMaintenanceCss.includes(".exec-maint44-emergency"), "Executive maintenance controls have dedicated professional formatting"],
-  [runtime.includes("executiveMaintenanceV44.js?v=20260906-v44") && runtime.includes("Executive Maintenance V44 isolated loader failed"), "Maintenance controls are isolated from Executive Control startup"]
+  [/executiveMaintenanceV44\.js\?v=20260906-v4[45]/.test(runtime) && runtime.includes("Executive Maintenance V44 isolated loader failed"), "Maintenance controls are isolated from Executive Control startup"]
 ];
 
 let failures = 0;

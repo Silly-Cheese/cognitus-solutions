@@ -130,11 +130,7 @@ jobs:
       - name: Run Promotional Access V33 contrast and feature checks
         run: node scripts/validate-promotional-contrast-v33.mjs
 
-      - name: Build Foundation V19 Firestore rules
-        run: node scripts/build-firestore-v19.mjs
-
-      - name: Add Promotional Access V26 Firestore rules
-        run: node scripts/build-promotional-rules-v26.mjs
-
-      - name: Compile Firestore rules in emulator
-        run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus --config firebase.v19.json "echo Foundation V19 + Promotional Access V26 Firestore rules compiled"
+      # Compile the deployed authoritative rules directly. Legacy V19/V26 generators
+      # were built for an older rules source and are intentionally not run by CI.
+      - name: Compile authoritative production Firestore rules
+        run: npx --yes firebase-tools@latest emulators:exec --only firestore --project demo-cognitus --config firebase.json "echo Production Firestore rules compiled"
