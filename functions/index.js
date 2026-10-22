@@ -42,8 +42,10 @@ async function employer(uid, orgId) {
   ]);
   if (!organization.exists || organization.data().verificationStatus !== "verified") fail("Organization must be verified.", "failed-precondition");
   const member = membership.data();
-  if (!member || member.memberStatus !== "active" || member.userUid !== uid || member.organizationId !== orgId
-      || !(member.permissions?.addEmploymentRecords === true || member.permissions?.manageTalent === true)) {
+  const explicitMembership = member && member.memberStatus === "active" && member.userUid === uid
+    && member.organizationId === orgId && (member.permissions?.addEmploymentRecords === true || member.permissions?.manageTalent === true);
+  const legacyOrgAdmin = account.role === "org_admin" && account.organizationId === orgId;
+  if (!explicitMembership && !legacyOrgAdmin) {
     fail("You are not an authorized reference representative for this organization.", "permission-denied");
   }
   return { account, organization: organization.data() };
@@ -192,11 +194,14 @@ exports.createReferenceShare = onCall(options, async (request) => {
   const token = crypto.randomBytes(32).toString("base64url");
   const shareId = crypto.randomBytes(12).toString("hex");
   const expiresAt = Timestamp.fromMillis(Date.now() + 7 * 86400000);
-  await db.doc(`referenceShares/${shareId}`).create({
+  const batch = db.batch();
+  batch.create(db.doc(`referenceShares/${shareId}`), {
     referenceRequestId: id, ownerUid: uid, tokenHash: hash(token),
     includeComments: request.data?.includeComments === true, createdAt: Timestamp.now(),
     expiresAt, revokedAt: null
   });
+  audit(batch, "REFERENCE_SHARE_CREATED", id, uid);
+  await batch.commit();
   return { shareId, token, expiresAt: expiresAt.toMillis() };
 });
 
@@ -221,6 +226,7 @@ exports.revokeReferenceShare = onCall(options, async (request) => {
     const snap = await tx.get(doc);
     if (!snap.exists || snap.data().ownerUid !== uid) fail("Share not found.", "not-found");
     tx.update(doc, { revokedAt: Timestamp.now() });
+    audit(tx, "REFERENCE_SHARE_REVOKED", snap.data().referenceRequestId, uid);
   });
   return { ok: true };
 });
