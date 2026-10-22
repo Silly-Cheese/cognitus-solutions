@@ -2067,6 +2067,7 @@ allow update: if isOwner()
 && request.resource.data.status == 'amended'
 && request.resource.data.amendedAt == request.time
 && request.resource.data.amendedByUid == request.auth.uid
+)
 ||
 (request.resource.data.diff(resource.data).changedKeys().hasOnly([
 'appealStatus', 'status', 'removedAt', 'removedByUid', 'removalReason', 'updatedAt'
@@ -2074,6 +2075,7 @@ allow update: if isOwner()
 && request.resource.data.status == 'removed'
 && request.resource.data.removedAt == request.time
 && request.resource.data.removedByUid == request.auth.uid
+)
 );
 allow delete: if false;
 }
@@ -2350,7 +2352,7 @@ allow create: if activeStaff()
 && request.resource.data.id == meetingId
 && request.resource.data.endsAt > request.resource.data.startsAt
 && (request.resource.data.url == null
-|| (shortString(request.resource.data.url, 1000)
+|| shortString(request.resource.data.url, 1000))
 && commandG2ValidVisibility(request.resource.data.visibility)
 && request.resource.data.organizerUid == request.auth.uid
 && (
