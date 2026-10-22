@@ -2,6 +2,7 @@
    Final visual override only. No access, entitlement, or Firebase behavior lives here. */
 
 :root.promo33-active {
+  --promo33-on-dark:#f8fafc;
   --promo-ink: #111827;
   --promo-ink-strong: #070b14;
   --promo-muted: #526071;
