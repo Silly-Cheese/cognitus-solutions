@@ -28,6 +28,7 @@ const MENU_SECTIONS = [
     label: "Records & workflows",
     items: [
       { href: "#/history", label: "History", note: "Your previous logged checks" },
+      { href: "#/references", label: "References", note: "Request and share verified employer references" },
       { href: "#/reports/submit", label: "Submit Report", note: "Add information for Cognitus review" },
       { href: "#/claims", label: "Claims", note: "Identity and record claims" },
       { href: "#/appeals", label: "Appeals", note: "Challenge a report or request correction" }
