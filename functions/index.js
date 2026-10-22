@@ -24,7 +24,9 @@ function identifier(value, name) {
 function dateValue(value) {
   if (value == null || value === "") return null;
   const text = field(value, "date", 10, true);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(text) || new Date(text + "T00:00:00Z").toISOString().slice(0, 10) !== text) fail("Invalid date.");
+  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(text)) fail("Invalid date.");
+  const parsed = new Date(text + "T00:00:00Z");
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== text) fail("Invalid date.");
   return text;
 }
 function hash(value) { return crypto.createHash("sha256").update(value).digest("hex"); }
