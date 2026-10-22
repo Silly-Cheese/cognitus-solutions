@@ -82,8 +82,15 @@ exports.createReferenceRequest = onCall(options, async (request) => {
   const endedOn = dateValue(request.data?.endedOn);
   if (startedOn && endedOn && startedOn > endedOn) fail("End date cannot precede start date.");
   if (request.data?.consent !== true) fail("You must consent to requesting a reference.");
-  const orgSnap = await db.doc(`organizations/${organizationId}`).get();
+  const [orgSnap, memberSnapshot] = await Promise.all([
+    db.doc(`organizations/${organizationId}`).get(),
+    db.collection("organizationMembers").where("organizationId", "==", organizationId).limit(40).get()
+  ]);
   if (!orgSnap.exists || orgSnap.data().verificationStatus !== "verified") fail("Select a verified organization.", "failed-precondition");
+  const employerRecipients = memberSnapshot.docs.map(doc => doc.data())
+    .filter(member => member.memberStatus === "active" && member.userUid !== uid
+      && (member.permissions?.addEmploymentRecords === true || member.permissions?.manageTalent === true))
+    .map(member => member.userUid);
   const requesterDisplayName = field(user.displayName || user.discordUsername || "Cognitus member", "display name", 80, true);
   const reqDoc = db.collection(REF).doc();
   const lock = db.doc(`referenceRequestLocks/${hash(uid + "|" + organizationId)}`);
@@ -107,6 +114,7 @@ exports.createReferenceRequest = onCall(options, async (request) => {
     tx.set(guard, { lastRequestedAt: now, day: new Date().toISOString().slice(0, 10), dailyCount: dailyCount + 1 });
     audit(tx, "REFERENCE_REQUESTED", reqDoc.id, uid);
     notice(tx, uid, reqDoc.id, "requested");
+    for (const recipient of [...new Set(employerRecipients)].slice(0, 30)) notice(tx, recipient, reqDoc.id, "employer_request");
   });
   return { id: reqDoc.id, status: "pending" };
 });
@@ -190,6 +198,18 @@ exports.createReferenceShare = onCall(options, async (request) => {
     expiresAt, revokedAt: null
   });
   return { shareId, token, expiresAt: expiresAt.toMillis() };
+});
+
+exports.listReferenceShares = onCall(options, async (request) => {
+  const uid = requireAuth(request);
+  await active(uid);
+  const snap = await db.collection("referenceShares").where("ownerUid", "==", uid).limit(100).get();
+  return { items: snap.docs.map(doc => ({
+    id: doc.id, referenceRequestId: doc.data().referenceRequestId,
+    createdAt: doc.data().createdAt?.toMillis?.() || null,
+    expiresAt: doc.data().expiresAt?.toMillis?.() || null,
+    revokedAt: doc.data().revokedAt?.toMillis?.() || null
+  })).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)) };
 });
 
 exports.revokeReferenceShare = onCall(options, async (request) => {
