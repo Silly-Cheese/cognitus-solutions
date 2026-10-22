@@ -358,6 +358,7 @@ allow update: if isOwner()
 && request.resource.data.diff(resource.data).changedKeys().hasOnly([
 'role', 'status', 'organizationId', 'identityVerified', 'updatedAt'
 ])
+&& (!request.resource.data.keys().hasAny(['identityVerified']) || request.resource.data.identityVerified is bool)
 && validUserRole(request.resource.data.role)
 && validUserStatus(request.resource.data.status)
 && request.resource.data.uid == resource.data.uid
