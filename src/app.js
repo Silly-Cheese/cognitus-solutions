@@ -345,6 +345,7 @@ function renderNav() {
     <a href="#/dashboard">Dashboard</a>
     <a href="#/search">Run Check</a>
     <a href="#/history">History</a>
+    <a href="#/references">References</a>
     <a href="#/reports/submit">Submit Report</a>
     <a href="#/claims">Claims</a>
     <a href="#/appeals">Appeals</a>
@@ -1015,6 +1016,7 @@ async function render() {
     if (current === "/dashboard") return dashboardPage();
     if (current === "/search") return searchPage();
     if (current === "/history") return historyPage();
+    if (current === "/references" || current === "/references/share") { const { renderReferenceRequestsPage } = await import("./referenceRequestsV1.js"); return renderReferenceRequestsPage(root, { user: authUser, account: userRecord }); }
     if (current === "/reports/quick") return reportPage("quick");
     if (current === "/reports/full") return reportPage("full");
     if (current === "/reports/submit") return submitReportPage();

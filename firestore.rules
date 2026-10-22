@@ -3119,6 +3119,26 @@ allow update: if (commandOwner() || (staffPermission('system.manage') && resourc
 && request.resource.data.updatedAt == request.time;
 allow delete: if false;
 }
+// Server-owned employment references. No direct browser writes or private reads.
+match /referenceRequests/{referenceId} {
+  allow read, write: if false;
+}
+match /referenceRequestLocks/{lockId} {
+  allow read, write: if false;
+}
+match /referenceRequestRateLimits/{uid} {
+  allow read, write: if false;
+}
+match /referenceShares/{shareId} {
+  allow read, write: if false;
+}
+match /referenceAuditEvents/{eventId} {
+  allow read, write: if false;
+}
+match /referenceNotifications/{uid}/items/{notificationId} {
+  allow read: if signedIn() && request.auth.uid == uid && activeAccount();
+  allow write: if false;
+}
 match /{document=**} {
 allow read, write: if false;
 }
