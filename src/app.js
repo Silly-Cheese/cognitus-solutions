@@ -1016,7 +1016,7 @@ async function render() {
     if (current === "/dashboard") return dashboardPage();
     if (current === "/search") return searchPage();
     if (current === "/history") return historyPage();
-    if (current === "/references" || current === "/references/share") { const { renderReferenceRequestsPage } = await import("./referenceRequestsV1.js"); return renderReferenceRequestsPage(root, { user: authUser, account: userRecord }); }
+    if (current === "/references" || current === "/references/share") { const { renderReferenceRequestsPage } = await import("./referenceRequestsV1.js"); return await renderReferenceRequestsPage(root, { user: authUser, account: userRecord }); }
     if (current === "/reports/quick") return reportPage("quick");
     if (current === "/reports/full") return reportPage("full");
     if (current === "/reports/submit") return submitReportPage();

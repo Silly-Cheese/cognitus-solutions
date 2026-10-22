@@ -24,7 +24,9 @@ function identifier(value, name) {
 function dateValue(value) {
   if (value == null || value === "") return null;
   const text = field(value, "date", 10, true);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(text) || new Date(text + "T00:00:00Z").toISOString().slice(0, 10) !== text) fail("Invalid date.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) fail("Invalid date.");
+  const parsed = new Date(text + "T00:00:00Z");
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== text) fail("Invalid date.");
   return text;
 }
 function hash(value) { return crypto.createHash("sha256").update(value).digest("hex"); }
@@ -42,8 +44,10 @@ async function employer(uid, orgId) {
   ]);
   if (!organization.exists || organization.data().verificationStatus !== "verified") fail("Organization must be verified.", "failed-precondition");
   const member = membership.data();
-  if (!member || member.memberStatus !== "active" || member.userUid !== uid || member.organizationId !== orgId
-      || !(member.permissions?.addEmploymentRecords === true || member.permissions?.manageTalent === true)) {
+  const explicitMembership = member && member.memberStatus === "active" && member.userUid === uid
+    && member.organizationId === orgId && (member.permissions?.addEmploymentRecords === true || member.permissions?.manageTalent === true);
+  const legacyOrgAdmin = account.role === "org_admin" && account.organizationId === orgId;
+  if (!explicitMembership && !legacyOrgAdmin) {
     fail("You are not an authorized reference representative for this organization.", "permission-denied");
   }
   return { account, organization: organization.data() };
@@ -82,8 +86,15 @@ exports.createReferenceRequest = onCall(options, async (request) => {
   const endedOn = dateValue(request.data?.endedOn);
   if (startedOn && endedOn && startedOn > endedOn) fail("End date cannot precede start date.");
   if (request.data?.consent !== true) fail("You must consent to requesting a reference.");
-  const orgSnap = await db.doc(`organizations/${organizationId}`).get();
+  const [orgSnap, memberSnapshot] = await Promise.all([
+    db.doc(`organizations/${organizationId}`).get(),
+    db.collection("organizationMembers").where("organizationId", "==", organizationId).limit(40).get()
+  ]);
   if (!orgSnap.exists || orgSnap.data().verificationStatus !== "verified") fail("Select a verified organization.", "failed-precondition");
+  const employerRecipients = memberSnapshot.docs.map(doc => doc.data())
+    .filter(member => member.memberStatus === "active" && member.userUid !== uid
+      && (member.permissions?.addEmploymentRecords === true || member.permissions?.manageTalent === true))
+    .map(member => member.userUid);
   const requesterDisplayName = field(user.displayName || user.discordUsername || "Cognitus member", "display name", 80, true);
   const reqDoc = db.collection(REF).doc();
   const lock = db.doc(`referenceRequestLocks/${hash(uid + "|" + organizationId)}`);
@@ -107,6 +118,7 @@ exports.createReferenceRequest = onCall(options, async (request) => {
     tx.set(guard, { lastRequestedAt: now, day: new Date().toISOString().slice(0, 10), dailyCount: dailyCount + 1 });
     audit(tx, "REFERENCE_REQUESTED", reqDoc.id, uid);
     notice(tx, uid, reqDoc.id, "requested");
+    for (const recipient of [...new Set(employerRecipients)].slice(0, 30)) notice(tx, recipient, reqDoc.id, "employer_request");
   });
   return { id: reqDoc.id, status: "pending" };
 });
@@ -184,12 +196,27 @@ exports.createReferenceShare = onCall(options, async (request) => {
   const token = crypto.randomBytes(32).toString("base64url");
   const shareId = crypto.randomBytes(12).toString("hex");
   const expiresAt = Timestamp.fromMillis(Date.now() + 7 * 86400000);
-  await db.doc(`referenceShares/${shareId}`).create({
+  const batch = db.batch();
+  batch.create(db.doc(`referenceShares/${shareId}`), {
     referenceRequestId: id, ownerUid: uid, tokenHash: hash(token),
     includeComments: request.data?.includeComments === true, createdAt: Timestamp.now(),
     expiresAt, revokedAt: null
   });
+  audit(batch, "REFERENCE_SHARE_CREATED", id, uid);
+  await batch.commit();
   return { shareId, token, expiresAt: expiresAt.toMillis() };
+});
+
+exports.listReferenceShares = onCall(options, async (request) => {
+  const uid = requireAuth(request);
+  await active(uid);
+  const snap = await db.collection("referenceShares").where("ownerUid", "==", uid).limit(100).get();
+  return { items: snap.docs.map(doc => ({
+    id: doc.id, referenceRequestId: doc.data().referenceRequestId,
+    createdAt: doc.data().createdAt?.toMillis?.() || null,
+    expiresAt: doc.data().expiresAt?.toMillis?.() || null,
+    revokedAt: doc.data().revokedAt?.toMillis?.() || null
+  })).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)) };
 });
 
 exports.revokeReferenceShare = onCall(options, async (request) => {
@@ -201,6 +228,7 @@ exports.revokeReferenceShare = onCall(options, async (request) => {
     const snap = await tx.get(doc);
     if (!snap.exists || snap.data().ownerUid !== uid) fail("Share not found.", "not-found");
     tx.update(doc, { revokedAt: Timestamp.now() });
+    audit(tx, "REFERENCE_SHARE_REVOKED", snap.data().referenceRequestId, uid);
   });
   return { ok: true };
 });

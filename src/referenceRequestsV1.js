@@ -73,7 +73,7 @@ export async function renderReferenceRequestsPage(root,{user,account}) {
  <label class="reference-check"><input name="consent" type="checkbox" required><span>I authorize Cognitus to contact this organization for a reference about my employment.</span></label>
  <button class="button button-dark" type="submit">Send reference request</button>
  <p class="disclaimer">Only verified organizations currently using Cognitus can respond in this release. Reference responses are not public.</p>
- </form></div><div class="reference-panel"><h2>Request history</h2><div id="reference-my-list" class="reference-list" aria-live="polite">Loading…</div><div id="reference-share-result"></div></div></section>
+ </form></div><div class="reference-panel"><h2>Request history</h2><div id="reference-my-list" class="reference-list" aria-live="polite">Loading…</div><div id="reference-share-result"></div><div id="reference-shares-list" class="reference-list" style="margin-top:1rem"></div></div></section>
  <section id="reference-employer" class="reference-panel" hidden><h2>Employer reference inbox</h2>
  <div class="reference-form"><label>Organization<select id="reference-employer-org"><option value="">Choose organization</option>${selectedOrgOptions(orgs)}</select></label>
  <button id="reference-load-inbox" class="button button-light" type="button">Load requests</button></div><div id="reference-inbox-list" class="reference-list" style="margin-top:1rem" aria-live="polite"></div></section></div>`;
@@ -83,6 +83,13 @@ export async function renderReferenceRequestsPage(root,{user,account}) {
    try {const result=await call("listReferenceRequests",{mode:"mine"});
       mine.innerHTML=result.items.length?result.items.map(requestRow).join(""):'<div class="reference-empty">No reference requests yet. Choose a former employer to get started.</div>';
    } catch(e){mine.textContent=e.message||"Unable to load your requests.";}
+   try {
+     const shares = await call("listReferenceShares");
+     root.querySelector("#reference-shares-list").innerHTML = shares.items.filter(s=>!s.revokedAt && s.expiresAt>Date.now()).length
+       ? '<h3>Active private shares</h3>' + shares.items.filter(s=>!s.revokedAt && s.expiresAt>Date.now()).map(s=>
+          `<div class="reference-item"><p>Share created ${fmt(s.createdAt)} · Expires ${fmt(s.expiresAt)}</p><button type="button" class="button button-light" data-revoke="${esc(s.id)}">Revoke access</button></div>`).join("")
+       : "";
+   } catch(e) {root.querySelector("#reference-shares-list").textContent="";}
  }
  root.querySelectorAll("[data-reference-tab]").forEach(button=>button.addEventListener("click",()=>{
     const isMine=button.dataset.referenceTab==="mine";
@@ -95,11 +102,18 @@ export async function renderReferenceRequestsPage(root,{user,account}) {
    try {const values=Object.fromEntries(new FormData(form).entries());values.consent=true;await call("createReferenceRequest",values);message(root,"Reference request submitted.");form.reset();await reloadMine();}
    catch(e){message(root,e.message||"Unable to create request.",true);} finally{button.disabled=false;}
  });
- mine.addEventListener("click",async event=>{
+ root.querySelector("#reference-shares-list").addEventListener("click",async event=>{
+   const button=event.target.closest("[data-revoke]");if(!button)return;
+   if(button.dataset.confirm!=="yes"){button.dataset.confirm="yes";button.textContent="Confirm revoke";return;}
+   button.disabled=true;
+   try{await call("revokeReferenceShare",{shareId:button.dataset.revoke});message(root,"Private link revoked.");await reloadMine();}
+   catch(e){message(root,e.message||"Could not revoke share.",true);button.disabled=false;}
+ });
+  mine.addEventListener("click",async event=>{
    const withdraw=event.target.closest("[data-withdraw]");
    const share=event.target.closest("[data-share]");
    if(withdraw){
-      if(!confirm("Withdraw this reference request?")) return;
+      if(withdraw.dataset.confirm!=="yes"){withdraw.dataset.confirm="yes";withdraw.textContent="Confirm withdrawal";withdraw.setAttribute("aria-label","Confirm withdrawal of this reference");return;}
       withdraw.disabled=true;
       try{await call("withdrawReferenceRequest",{requestId:withdraw.dataset.withdraw});message(root,"Request withdrawn.");await reloadMine();}
       catch(e){message(root,e.message||"Withdrawal failed.",true);withdraw.disabled=false;}
@@ -128,7 +142,7 @@ export async function renderReferenceRequestsPage(root,{user,account}) {
        ${status(r.status)==="pending"?`<form class="reference-form" data-respond="${esc(r.id)}"><label>Confirmed position<input name="position" maxlength="120" placeholder="Position on record" required></label>
        <label>Can you confirm this employment?<select name="verifiedEmployment"><option value="true">Yes</option><option value="false">No</option></select></label>
        <label>Professional reference (optional)<textarea name="comments" maxlength="1000" rows="3"></textarea></label>
-       <div class="reference-actions"><button class="button button-dark" name="decision" value="complete">Submit response</button><button class="button button-light" name="decision" value="decline">Decline</button></div></form>`:""}
+       <div class="reference-actions"><button class="button button-dark" name="decision" value="complete">Submit response</button><button class="button button-light" name="decision" value="decline" formnovalidate>Decline</button></div></form>`:""}
      </article>`).join(""):'<div class="reference-empty">No requests for this organization.</div>';
    }catch(e){inbox.textContent="Unable to open this organization’s inbox: "+(e.message||"Access denied");}
  });
