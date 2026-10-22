@@ -1,0 +1,31 @@
+
+.reference-page { display:grid; gap:1.1rem; }
+.reference-page .reference-hero { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:1rem; padding:clamp(1.25rem,3vw,2rem); }
+.reference-page .reference-hero h1 { font-size:clamp(2.2rem,5vw,3.5rem);line-height:1.08;max-width:none;margin:.25rem 0 .65rem; }
+.reference-page .reference-hero p { max-width:66ch; }
+.reference-page .reference-tabs { display:flex; flex-wrap:wrap; gap:.45rem; }
+.reference-page .reference-tabs button { appearance:none;background:#fff;color:#111;border:1px solid #bcbcb7;border-radius:100px;padding:.7rem 1rem;font-weight:800; }
+.reference-page .reference-tabs button[aria-selected="true"] {background:#111;color:#fff;border-color:#111;}
+.reference-page .reference-grid {display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:1rem;align-items:start;}
+.reference-page .reference-panel { background:#fff;border:1px solid #d8d8d4;border-radius:20px;padding:clamp(1rem,3vw,1.6rem); }
+.reference-page .reference-panel h2 {margin:0 0 1rem;font-size:1.35rem;letter-spacing:-.035em}
+.reference-page .reference-list {display:grid;gap:.75rem;}
+.reference-page .reference-item {border:1px solid #deded9;border-radius:16px;padding:1rem;display:grid;gap:.65rem;min-width:0;}
+.reference-page .reference-item h3 {margin:0;font-size:1rem;}
+.reference-page .reference-item p {margin:0;color:#555;line-height:1.5;overflow-wrap:anywhere;}
+.reference-page .reference-item header {display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:.55rem;}
+.reference-page .reference-badge {border-radius:100px;background:#f0f0ec;color:#333;padding:.3rem .65rem;font-size:.75rem;font-weight:800;white-space:nowrap;}
+.reference-page .reference-badge[data-status="completed"] {background:#e6f6eb;color:#205c39;}
+.reference-page .reference-badge[data-status="declined"] {background:#fff0ed;color:#9a453a;}
+.reference-page .reference-actions {display:flex;flex-wrap:wrap;gap:.55rem;}
+.reference-page .reference-form {display:grid;gap:.85rem;}
+.reference-page .reference-form label {display:grid;gap:.4rem;font-size:.9rem;}
+.reference-page .reference-form input[type="checkbox"] {width:auto;min-height:auto;margin-top:.25rem;}
+.reference-page .reference-check {display:flex!important;flex-direction:row;align-items:flex-start;gap:.65rem;line-height:1.45;}
+.reference-page .reference-feedback {border-radius:12px;border:1px solid #ddd;padding:.85rem;background:#f9f9f7;overflow-wrap:anywhere;}
+.reference-page .reference-feedback[data-error="true"] {color:#812e2e;border-color:#dbb8b8;background:#fff4f4;}
+.reference-page .reference-copy {width:100%;font-family:ui-monospace,monospace;font-size:.8rem;overflow-wrap:anywhere;}
+.reference-page .reference-empty {border:1px dashed #c6c6c0;padding:1.5rem;border-radius:14px;color:#666;}
+.reference-page .reference-item button {min-height:42px;}
+@media(max-width:760px){.reference-page .reference-grid{grid-template-columns:1fr}.reference-page .reference-hero{padding:1.25rem}.reference-page .reference-tabs button{flex:1;min-width:max-content}}
+@media(prefers-reduced-motion:reduce){.reference-page *{scroll-behavior:auto}}
