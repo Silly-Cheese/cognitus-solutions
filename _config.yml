@@ -1,0 +1,17 @@
+exclude:
+  - .github
+  - .gitignore
+  - FOUNDATION_V19.md
+  - README.md
+  - deploy-rules-v19.cmd
+  - docs
+  - firebase.json
+  - firebase.v19.json
+  - firebase.v36.json
+  - firestore.rules
+  - functions
+  - index.html
+  - notes
+  - scripts
+  - src
+  - tests
